@@ -26,7 +26,7 @@ public class Role {
             joinColumns = @JoinColumn(name = "role_code"),
             inverseJoinColumns = @JoinColumn(name = "privilege_code")
     )
-    private Set<Privilege> privileges = new HashSet<>();
+    private Set<Permision> permisions = new HashSet<>();
 
     @ManyToMany(mappedBy = "rolelist")
     private Set<Users> users = new HashSet<>();

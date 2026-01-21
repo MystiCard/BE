@@ -15,9 +15,11 @@ public enum ErrorCode {
 
     // USERS ERRORS(3)
     USER_NOT_FOUND(3001, "User not found ", HttpStatus.NOT_FOUND),
-    USER_INACTIVE(3002, "User is inactive", HttpStatus.FORBIDDEN)
+    USER_INACTIVE(3002, "User is inactive", HttpStatus.FORBIDDEN),
 
-
+    // Permision error (4)
+    PERMISION_CODE_EXISTED(4001,"Permision Code existed. Please input Permision Code again", HttpStatus.BAD_REQUEST),
+    PERMISION_CODE_NOT_FOUND(4002,"Permision not found with this code",HttpStatus.NOT_FOUND),
 
     ;
 

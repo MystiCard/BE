@@ -67,9 +67,9 @@ public class TokenServiceImpl implements TokenService {
             user.getRolelist().forEach(role -> {
 
                 scope.add("ROLE_"+role.getRoleCode());
-                if(role.getPrivileges() != null && role.getPrivileges().size() > 0)
+                if(role.getPermisions() != null && role.getPermisions().size() > 0)
                 {
-                    role.getPrivileges().forEach(privilege -> scope.add(privilege.getPrivilegeCode()));
+                    role.getPermisions().forEach(privilege -> scope.add(privilege.getPermisionCode()));
                 }
             });
 

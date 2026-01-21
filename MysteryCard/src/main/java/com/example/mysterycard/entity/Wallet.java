@@ -25,4 +25,7 @@ public class Wallet {
     private Set<WalletTransaction> sentTransactions = new HashSet<>();
     @OneToMany(mappedBy = "walletReceive")
     private Set<WalletTransaction> receivedTransactions = new HashSet<>();
+    @OneToOne
+    @JoinColumn(name= "user_id")
+    private Users onwer;
 }

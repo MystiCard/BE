@@ -44,4 +44,6 @@ public class Users {
     private List<Feedback> reviewerList = new ArrayList<>();
     @OneToMany(mappedBy = "seller")
     private List<Feedback>  revieweeList= new ArrayList<>();
+    @OneToOne(mappedBy = "onwer")
+    private Wallet wallet;
 }

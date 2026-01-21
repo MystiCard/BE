@@ -1,9 +1,9 @@
 package com.example.mysterycard.configuration;
 
-import com.example.mysterycard.entity.Privilege;
+import com.example.mysterycard.entity.Permision;
 import com.example.mysterycard.entity.Role;
 import com.example.mysterycard.entity.Users;
-import com.example.mysterycard.repository.PrivilegeRepo;
+import com.example.mysterycard.repository.PermisionRepo;
 import com.example.mysterycard.repository.RoleRepo;
 import com.example.mysterycard.repository.UsersRepo;
 import lombok.RequiredArgsConstructor;
@@ -11,14 +11,14 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
 public class DataSender implements CommandLineRunner {
     private final RoleRepo roleRepository;
-    private final PrivilegeRepo privilegeRepository;
+    private final PermisionRepo permisionRepository;
     private final UsersRepo userRepository;
     private final PasswordEncoder passwordEncoder;
     @Override
@@ -27,12 +27,12 @@ public class DataSender implements CommandLineRunner {
 
         /* ================= PRIVILEGES ================= */
 
-        Privilege p1 = createPrivilege("USER_VIEW", "View user", "Xem người dùng");
-        Privilege p2 = createPrivilege("USER_MANAGE", "Manage user", "Quản lý người dùng");
-        Privilege p3 = createPrivilege("CARD_SELL", "Sell card", "Bán thẻ");
-        Privilege p4 = createPrivilege("CARD_BUY", "Buy card", "Mua thẻ");
-        Privilege p5 = createPrivilege("BLIND_BOX_OPEN", "Open blind box", "Mở túi mù");
-        Privilege p6 = createPrivilege("SYSTEM_ADMIN", "System admin", "Toàn quyền hệ thống");
+        Permision p1 = createPrivilege("USER_VIEW", "View user", "Xem người dùng");
+        Permision p2 = createPrivilege("USER_MANAGE", "Manage user", "Quản lý người dùng");
+        Permision p3 = createPrivilege("CARD_SELL", "Sell card", "Bán thẻ");
+        Permision p4 = createPrivilege("CARD_BUY", "Buy card", "Mua thẻ");
+        Permision p5 = createPrivilege("BLIND_BOX_OPEN", "Open blind box", "Mở túi mù");
+        Permision p6 = createPrivilege("SYSTEM_ADMIN", "System admin", "Toàn quyền hệ thống");
 
         /* ================= ROLES ================= */
 
@@ -79,21 +79,21 @@ public class DataSender implements CommandLineRunner {
 
 /* ================= Helper methods ================= */
 
-private Privilege createPrivilege(String code, String name, String desc) {
-    return privilegeRepository.findById(code)
-            .orElseGet(() -> privilegeRepository.save(
-                    new Privilege(code, name, desc)
+private Permision createPrivilege(String code, String name, String desc) {
+    return permisionRepository.findById(code)
+            .orElseGet(() -> permisionRepository.save(
+                    new Permision(code, name, desc)
             ));
 }
 
-private Role createRole(String code, String name, String desc, Set<Privilege> privileges) {
+private Role createRole(String code, String name, String desc, Set<Permision> permisions) {
     return roleRepository.findById(code)
             .orElseGet(() -> {
                 Role role = new Role();
                 role.setRoleCode(code);
                 role.setRoleName(name);
                 role.setDescription(desc);
-                role.setPrivileges(privileges);
+                role.setPermisions(permisions);
                 return roleRepository.save(role);
             });
 }

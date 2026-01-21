@@ -29,7 +29,8 @@ public class SecurityConfiguration  {
                            "/api/auth/login-google",
                            "/v3/api-docs/**",
                            "/swagger-ui/**",
-                           "/swagger-ui.html").permitAll()
+                           "/swagger-ui.html",
+                           "/api/files/upload").permitAll()
                .anyRequest().authenticated();
        });
 

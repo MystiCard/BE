@@ -21,6 +21,10 @@ public enum ErrorCode {
     PERMISION_CODE_EXISTED(4001,"Permision Code existed. Please input Permision Code again", HttpStatus.BAD_REQUEST),
     PERMISION_CODE_NOT_FOUND(4002,"Permision not found with this code",HttpStatus.NOT_FOUND),
 
+    //CATEGORY ERRORS(4)
+    CATEGORY_NOT_FOUND(4001, "Category not found", HttpStatus.NOT_FOUND),
+    CATEGORY_DUPLICATE(4002, "Category already exists", HttpStatus.CONFLICT)
+    ;
     ;
 
     int code;

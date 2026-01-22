@@ -10,8 +10,10 @@ import java.util.UUID;
 @Entity
 @Table(name = "CardCategory")
 @NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
+@Builder
 public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

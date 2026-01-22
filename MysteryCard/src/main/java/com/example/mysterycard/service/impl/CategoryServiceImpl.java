@@ -1,9 +1,12 @@
 package com.example.mysterycard.service.impl;
 
+import com.example.mysterycard.dto.response.CardResponse;
 import com.example.mysterycard.dto.response.CategoryResponse;
+import com.example.mysterycard.entity.Card;
 import com.example.mysterycard.entity.Category;
 import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
+import com.example.mysterycard.mapper.CardMapper;
 import com.example.mysterycard.mapper.CategoryMapper;
 import com.example.mysterycard.repository.CategoryRepo;
 import com.example.mysterycard.service.CategoryService;
@@ -20,6 +23,8 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Autowired
     private CategoryMapper categoryMapper;
+    @Autowired
+    private CardMapper cardMapper;
 
     @Override
     public CategoryResponse getCateById(UUID id) {
@@ -55,4 +60,13 @@ public class CategoryServiceImpl implements CategoryService {
         categoryRepo.save(cate);
         return categoryMapper.toResponse(cate);
     }
+
+    @Override
+    public List<CardResponse> getCardsByCategoryId(UUID id) {
+        Category cate = categoryRepo.findById(id) .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+        List<Card> cards = cate.getCardlist();
+        return cards.stream().map(cardMapper::toResponse).toList();
+    }
+
+
 }

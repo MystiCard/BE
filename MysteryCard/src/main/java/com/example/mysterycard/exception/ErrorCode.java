@@ -25,10 +25,15 @@ public enum ErrorCode {
     CATEGORY_NOT_FOUND(4001, "Category not found", HttpStatus.NOT_FOUND),
     CATEGORY_DUPLICATE(4002, "Category already exists", HttpStatus.CONFLICT),
 
+    //CARD ERRORS(6)
+    CARD_NOT_FOUND(6001, "Card not found", HttpStatus.NOT_FOUND),
+    CARD_DUPLICATE(6002, "Card already exists", HttpStatus.CONFLICT),
+
     // Role Erreer(5)
     ROLE_NOT_FOUND(5001, "Role not found with this code",HttpStatus.NOT_FOUND),
     ROLE_EXISTED(5002, "Role existed. Please enter another Role code", HttpStatus.BAD_REQUEST);
     ;
+
 
     int code;
     String message;

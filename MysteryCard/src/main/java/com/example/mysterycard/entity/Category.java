@@ -21,4 +21,7 @@ public class Category {
     private String categoryName;
     @OneToMany(mappedBy = "category")
     private List<Card> cardlist = new ArrayList<>();
+    public void addCard(Card card) {
+        cardlist.add(card); card.setCategory(this);
+    }
 }

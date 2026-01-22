@@ -1,5 +1,7 @@
 package com.example.mysterycard.dto.response;
 
+import com.example.mysterycard.entity.Role;
+import com.example.mysterycard.enums.Gender;
 import lombok.Builder;
 import lombok.Data;
 
@@ -11,10 +13,9 @@ import java.util.UUID;
 public class UserResponse {
     private UUID userId;
     private String email;
-    private String password;
+    private Gender gender;
     private String name;
-    private int tokenVersion = 0;
     private String avatarUrl;
     private String address;
-    private List<String> roles;
+    private String phone;
 }

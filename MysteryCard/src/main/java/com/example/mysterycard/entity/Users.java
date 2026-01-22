@@ -1,5 +1,6 @@
 package com.example.mysterycard.entity;
 
+import com.example.mysterycard.enums.Gender;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,6 +21,9 @@ public class Users {
     private String email;
     private String password;
     private String name;
+    private String phone;
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
     private int tokenVersion = 0;
     private String avatarUrl;
     private String address;

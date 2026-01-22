@@ -16,40 +16,40 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableMethodSecurity
 @RequiredArgsConstructor
-public class SecurityConfiguration  {
-  private final CustomDecoder jwtDecoder;
-  private final CustomAuthenticationEntryPoint authenticationEntryPoint;
-  @Value("${login.google.success-url}")
-  private String SUCCESS_URL;
-    private final static String [] ADMIN_API = {"/api/permisions/*"};
-    private final static String [] USER_API ={"/api/roles/user/*"};
-  @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-       http.authorizeHttpRequests(auth -> {
-           auth.requestMatchers(
-                           "/api/auth/login",
-                           "/api/auth/login-google",
-                           "/v3/api-docs/**",
-                           "/swagger-ui/**",
-                           "/swagger-ui.html",
-                           "/api/files/upload").permitAll()
-                   .requestMatchers(USER_API).hasAnyRole("USER","ADMIN")
-                   .requestMatchers(ADMIN_API).hasRole("ADMIN")
-               .anyRequest().authenticated();
-       });
+public class SecurityConfiguration {
+    private final CustomDecoder jwtDecoder;
+    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+    @Value("${login.google.success-url}")
+    private String SUCCESS_URL;
+    private final static String[] ADMIN_API = {"/api/permisions/*"};
+    private final static String[] USER_API = {"/api/roles/user/*"};
+    private final static String[] PUBLIC_API = {"/api/users/create", "/api/auth/login", "/api/auth/login-google", "/v3/api-docs/**",
+ "/swagger-ui/**", "/swagger-ui.html", "/api/files/upload"};
 
-       http.oauth2ResourceServer(
-               config -> config.jwt( jwtConfigurer -> {
-                   jwtConfigurer
-                           .decoder(jwtDecoder)
-                   .jwtAuthenticationConverter(jwtAuthenticationConverter());
-               })
-                       .authenticationEntryPoint(authenticationEntryPoint)
-       );
-       http.oauth2Login(config -> {config.defaultSuccessUrl(SUCCESS_URL,true);});
-       http.csrf(AbstractHttpConfigurer::disable);
-       return http.build();
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.authorizeHttpRequests(auth -> {
+            auth.requestMatchers(PUBLIC_API).permitAll()
+                    .requestMatchers(USER_API).hasAnyRole("USER", "ADMIN")
+                    .requestMatchers(ADMIN_API).hasRole("ADMIN")
+                    .anyRequest().authenticated();
+        });
+
+        http.oauth2ResourceServer(
+                config -> config.jwt(jwtConfigurer -> {
+                            jwtConfigurer
+                                    .decoder(jwtDecoder)
+                                    .jwtAuthenticationConverter(jwtAuthenticationConverter());
+                        })
+                        .authenticationEntryPoint(authenticationEntryPoint)
+        );
+        http.oauth2Login(config -> {
+            config.defaultSuccessUrl(SUCCESS_URL, true);
+        });
+        http.csrf(AbstractHttpConfigurer::disable);
+        return http.build();
     }
+
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter granted = new JwtGrantedAuthoritiesConverter();

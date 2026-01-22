@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface PermisionServcie {
     PermisionResponse addPermision(Permision permision);
-    Page<PermisionResponse> getByRoleCode(String roleCode,int page, int size);
+    Page<PermisionResponse> getByRoleCode(String roleCode,int page, int size,boolean active);
     void deletePermision(String permisionCode);
-    Page<PermisionResponse> getAll(int page , int size);
+    Page<PermisionResponse> getAll(int page , int size,boolean active);
 }

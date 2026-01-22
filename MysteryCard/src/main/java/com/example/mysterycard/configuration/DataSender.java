@@ -94,6 +94,8 @@ private Role createRole(String code, String name, String desc, Set<Permision> pe
                 role.setRoleName(name);
                 role.setDescription(desc);
                 role.setPermisions(permisions);
+                role.setCreatedAt(LocalDateTime.now());
+                role.setActive(true);
                 return roleRepository.save(role);
             });
 }
@@ -105,7 +107,7 @@ private void createUserIfNotExist(String email, String password, String name, Se
             .email(email)
             .password(passwordEncoder.encode(password))
             .name(name)
-            .isActive(true)
+            .active(true)
             .build();
 
     user.setRolelist(roles);

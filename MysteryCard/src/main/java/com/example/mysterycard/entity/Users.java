@@ -24,7 +24,7 @@ public class Users {
     private String avatarUrl;
     private String address;
     @Builder.Default
-    private boolean isActive = true;
+    private boolean active = true;
     @Builder.Default
     private LocalDateTime createAt = LocalDateTime.now();
     @ManyToMany

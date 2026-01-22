@@ -15,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Set;
 
 @Service
@@ -33,20 +32,22 @@ public class PermisionServiceImpl implements PermisionServcie {
         return permisionMapper.entityToResponse(permisionRepo.save(permision));
     }
     @Override
-    public Page<PermisionResponse> getByRoleCode(String roleCode,int page, int  size) {
+    public Page<PermisionResponse> getByRoleCode(String roleCode,int page, int  size,boolean active) {
         Pageable pageable = PageRequest.of(page-1, size, Sort.by("createdAt").descending());
-        return  permisionRepo.findAllByRoles(Set.of(roleRepo.findByRoleCode(roleCode)),pageable).map(permisionMapper::entityToResponse);
+        return  permisionRepo.findByRolesAndActive(Set.of(roleRepo.findByRoleCode(roleCode)),active,pageable).map(permisionMapper::entityToResponse);
     }
     @Override
     public void deletePermision(String permisionCode) {
         if(!permisionRepo.existsById(permisionCode)){
             throw new AppException(ErrorCode.PERMISION_CODE_NOT_FOUND);
         }
-        permisionRepo.deleteById(permisionCode);
+        Permision permision = permisionRepo.findById(permisionCode).get();
+        permision.setActive(false);
+        permisionRepo.save(permision);
     }
     @Override
-    public Page<PermisionResponse> getAll(int page, int size) {
+    public Page<PermisionResponse> getAll(int page, int size,boolean active) {
         Pageable pageable = PageRequest.of(page-1, size, Sort.by("createdAt").descending());
-        return permisionRepo.findAll(pageable).map(permisionMapper::entityToResponse);
+        return permisionRepo.findByActive(active,pageable).map(permisionMapper::entityToResponse);
     }
 }

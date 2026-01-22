@@ -22,6 +22,7 @@ public class SecurityConfiguration  {
   @Value("${login.google.success-url}")
   private String SUCCESS_URL;
     private final static String [] ADMIN_API = {"/api/permisions/*"};
+    private final static String [] USER_API ={"/api/roles/user/*"};
   @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
        http.authorizeHttpRequests(auth -> {
@@ -32,6 +33,7 @@ public class SecurityConfiguration  {
                            "/swagger-ui/**",
                            "/swagger-ui.html",
                            "/api/files/upload").permitAll()
+                   .requestMatchers(USER_API).hasAnyRole("USER","ADMIN")
                    .requestMatchers(ADMIN_API).hasRole("ADMIN")
                .anyRequest().authenticated();
        });

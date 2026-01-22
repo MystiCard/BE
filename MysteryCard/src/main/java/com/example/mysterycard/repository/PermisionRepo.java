@@ -14,4 +14,8 @@ import java.util.Set;
 public interface PermisionRepo extends JpaRepository<Permision, String> {
     Page<Permision> findByActive(boolean active, Pageable pageable);
     Page<Permision> findByRolesAndActive(Set<Role> roles, boolean active,Pageable pageable);
+
+    Permision findByPermisionCodeAndActive(String permisionCode, boolean active);
+
+    Permision findByPermisionCode(String permisionCode);
 }

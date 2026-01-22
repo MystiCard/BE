@@ -20,7 +20,9 @@ public enum ErrorCode {
     // Permision error (4)
     PERMISION_CODE_EXISTED(4001,"Permision Code existed. Please input Permision Code again", HttpStatus.BAD_REQUEST),
     PERMISION_CODE_NOT_FOUND(4002,"Permision not found with this code",HttpStatus.NOT_FOUND),
-
+    // Role Erreer(5)
+    ROLE_NOT_FOUND(5001, "Role not found with this code",HttpStatus.NOT_FOUND),
+    ROLE_EXISTED(5002, "Role existed. Please enter another Role code", HttpStatus.BAD_REQUEST);
     ;
 
     int code;

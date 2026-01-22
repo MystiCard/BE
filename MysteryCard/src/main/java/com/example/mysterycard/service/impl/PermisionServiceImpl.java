@@ -50,4 +50,15 @@ public class PermisionServiceImpl implements PermisionServcie {
         Pageable pageable = PageRequest.of(page-1, size, Sort.by("createdAt").descending());
         return permisionRepo.findByActive(active,pageable).map(permisionMapper::entityToResponse);
     }
+
+    @Override
+    public void activePermision(String permisionCode) {
+        Permision permision = permisionRepo.findByPermisionCode(permisionCode);
+        if(permision == null){
+            throw new AppException(ErrorCode.PERMISION_CODE_NOT_FOUND);
+        }
+        permision.setActive(true);
+        permisionRepo.save(permision);
+
+    }
 }

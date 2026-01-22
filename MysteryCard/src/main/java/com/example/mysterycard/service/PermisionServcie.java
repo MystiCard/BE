@@ -11,4 +11,5 @@ public interface PermisionServcie {
     Page<PermisionResponse> getByRoleCode(String roleCode,int page, int size,boolean active);
     void deletePermision(String permisionCode);
     Page<PermisionResponse> getAll(int page , int size,boolean active);
+    void activePermision(String permisionCode);
 }

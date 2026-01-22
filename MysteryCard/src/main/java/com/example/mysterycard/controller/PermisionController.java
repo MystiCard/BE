@@ -41,6 +41,11 @@ public class PermisionController {
     }
     @PostMapping("/add")
     public ResponseEntity<ApiResponse> addPermision(@RequestBody Permision permision) {
-        return ResponseEntity.ok(ApiResponse.success("Add Succesfully permision",permisionServcie.addPermision(permision)));
+        return ResponseEntity.ok(ApiResponse.success("Add Succesfully permision ",permisionServcie.addPermision(permision)));
+    }
+    @PostMapping("/active/{code}")
+    public ResponseEntity<ApiResponse> activePermision(@PathVariable String code) {
+        permisionServcie.activePermision(code);
+        return ResponseEntity.ok(ApiResponse.success("Active succesfully permision with code "+code));
     }
 }

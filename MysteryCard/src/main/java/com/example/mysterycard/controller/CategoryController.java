@@ -41,5 +41,8 @@ public class CategoryController {
     public ApiResponse updateCategory(@PathVariable UUID id, @RequestBody CategoryRequest request) {
         return ApiResponse.success(categoryService.updateCate(id, request.getCategoryName()));
     }
-
+    @GetMapping("/{id}/cards")
+    public ApiResponse getCardsByCategoryId(@PathVariable UUID id) {
+        return ApiResponse.success(categoryService.getCardsByCategoryId(id));
+    }
 }

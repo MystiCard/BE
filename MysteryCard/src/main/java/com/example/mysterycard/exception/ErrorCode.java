@@ -23,9 +23,13 @@ public enum ErrorCode {
 
     //CATEGORY ERRORS(4)
     CATEGORY_NOT_FOUND(4001, "Category not found", HttpStatus.NOT_FOUND),
-    CATEGORY_DUPLICATE(4002, "Category already exists", HttpStatus.CONFLICT)
+    CATEGORY_DUPLICATE(4002, "Category already exists", HttpStatus.CONFLICT),
+
+    //CARD ERRORS(5)
+    CARD_NOT_FOUND(5001, "Card not found", HttpStatus.NOT_FOUND),
+    CARD_DUPLICATE(5002, "Card already exists", HttpStatus.CONFLICT),
     ;
-    ;
+
 
     int code;
     String message;

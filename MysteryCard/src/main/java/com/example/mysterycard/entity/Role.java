@@ -1,14 +1,12 @@
 package com.example.mysterycard.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
-
+@Builder
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,6 +18,10 @@ public class Role {
     private String roleCode;
     private String roleName;
     private String description;
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now();
+    @Builder.Default
+    private boolean active = true;
     @ManyToMany
     @JoinTable(
             name = "role_Privilege",

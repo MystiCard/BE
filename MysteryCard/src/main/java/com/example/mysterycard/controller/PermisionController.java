@@ -21,17 +21,18 @@ public class PermisionController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<PermisionResponse>>> getAll(
             @RequestParam(required = false,defaultValue = "1") int page,
-            @RequestParam(required = false, defaultValue = "10") int size) {
-        return ResponseEntity.ok(ApiResponse.success(permisionServcie.getAll(page,size)));
+            @RequestParam(required = false, defaultValue = "10") int size,
+            @RequestParam(required = false,defaultValue = "true") boolean active) {
+        return ResponseEntity.ok(ApiResponse.success(permisionServcie.getAll(page,size,active)));
     }
     @GetMapping("/{roleCode}")
     public ResponseEntity<ApiResponse<Page<PermisionResponse>>> getPermisionByRoleCode(
             @PathVariable String roleCode,
             @RequestParam(required = false,defaultValue = "1") int page,
-            @RequestParam(required = false, defaultValue = "10") int size
-
+            @RequestParam(required = false, defaultValue = "10") int size,
+            @RequestParam(required = false,defaultValue = "true") boolean active
     ) {
-        return ResponseEntity.ok(ApiResponse.success(permisionServcie.getByRoleCode(roleCode,page,size)));
+        return ResponseEntity.ok(ApiResponse.success(permisionServcie.getByRoleCode(roleCode,page,size,active)));
     }
     @DeleteMapping("/{code}")
     public ResponseEntity<ApiResponse> deletePermisionByCode(@PathVariable String code) {
@@ -40,6 +41,11 @@ public class PermisionController {
     }
     @PostMapping("/add")
     public ResponseEntity<ApiResponse> addPermision(@RequestBody Permision permision) {
-        return ResponseEntity.ok(ApiResponse.success("Add Succesfully permision",permisionServcie.addPermision(permision)));
+        return ResponseEntity.ok(ApiResponse.success("Add Succesfully permision ",permisionServcie.addPermision(permision)));
+    }
+    @PostMapping("/active/{code}")
+    public ResponseEntity<ApiResponse> activePermision(@PathVariable String code) {
+        permisionServcie.activePermision(code);
+        return ResponseEntity.ok(ApiResponse.success("Active succesfully permision with code "+code));
     }
 }

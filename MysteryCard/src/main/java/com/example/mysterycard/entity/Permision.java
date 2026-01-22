@@ -20,12 +20,14 @@ public class Permision {
     private String description;
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
-
+    @Builder.Default
+    private boolean active = true;
     public Permision(String permisionCode, String permisionName, String description) {
         this.permisionCode = permisionCode;
         this.permisionName = permisionName;
         this.description = description;
         this.createdAt = LocalDateTime.now();
+        this.active = true;
     }
     @ManyToMany(mappedBy = "permisions")
     private Set<Role> roles = new HashSet<>();

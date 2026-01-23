@@ -37,5 +37,7 @@ public class WalletTransaction {
     @ManyToOne
     @JoinColumn(name = "wallet_receive_id")
     private Wallet walletReceive;
-
+    @ManyToOne
+    @JoinColumn(name = "blindboxpurchase_id")
+    private BlindBoxPurChase blindboxpurchase;
 }

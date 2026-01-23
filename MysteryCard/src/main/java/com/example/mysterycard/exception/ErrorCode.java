@@ -32,10 +32,13 @@ public enum ErrorCode {
 
     // Role Erreer(5)
     ROLE_NOT_FOUND(5001, "Role not found with this code",HttpStatus.NOT_FOUND),
-    ROLE_EXISTED(5002, "Role existed. Please enter another Role code", HttpStatus.BAD_REQUEST);
-    ;
+    ROLE_EXISTED(5002, "Role existed. Please enter another Role code", HttpStatus.BAD_REQUEST),
 
-
+      // Bank Account (7)
+       BANK_ACCOUNT_NOT_FOUND(7001,"Bank Account Not Found ",HttpStatus.NOT_FOUND),
+       BANK_CODE_EXISTED(7002,"Bank Code existed. Please input again bank code ",HttpStatus.BAD_REQUEST),
+       BANK_DUPLICATIN(7003,"You already have this bank account",HttpStatus.BAD_REQUEST),
+;
     int code;
     String message;
     HttpStatus status;

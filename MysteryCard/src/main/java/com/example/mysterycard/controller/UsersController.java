@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,6 +29,7 @@ public class UsersController {
     public ResponseEntity<ApiResponse<UserResponse>> updateUser(@RequestPart @Valid UserRegisterRequest request, @RequestPart(required = false) MultipartFile avatar, @PathVariable UUID id){
         return ResponseEntity.ok(ApiResponse.success(userService.updateUser(request, avatar, id)));
     }
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<ApiResponse<Page<UserResponse>>> getAllUsers(
             @RequestParam(required = false, defaultValue = "1") int page,
@@ -37,11 +39,13 @@ public class UsersController {
     ) {
         return ResponseEntity.ok(ApiResponse.success(userService.getAll(active,page,size)));
     }
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<String>> deleteUser(@PathVariable UUID id) {
         userService.deleteUser(id);
         return ResponseEntity.ok(ApiResponse.success("Delete sucessfully user with id "+id));
     }
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/active/{id}")
     public ResponseEntity<ApiResponse<UserResponse>> activateUser(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.success(userService.activeUser(id)));
@@ -54,11 +58,13 @@ public class UsersController {
     public ResponseEntity<ApiResponse<UserResponse>> getUser(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.success(userService.getUserById(id)));
     }
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/remove-role")
     public ResponseEntity<ApiResponse<String>> removeRole(@RequestBody AddRemoveRoleRequest request) {
         userService.removeRole(request);
         return ResponseEntity.ok(ApiResponse.success("Remove sucessfully"));
     }
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/add-role")
     public ResponseEntity<ApiResponse<String>> addRole(@RequestBody AddRemoveRoleRequest request) {
         userService.addRole(request);

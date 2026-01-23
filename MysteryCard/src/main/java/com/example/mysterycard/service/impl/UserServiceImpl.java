@@ -16,6 +16,7 @@ import com.example.mysterycard.repository.RoleRepo;
 import com.example.mysterycard.repository.UsersRepo;
 import com.example.mysterycard.service.RoleService;
 import com.example.mysterycard.service.UserService;
+import com.example.mysterycard.service.WalletService;
 import com.example.mysterycard.utils.CloudiaryUtils;
 import lombok.RequiredArgsConstructor;
 import org.apache.catalina.User;
@@ -51,6 +52,7 @@ public class UserServiceImpl implements UserService {
     private String maleAvartar;
     @Value("${avartar.default.female}")
     private String femaleAvartar;
+    private final WalletService walletService;
 
     @Override
     @Transactional
@@ -77,6 +79,7 @@ public class UserServiceImpl implements UserService {
         }
         usersRepo.save(user);
         UserResponse response = userMapper.requestToResponse(user);
+        response.setWalletResponse(walletService.createWallet(user));
         return response;
     }
 

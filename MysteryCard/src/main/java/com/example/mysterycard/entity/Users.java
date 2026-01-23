@@ -50,4 +50,6 @@ public class Users {
     private List<Feedback>  revieweeList= new ArrayList<>();
     @OneToOne(mappedBy = "onwer")
     private Wallet wallet;
+    @OneToMany(mappedBy = "user")
+    private List<BankAccount> bankAccountslist = new ArrayList<>();
 }

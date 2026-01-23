@@ -21,8 +21,8 @@ public class SecurityConfiguration {
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     @Value("${login.google.success-url}")
     private String SUCCESS_URL;
-    private final static String[] ADMIN_API = {"/api/permisions/*"};
-    private final static String[] USER_API = {"/api/roles/user/*"};
+    private final static String[] ADMIN_API = {"/api/permisions/*","/api/roles/**"};
+    private final static String[] USER_API = {"/api/roles/user/**","/api/users/my-infor"};
     private final static String[] PUBLIC_API = {"/api/users/create", "/api/auth/login", "/api/auth/login-google", "/v3/api-docs/**",
  "/swagger-ui/**", "/swagger-ui.html", "/api/files/upload"};
 

@@ -25,4 +25,6 @@ public class BlindBoxPurChase {
     private BlindBox blindBox;
     @OneToMany(mappedBy = "blindBoxPurchase")
     private List<BlindBoxResult> blindBoxResultsList= new ArrayList<>();
+    @OneToMany(mappedBy = "blindboxpurchase")
+    private List<WalletTransaction> transactionList = new ArrayList<>();
 }

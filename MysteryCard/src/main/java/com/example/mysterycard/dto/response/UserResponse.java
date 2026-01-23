@@ -1,5 +1,6 @@
 package com.example.mysterycard.dto.response;
 
+import com.example.mysterycard.dto.response.wallet.WalletResponse;
 import com.example.mysterycard.entity.Role;
 import com.example.mysterycard.enums.Gender;
 import lombok.Builder;
@@ -18,4 +19,5 @@ public class UserResponse {
     private String avatarUrl;
     private String address;
     private String phone;
+    private WalletResponse walletResponse;
 }

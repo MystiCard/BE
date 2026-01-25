@@ -28,5 +28,7 @@ public class Card {
     private Set<BlindBox> blindBoxes = new HashSet<>();
     @OneToOne(mappedBy = "card")
     private BlindBoxResult blindBoxResult;
+    @OneToMany(mappedBy = "card",cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Image> images = new ArrayList<>();
 
 }

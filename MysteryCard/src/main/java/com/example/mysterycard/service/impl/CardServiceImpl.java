@@ -4,6 +4,7 @@ import com.example.mysterycard.dto.request.CardRequest;
 import com.example.mysterycard.dto.response.CardResponse;
 import com.example.mysterycard.entity.Card;
 import com.example.mysterycard.entity.Category;
+import com.example.mysterycard.entity.Image;
 import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.CardMapper;
@@ -51,6 +52,12 @@ public class CardServiceImpl implements CardService {
         UUID cateId = UUID.fromString(request.getCategoryId());
         Category category = categoryRepo.findById(cateId).orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
         category.addCard(card);
+        if (request.getImageUrl() != null) {
+            Image img = new Image();
+            img.setImageUrl(request.getImageUrl());
+            img.setCard(card);
+            card.getImages().add(img);
+        }
         card = cardRepo.save(card);
         return cardMapper.toResponse(card);
     }

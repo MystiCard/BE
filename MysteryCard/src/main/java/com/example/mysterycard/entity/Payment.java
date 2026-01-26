@@ -14,16 +14,17 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Setter
+@AllArgsConstructor
+@Builder
 public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID paymentId;
     private String provider;
-    private Double amount;
-    private String transaction_ref;
-    @Enumerated(EnumType.STRING)
-    private StatusPayment status;
-    private LocalDateTime createdAt;
+    private String transactionRef;
+    private Long amount;
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now();
      @OneToOne(mappedBy = "payment")
     private WalletTransaction walletTransaction;
 

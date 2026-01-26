@@ -1,8 +1,10 @@
 package com.example.mysterycard.exception;
 
+import com.example.mysterycard.entity.BlindBoxPurChase;
 import lombok.Data;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
+
 @Getter
 public enum ErrorCode {
     // AUTHENCATION ERRORS(1)
@@ -16,11 +18,12 @@ public enum ErrorCode {
     // USERS ERRORS(3)
     USER_NOT_FOUND(3001, "User not found ", HttpStatus.NOT_FOUND),
     USER_INACTIVE(3002, "User is inactive", HttpStatus.FORBIDDEN),
-    USER_EXISTED(3003,"Email existed.Please input another email",HttpStatus.BAD_REQUEST),
-    PHONE_EXISTED(3004,"Phone existed. Please input another phone",HttpStatus.BAD_REQUEST),
+    USER_EXISTED(3003, "Email existed.Please input another email", HttpStatus.BAD_REQUEST),
+    PHONE_EXISTED(3004, "Phone existed. Please input another phone", HttpStatus.BAD_REQUEST),
+    ACCOUNT_NOT_ACTIVE(3005,"Account invalid can do this function",HttpStatus.BAD_REQUEST),
     // Permision error (4)
-    PERMISION_CODE_EXISTED(4001,"Permision Code existed. Please input Permision Code again", HttpStatus.BAD_REQUEST),
-    PERMISION_CODE_NOT_FOUND(4002,"Permision not found with this code",HttpStatus.NOT_FOUND),
+    PERMISION_CODE_EXISTED(4001, "Permision Code existed. Please input Permision Code again", HttpStatus.BAD_REQUEST),
+    PERMISION_CODE_NOT_FOUND(4002, "Permision not found with this code", HttpStatus.NOT_FOUND),
 
     //CATEGORY ERRORS(4)
     CATEGORY_NOT_FOUND(4001, "Category not found", HttpStatus.NOT_FOUND),
@@ -31,13 +34,25 @@ public enum ErrorCode {
     CARD_DUPLICATE(6002, "Card already exists", HttpStatus.CONFLICT),
 
     // Role Erreer(5)
-    ROLE_NOT_FOUND(5001, "Role not found with this code",HttpStatus.NOT_FOUND),
+    ROLE_NOT_FOUND(5001, "Role not found with this code", HttpStatus.NOT_FOUND),
     ROLE_EXISTED(5002, "Role existed. Please enter another Role code", HttpStatus.BAD_REQUEST),
 
-      // Bank Account (7)
-       BANK_ACCOUNT_NOT_FOUND(7001,"Bank Account Not Found ",HttpStatus.NOT_FOUND),
-       BANK_CODE_EXISTED(7002,"Bank Code existed. Please input again bank code ",HttpStatus.BAD_REQUEST),
-       BANK_DUPLICATIN(7003,"You already have this bank account",HttpStatus.BAD_REQUEST),
+    // Bank Account (7)
+    BANK_ACCOUNT_NOT_FOUND(7001, "Bank Account Not Found ", HttpStatus.NOT_FOUND),
+    BANK_CODE_EXISTED(7002, "Bank Code existed. Please input again bank code ", HttpStatus.BAD_REQUEST),
+    BANK_DUPLICATIN(7003, "You already have this bank account", HttpStatus.BAD_REQUEST),
+
+    // Transaction (8)
+    TRANSACTION_NOT_FOUND(8001, "Transaction not found", HttpStatus.BAD_REQUEST),
+    PAYMENT_HASH_DATA_FAIL(8002,"Hash data to payment MOMO fail",HttpStatus.BAD_REQUEST),
+    CAN_NOT_WITHDRAW(8003,"Amout withdraw larger than balance in wallet",HttpStatus.BAD_REQUEST),
+
+    // Order (9)
+    ORDER_NOT_FOUND(9001, "Order not found with code", HttpStatus.NOT_FOUND),
+  //BlindBox purchase (10)
+    BLIND_BOX_PURCHASE_NOT_FOUND(10001,"Blind box purchase not found",HttpStatus.NOT_FOUND),
+
+
 ;
     int code;
     String message;

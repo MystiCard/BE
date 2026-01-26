@@ -27,6 +27,8 @@ public class BankAccount {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private Users user;
+    @OneToOne(mappedBy = "bankAccount")
+    private WalletTransaction walletTransaction;
 
 
 }

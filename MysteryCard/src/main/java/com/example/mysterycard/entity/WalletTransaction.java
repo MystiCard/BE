@@ -13,18 +13,22 @@ import java.util.UUID;
 @Entity
 @Table(name = "WalletTransaction")
 @NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
+@Builder
 public class WalletTransaction {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID walletTransactionId;
     @Enumerated(EnumType.STRING)
     private TransactionType transactionType;
-    private double amount;
+    private Long amount;
+    private String message;
     @Enumerated(EnumType.STRING)
     private StatusPayment statusTransaction;
-    private LocalDateTime createAt;
+    @Builder.Default
+    private LocalDateTime createAt = LocalDateTime.now();
     @OneToOne
     @JoinColumn(name = "payment_id")
     private Payment payment;
@@ -40,4 +44,7 @@ public class WalletTransaction {
     @ManyToOne
     @JoinColumn(name = "blindboxpurchase_id")
     private BlindBoxPurChase blindboxpurchase;
+    @OneToOne
+    @JoinColumn(name = "bank_id")
+    private BankAccount bankAccount;
 }

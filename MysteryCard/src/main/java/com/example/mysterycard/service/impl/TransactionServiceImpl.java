@@ -8,7 +8,7 @@ import com.example.mysterycard.enums.StatusPayment;
 import com.example.mysterycard.enums.TransactionType;
 import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
-import com.example.mysterycard.mapper.BlindBoxRepo;
+import com.example.mysterycard.repository.BlindBoxPurchaseRepo;
 import com.example.mysterycard.mapper.PaymentMapper;
 import com.example.mysterycard.mapper.TransactionMapper;
 import com.example.mysterycard.repository.*;
@@ -34,7 +34,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final PaymentMapper paymentMapper;
     private final PaymentService paymentService;
     private final OrderRepo orderRepo;
-    private final BlindBoxRepo blindBoxRepo;
+    private final BlindBoxPurchaseRepo blindBoxPurchaseRepo;
     private final BankAccountRepo bankAccountRepo;
     private final UsersRepo usersRepo;
     private final PaymentRepo paymentRepo;
@@ -99,14 +99,14 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public TransactionResponse createTransaction(TransactionRequest request) {
         Order order =null;
-        BlindBoxPurChase blindBoxPurChase;
+        BlindBoxPurChase blindBoxPurChase = null;
         if(request.getOrderId() != null) {
              order = orderRepo.findById(request.getOrderId()).orElseThrow(
                     ()->  new AppException(ErrorCode.ORDER_NOT_FOUND)
             );
 
         } else if(request.getBlindboxPurchaseId() != null) {
-             blindBoxPurChase = blindBoxRepo.findById(request.getBlindboxPurchaseId()).orElseThrow(()-<
+             blindBoxPurChase = blindBoxPurchaseRepo.findById(request.getBlindboxPurchaseId()).orElseThrow(()->
                     new AppException(ErrorCode.BLIND_BOX_PURCHASE_NOT_FOUND)
             );
         }

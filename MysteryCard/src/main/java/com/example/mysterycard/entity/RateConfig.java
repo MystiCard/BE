@@ -17,6 +17,7 @@ public class RateConfig {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID rateConfigId;
+    @Enumerated(EnumType.STRING)
     private Rarity cardRarity;
     private double dropRate;
   @ManyToMany

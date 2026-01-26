@@ -67,7 +67,7 @@ public class CardServiceImpl implements CardService {
         Card card = cardRepo.findById(id).orElseThrow(()-> new AppException(ErrorCode.CARD_NOT_FOUND));
         card.setName(request.getName());
         card.setRarity(request.getRarity());
-        card.setImageUrl(request.getImageUrl());
+//        card.setImageUrl(request.getImageUrl());
         card = cardRepo.save(card);
         return cardMapper.toResponse(card);
     }

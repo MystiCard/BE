@@ -34,11 +34,19 @@ public enum ErrorCode {
     ROLE_NOT_FOUND(5001, "Role not found with this code",HttpStatus.NOT_FOUND),
     ROLE_EXISTED(5002, "Role existed. Please enter another Role code", HttpStatus.BAD_REQUEST),
 
-      // Bank Account (7)
-       BANK_ACCOUNT_NOT_FOUND(7001,"Bank Account Not Found ",HttpStatus.NOT_FOUND),
-       BANK_CODE_EXISTED(7002,"Bank Code existed. Please input again bank code ",HttpStatus.BAD_REQUEST),
-       BANK_DUPLICATIN(7003,"You already have this bank account",HttpStatus.BAD_REQUEST),
-;
+    // Bank Account (7)
+    BANK_ACCOUNT_NOT_FOUND(7001,"Bank Account Not Found ",HttpStatus.NOT_FOUND),
+    BANK_CODE_EXISTED(7002,"Bank Code existed. Please input again bank code ",HttpStatus.BAD_REQUEST),
+    BANK_DUPLICATIN(7003,"You already have this bank account",HttpStatus.BAD_REQUEST),
+
+    // Blind Box (8)
+    BLIND_BOX_NOT_FOUND(8001,"Blind Box Not Found",HttpStatus.NOT_FOUND),
+    BLIND_BOX_ALREADY_EXISTS(8002,"Blind Box Already Exists",HttpStatus.BAD_REQUEST),
+    DRAW_CARD_FAILED(8003,"Draw Card Failed",HttpStatus.BAD_REQUEST),
+    //Rate Config (9)
+    RATE_CONFIG_NOT_FOUND(9001,"Rate Config Not Found",HttpStatus.NOT_FOUND),
+    RATE_CONFIG_ALREADY_EXISTS(9002,"Rate Config Already Exists",HttpStatus.BAD_REQUEST),
+    ;
     int code;
     String message;
     HttpStatus status;

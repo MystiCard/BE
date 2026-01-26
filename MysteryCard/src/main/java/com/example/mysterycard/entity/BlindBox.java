@@ -25,15 +25,10 @@ public class BlindBox {
     @Enumerated(EnumType.STRING)
     private BlindBoxStatus blindBoxStatus;
     private int quantity;
-    @ManyToMany
-    @JoinTable(
-            name = "BlindBox_Card",
-            joinColumns = @JoinColumn(name = "blind_box_id"),
-            inverseJoinColumns = @JoinColumn(name = "card_id")
-    )
-    private Set<Card> cardList = new HashSet<>();
-    @ManyToMany(mappedBy = "blindBoxesList")
-    private Set<RateConfig> rateConfigList = new HashSet<>();
+    @OneToMany(mappedBy = "blindBox", cascade = CascadeType.ALL)
+    private List<BlindBoxCard> blindBoxCards = new ArrayList<>();
+    @ManyToMany(mappedBy = "blindBoxesList",cascade = CascadeType.ALL)
+    private List<RateConfig> rateConfigList = new ArrayList<>();
     @OneToMany(mappedBy = "blindBox")
     private List<BlindBoxPurChase> blindBoxPurChaseList = new ArrayList<>();
     @OneToMany(mappedBy = "blindBox")

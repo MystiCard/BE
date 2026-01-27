@@ -6,6 +6,7 @@ import com.example.mysterycard.entity.Users;
 import com.example.mysterycard.repository.PermisionRepo;
 import com.example.mysterycard.repository.RoleRepo;
 import com.example.mysterycard.repository.UsersRepo;
+import com.example.mysterycard.service.WalletService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +22,7 @@ public class DataSender implements CommandLineRunner {
     private final PermisionRepo permisionRepository;
     private final UsersRepo userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final WalletService walletService;
     @Override
     public void run(String... args) throws Exception {
         if(roleRepository.count() > 0) return; // tránh insert lại
@@ -112,6 +114,7 @@ private void createUserIfNotExist(String email, String password, String name, Se
 
     user.setRolelist(roles);
     userRepository.save(user);
+    walletService.createWallet(user);
 
 }
 }

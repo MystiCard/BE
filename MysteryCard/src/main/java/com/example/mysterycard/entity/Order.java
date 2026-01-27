@@ -16,15 +16,15 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID orderId;
-    private Double totalAmount;
+    private Long totalAmount;
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
     private LocalDateTime orderDate;
-
     @ManyToOne
     @JoinColumn(name = "buyer_id")
     private Users buyer;
-    @OneToOne(mappedBy = "order")
+    @OneToOne
+    @JoinColumn(name = "shipment_id")
     private Shipment shipment;
     @OneToMany(mappedBy = "order")
     private List<WalletTransaction> transactionList = new ArrayList<>();

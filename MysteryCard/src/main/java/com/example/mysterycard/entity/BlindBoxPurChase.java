@@ -15,7 +15,7 @@ public class BlindBoxPurChase {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID blindBoxPurchaseId;
-    private double price;
+    private Long price;
     private LocalDateTime purchaseDate;
     @ManyToOne
     @JoinColumn(name ="buyer_id")
@@ -27,4 +27,7 @@ public class BlindBoxPurChase {
     private List<BlindBoxResult> blindBoxResultsList= new ArrayList<>();
     @OneToMany(mappedBy = "blindboxpurchase")
     private List<WalletTransaction> transactionList = new ArrayList<>();
+    @OneToOne
+    @JoinColumn(name = "shipment_id")
+    private Shipment shipment;
 }

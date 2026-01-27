@@ -20,13 +20,15 @@ public class Shipment {
     private String shipmentAddress;
     @Enumerated(EnumType.STRING)
     private ShippingStatus shipmentStatus;
+    private Long shipmentFee;
     private String trackingCode;
     private String shipperName;
     private String shipperContact;
     private String provider;
-    @OneToOne
-    @JoinColumn(name = "order_id")
+    @OneToOne(mappedBy = "shipment")
     private Order order;
+    @OneToOne(mappedBy = "shipment")
+    private BlindBoxPurChase purChase;
 
 
 }

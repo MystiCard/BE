@@ -23,6 +23,7 @@ public class Payment {
     private String provider;
     private String transactionRef;
     private Long amount;
+    private String payType;
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
      @OneToOne(mappedBy = "payment")

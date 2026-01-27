@@ -5,6 +5,8 @@ import lombok.*;
 import org.apache.catalina.User;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -27,8 +29,8 @@ public class BankAccount {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private Users user;
-    @OneToOne(mappedBy = "bankAccount")
-    private WalletTransaction walletTransaction;
+    @OneToMany(mappedBy = "bankAccount")
+    private List<WalletTransaction> walletTransaction = new ArrayList<>();
 
 
 }

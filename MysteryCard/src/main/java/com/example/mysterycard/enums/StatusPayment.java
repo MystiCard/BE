@@ -1,5 +1,5 @@
 package com.example.mysterycard.enums;
 
 public enum StatusPayment {
-PENDING, SUCCESS, FAILED,APPROVED
+PENDING, SUCCESS, FAILED,REFUNDED,ESCROWED,RELEASED
 }

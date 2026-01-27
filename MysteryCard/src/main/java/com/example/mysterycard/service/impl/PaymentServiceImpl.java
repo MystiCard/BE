@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 public class PaymentServiceImpl implements PaymentService {
     private final MomoConfig config;
     private RestTemplate restTemplate = new RestTemplate();
+    private final PaymentRepo paymentRepo;
 
     @Override
     public String createPayment(Payment payment) {
@@ -84,7 +85,13 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public boolean veryfySignature(HttpServletRequest request) {
-
+        Payment payment = paymentRepo.findByTransactionRef(request.getParameter("orderId"));
+        if(payment == null)
+        {
+            throw  new AppException(ErrorCode.PAYMENT_NOT_FOUND);
+        }
+        payment.setPayType(request.getParameter("payType"));
+        paymentRepo.save(payment);
         String receivedSignature = request.getParameter("signature");
         if (receivedSignature == null) return false;
 

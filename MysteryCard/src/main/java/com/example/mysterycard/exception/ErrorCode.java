@@ -10,7 +10,9 @@ public enum ErrorCode {
     // AUTHENCATION ERRORS(1)
     INVALID_AUTHENCATION(1001, "Invalid credentials", HttpStatus.UNAUTHORIZED),
     INVALID_LOGIN_REQUEST(1002, "username or password wrong", HttpStatus.BAD_REQUEST),
-
+    ACCOUNT_NOT_VERYFY(1003,"Email not verify. Please input code in your email" ,HttpStatus.NOT_FOUND),
+   INVALID_CODE(1004,"Code verify not right. Please input again",HttpStatus.NOT_FOUND),
+    EMAIL_VERIFED(1005, "Email verified",HttpStatus.BAD_REQUEST),
     // TOKEN ERRORS(2)
     REFRESH_TOKEN_NOT_FOUND(2001, "Refresh token not found", HttpStatus.NOT_FOUND),
     REFRESH_TOKEN_EXPIRED(2002, "Refresh token has expired.Please make a new login request", HttpStatus.BAD_REQUEST),

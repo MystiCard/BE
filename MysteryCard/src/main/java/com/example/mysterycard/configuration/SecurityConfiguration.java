@@ -24,7 +24,7 @@ public class SecurityConfiguration {
     private final static String[] ADMIN_API = {"/api/permisions/*","/api/roles/**"};
     private final static String[] USER_API = {"/api/roles/user/**","/api/users/my-infor"};
     private final static String[] PUBLIC_API = {"/api/users/create", "/api/auth/login", "/api/auth/login-google", "/v3/api-docs/**",
- "/swagger-ui/**", "/swagger-ui.html", "/api/files/upload","/api/payments/*"};
+ "/swagger-ui/**", "/swagger-ui.html", "/api/files/upload","/api/payments/*","/api/auth/verify-email","/api/auth/send-verify-code"};
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {

@@ -6,3 +6,19 @@ momo:
   return-url: http://localhost:8080/api/payments/call-back
   ipn-url: http://localhost:8080/api/payments/call-back
   request-type: payWithMethod
+spring:
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: dnaeasyswp@gmail.com
+    password: vzmg jzmt gsqv ugki
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+
+
+

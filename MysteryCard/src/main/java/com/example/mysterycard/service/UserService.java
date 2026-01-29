@@ -3,6 +3,7 @@ package com.example.mysterycard.service;
 import com.example.mysterycard.dto.request.user.AddRemoveRoleRequest;
 import com.example.mysterycard.dto.request.user.UserRegisterRequest;
 import com.example.mysterycard.dto.response.UserResponse;
+import com.example.mysterycard.entity.Users;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,6 +16,7 @@ public interface UserService {
     void deleteUser(UUID userId);
     UserResponse activeUser(UUID userId);
     UserResponse getMyInfor();
+    Users getUser();
     UserResponse getUserById(UUID userId);
     void addRole(AddRemoveRoleRequest request);
     void removeRole(AddRemoveRoleRequest request);

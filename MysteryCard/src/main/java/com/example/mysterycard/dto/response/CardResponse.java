@@ -12,4 +12,7 @@ public class CardResponse {
     private Rarity rarity;
     private String imageUrl;
     private String categoryName;
+    private double basePrice;
+    private double minPrice;
+    private double maxPrice;
 }

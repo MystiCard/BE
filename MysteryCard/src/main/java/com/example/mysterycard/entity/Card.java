@@ -25,9 +25,12 @@ public class Card {
     private List<ListSeller> listSellers = new ArrayList<>();
     @OneToMany(mappedBy = "card")
     private List<BlindBoxCard> blindBoxCards = new ArrayList<>();
-    @OneToOne(mappedBy = "card")
-    private BlindBoxResult blindBoxResult;
+    @OneToMany(mappedBy = "card")
+    private List<BlindBoxResult> blindBoxResults = new ArrayList<>();
     @OneToMany(mappedBy = "card",cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Image> images = new ArrayList<>();
+    private double basePrice;
+    private double minPrice;
+    private double maxPrice;
 
 }

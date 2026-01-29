@@ -10,4 +10,6 @@ public class RateConfigResponse {
     private UUID rateConfigId;
     private Rarity cardRarity;
     private double dropRate;
+    private double variancePercent;
+
 }

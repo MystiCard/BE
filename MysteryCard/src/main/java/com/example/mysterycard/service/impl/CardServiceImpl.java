@@ -5,11 +5,14 @@ import com.example.mysterycard.dto.response.CardResponse;
 import com.example.mysterycard.entity.Card;
 import com.example.mysterycard.entity.Category;
 import com.example.mysterycard.entity.Image;
+import com.example.mysterycard.entity.RateConfig;
+import com.example.mysterycard.enums.Rarity;
 import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.CardMapper;
 import com.example.mysterycard.repository.CardRepo;
 import com.example.mysterycard.repository.CategoryRepo;
+import com.example.mysterycard.repository.RateConfigRepo;
 import com.example.mysterycard.service.CardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +26,8 @@ public class CardServiceImpl implements CardService {
     private CardRepo cardRepo;
     @Autowired
     private CategoryRepo categoryRepo;
+    @Autowired
+    private RateConfigRepo rateConfigRepo;
 
     @Autowired
     private CardMapper cardMapper;
@@ -59,6 +64,7 @@ public class CardServiceImpl implements CardService {
             card.getImages().add(img);
         }
         card = cardRepo.save(card);
+        setMinMaxPrice(card);
         return cardMapper.toResponse(card);
     }
 
@@ -70,5 +76,16 @@ public class CardServiceImpl implements CardService {
 //        card.setImageUrl(request.getImageUrl());
         card = cardRepo.save(card);
         return cardMapper.toResponse(card);
+    }
+
+    public void setMinMaxPrice(Card card) {
+        Rarity rarity = card.getRarity();
+        RateConfig config = rateConfigRepo.findAll().stream()
+                .filter(rc -> rc.getCardRarity() == rarity)
+                .findFirst()
+                .orElseThrow(() -> new AppException(ErrorCode.RATE_CONFIG_NOT_FOUND));
+        card.setMinPrice(card.getBasePrice()-card.getBasePrice()*config.getVariancePercent());
+        card.setMaxPrice(card.getBasePrice()+card.getBasePrice()*config.getVariancePercent());
+        cardRepo.save(card);
     }
 }

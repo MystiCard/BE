@@ -21,11 +21,11 @@ public class BlindBox {
     private String name;
     private String description;
     private String imageUrl;
-    private double price;
+    private double drawPrice;
+    private double allBoxPrice;
     @Enumerated(EnumType.STRING)
-    private BlindBoxStatus blindBoxStatus;
-    private int quantity;
-    @OneToMany(mappedBy = "blindBox", cascade = CascadeType.ALL)
+    private BlindBoxStatus blindBoxStatus = BlindBoxStatus.ACTIVE;
+    @OneToMany(mappedBy = "blindBox", cascade = CascadeType.ALL , orphanRemoval = true)
     private List<BlindBoxCard> blindBoxCards = new ArrayList<>();
     @ManyToMany(mappedBy = "blindBoxesList",cascade = CascadeType.ALL)
     private List<RateConfig> rateConfigList = new ArrayList<>();

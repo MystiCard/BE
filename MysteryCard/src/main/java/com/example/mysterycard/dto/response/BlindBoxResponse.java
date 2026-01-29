@@ -8,5 +8,5 @@ public class BlindBoxResponse {
     private String name;
     private String description;
     private String imageUrl;
-    private double price;
+    private double drawPrice;
 }

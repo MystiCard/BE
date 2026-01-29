@@ -7,4 +7,5 @@ import lombok.Data;
 public class RateConfigRequest {
     private Rarity cardRarity;
     private double dropRate;
+    private double variancePercent;
 }

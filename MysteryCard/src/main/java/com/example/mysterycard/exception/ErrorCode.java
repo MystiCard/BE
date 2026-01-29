@@ -46,6 +46,9 @@ public enum ErrorCode {
     //Rate Config (9)
     RATE_CONFIG_NOT_FOUND(9001,"Rate Config Not Found",HttpStatus.NOT_FOUND),
     RATE_CONFIG_ALREADY_EXISTS(9002,"Rate Config Already Exists",HttpStatus.BAD_REQUEST),
+
+    //Blind Box Purchase (10)
+    BLIND_BOX_PURCHASE_NOT_FOUND(10001,"Blind Box Purchase Not Found",HttpStatus.NOT_FOUND),
     ;
     int code;
     String message;

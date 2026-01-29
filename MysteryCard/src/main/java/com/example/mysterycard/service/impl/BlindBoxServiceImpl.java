@@ -59,6 +59,7 @@ public class BlindBoxServiceImpl implements BlindBoxService {
             bc.setRate(rate);
         }
         blindBox.setDrawPrice(calculateEVWithRatio(blindBox));
+        blindBox.setAllBoxPrice(calculateBlindBoxPrice(blindBox));
         blindBox = blindBoxRepo.save(blindBox);
         return blindBoxMapper.toBlindBoxResponse(blindBox);
     }
@@ -79,7 +80,7 @@ public class BlindBoxServiceImpl implements BlindBoxService {
                 .sum();
     }
     @Override
-    public CardResponse drawCard(UUID id) {
+    public DrawResultResponse drawCard(UUID id) {
         BlindBoxPurChase purchase = blindBoxPurChaseRepo.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.BLIND_BOX_PURCHASE_NOT_FOUND));
         BlindBox box = purchase.getBlindBox();
@@ -96,8 +97,17 @@ public class BlindBoxServiceImpl implements BlindBoxService {
         BlindBoxCard chosenCard = candidates.get(new Random().nextInt(candidates.size()));
         chosenCard.setStatus(false);
         blindBoxCardRepo.save(chosenCard);
+
+        CardResponse cardResponse =  cardMapper.toResponse(chosenCard.getCard());
+        DrawResultResponse drawResult = new DrawResultResponse();
+        drawResult.setCard(cardResponse);
+        drawResult.setDrawPrice(box.getDrawPrice());
+        double profitOrLoss =  chosenCard.getCard().getBasePrice() - box.getDrawPrice();
+        drawResult.setProfitOrLoss(profitOrLoss);
+
         updateRates(box);
         box.setDrawPrice(calculateEVWithRatio(box));
+        box.setAllBoxPrice(calculateBlindBoxPrice(box));
         blindBoxRepo.save(box);
         BlindBoxResult result = new BlindBoxResult();
         result.setCard(chosenCard.getCard());
@@ -108,7 +118,8 @@ public class BlindBoxServiceImpl implements BlindBoxService {
 //        purchase.setOpened(true);
 //        blindBoxPurChaseRepo.save(purchase);
 
-        return cardMapper.toResponse(chosenCard.getCard());
+
+        return drawResult;
     }
     private void updateRates(BlindBox box) {
         double totalWeight = calculateTotalWeight(box);
@@ -281,5 +292,16 @@ public class BlindBoxServiceImpl implements BlindBoxService {
         return ev;
     }
 
+    public double calculateBlindBoxPrice(BlindBox box) {
+        double totalValue = box.getBlindBoxCards().stream()
+                .filter(BlindBoxCard::isStatus)
+                .mapToDouble(bc -> bc.getCard().getBasePrice())
+                .sum();
+
+        double insuranceFactor = 1.03;
+        double finalPrice = totalValue * insuranceFactor;
+
+        return finalPrice;
+    }
 
 }

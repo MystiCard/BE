@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public interface BlindBoxService {
     BlindBoxResponse createBlindBox(BlindBoxRequest request);
-    CardResponse drawCard(UUID id);
+    DrawResultResponse drawCard(UUID id);
     BlindBoxResponse getBlindBoxById(Long id);
     List<BlindBoxResponse> getAllBlindBoxes();
     List<BlindBoxCardResponse> getCardsInBlindBox(Long blindBoxId);

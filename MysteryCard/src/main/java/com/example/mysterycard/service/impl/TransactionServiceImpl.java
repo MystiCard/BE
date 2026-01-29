@@ -132,6 +132,7 @@ public class TransactionServiceImpl implements TransactionService {
         }
         return transactionMapper.entityToResponse(transactionRepo.save(transaction));
     }
+
     @Transactional
     @Override
     public TransactionResponse createTransaction(TransactionRequest request) {
@@ -148,7 +149,7 @@ public class TransactionServiceImpl implements TransactionService {
                     () -> new AppException(ErrorCode.ORDER_NOT_FOUND)
             );
             Wallet seller = getWallet(request.getSellerId());
-            amount = order.getTotalAmount() ;
+            amount = order.getTotalAmount();
             transaction.setWalletReceive(seller);
             transaction.setOrder(order);
             transaction.setStatusTransaction(StatusPayment.ESCROWED);
@@ -160,38 +161,36 @@ public class TransactionServiceImpl implements TransactionService {
             transaction.setWalletReceive(admin.getWallet());
             transaction.setBlindboxpurchase(blindBoxPurChase);
             transaction.setStatusTransaction(StatusPayment.SUCCESS);
-
         }
-
-        if (buyer != null && buyer.getBalance() < amount) {
-            throw new AppException(ErrorCode.CAN_NOT_TRANSACTION);
-        }
-        admin.getWallet().setBalance(admin.getWallet().getBalance() + amount);
-        usersRepo.save(admin);
-        buyer.setBalance(buyer.getBalance() - amount);
         transaction.setWalletSend(buyer);
         transaction.setAmount(amount);
+        if (buyer.getBalance() < amount) {
+            transaction.setStatusTransaction(StatusPayment.FAILED);
+            transaction.setMessage(ErrorCode.CAN_NOT_TRANSACTION.getMessage());
+        } else {
+            admin.getWallet().setBalance(admin.getWallet().getBalance() + amount);
+            usersRepo.save(admin);
+            buyer.setBalance(buyer.getBalance() - amount);
+        }
         return transactionMapper.entityToResponse(transactionRepo.save(transaction));
     }
 
     @Override
     public Page<TransactionResponse> getAllByStatus(SearchRequest request, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createAt").descending());
-        if(request == null)
-        {
+        if (request == null) {
             return transactionRepo.findAll(pageable).map(transactionMapper::entityToResponse);
         }
-        if(request.getTransactionType() != null && request.getStatusPayment() != null)
-        {
-            return transactionRepo.findByStatusTransactionAndTransactionType(request.getStatusPayment(),request.getTransactionType(),pageable).map(transactionMapper::entityToResponse);
+        if (request.getTransactionType() != null && request.getStatusPayment() != null) {
+            return transactionRepo.findByStatusTransactionAndTransactionType(request.getStatusPayment(), request.getTransactionType(), pageable).map(transactionMapper::entityToResponse);
         }
-        if(request.getStatusPayment() != null)
-        {
-            return transactionRepo.findByStatusTransaction(request.getStatusPayment(),pageable).map(transactionMapper::entityToResponse);
+        if (request.getStatusPayment() != null) {
+            return transactionRepo.findByStatusTransaction(request.getStatusPayment(), pageable).map(transactionMapper::entityToResponse);
         }
         return transactionRepo.findByTransactionType(request.getTransactionType(), pageable).map(transactionMapper::entityToResponse);
     }
-@Transactional
+
+    @Transactional
     @Override
     public TransactionResponse getById(UUID transactionId) {
         WalletTransaction transaction = transactionRepo.findById(transactionId).orElseThrow(
@@ -199,45 +198,65 @@ public class TransactionServiceImpl implements TransactionService {
         );
         return transactionMapper.entityToResponse(transaction);
     }
-
+    @Transactional
     @Override
-    public TransactionResponse processTransaction(ProcessTransactionRequest request) {
-        WalletTransaction transaction = transactionRepo.findById(request.getTransactionId()).orElseThrow(
+    public TransactionResponse processTransaction(UUID transactionId) {
+        WalletTransaction transaction = transactionRepo.findById(transactionId).orElseThrow(
                 () -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND)
         );
         Users admin = usersRepo.findByEmail("admin@mysterycard.com");
+
         if (admin == null) {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
         Wallet adminWallet = admin.getWallet();
-        if(transaction.getOrder() != null)
-        {
-            OrderStatus orderStatus = transaction.getOrder().getStatus();
-            if(orderStatus.equals(OrderStatus.COMPLETED))
-            {
+        Order order = transaction.getOrder();
+        BlindBoxPurChase blindBoxPurChase = transaction.getBlindboxpurchase();
+        Shipment shipment = order  == null ? blindBoxPurChase.getShipment() : order.getShipment();
+        Wallet buyer = transaction.getWalletSend();
+        if (order != null) {
+            transaction.setStatusTransaction(StatusPayment.REFUNDED);
+            OrderStatus orderStatus = order.getStatus();
+            ShippingStatus shippingStatus = shipment.getShipmentStatus();
+            Long price = (transaction.getAmount() - shipment.getShipmentFee());
+            if (orderStatus.equals(OrderStatus.COMPLETED)) {
                 Wallet seller = transaction.getWalletReceive();
-                seller.setBalance(seller.getBalance() + transaction.getAmount());
-                adminWallet.setBalance(adminWallet.getBalance() - transaction.getAmount());
+                seller.setBalance(seller.getBalance() + price );
+                adminWallet.setBalance(adminWallet.getBalance() - price);
                 transaction.setStatusTransaction(StatusPayment.RELEASED);
-            }
-            else if(orderStatus.equals(OrderStatus.CANCELLED))
-            {
-                Wallet buyer = transaction.getWalletSend();
+            } else if (orderStatus.equals(OrderStatus.CANCELLED) ) {
+
+
+                if(shippingStatus.equals(ShippingStatus.PENDING)) {
+
+                    buyer.setBalance(buyer.getBalance() + transaction.getAmount());
+                    adminWallet.setBalance(adminWallet.getBalance() - transaction.getAmount());
+
+                }else if(shippingStatus.equals(ShippingStatus.RETURNED)) {
+                    Long refund_money = transaction.getAmount() - shipment.getShipmentFee();
+                    buyer.setBalance(buyer.getBalance() + refund_money);
+                    adminWallet.setBalance(adminWallet.getBalance() - refund_money);
+                }
+
+
+            }else if(shippingStatus.equals(ShippingStatus.LOST)) {
                 buyer.setBalance(buyer.getBalance() + transaction.getAmount());
                 adminWallet.setBalance(adminWallet.getBalance() - transaction.getAmount());
-                transaction.setStatusTransaction(StatusPayment.REFUNDED);
+                Wallet seller = transaction.getWalletReceive();
+                seller.setBalance(seller.getBalance() + price);
+                adminWallet.setBalance(adminWallet.getBalance() - price);
+
             }
-        }else if(transaction.getBlindboxpurchase() != null)
-        {
+
+        } else if (blindBoxPurChase != null) {
             ShippingStatus shippingStatus = transaction.getBlindboxpurchase().getShipment().getShipmentStatus();
-            if(shippingStatus.equals(ShippingStatus.FAILED) || shippingStatus.equals(ShippingStatus.RETURNED))
-            {
-                Wallet buyer = transaction.getWalletSend();
+            if (shippingStatus.equals(ShippingStatus.LOST)) {
                 buyer.setBalance(buyer.getBalance() + transaction.getAmount());
                 adminWallet.setBalance(adminWallet.getBalance() - transaction.getAmount());
                 transaction.setStatusTransaction(StatusPayment.REFUNDED);
             }
         }
+        usersRepo.save(admin);
         return transactionMapper.entityToResponse(transactionRepo.save(transaction));
     }
 

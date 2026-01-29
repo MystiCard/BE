@@ -48,7 +48,7 @@ public enum ErrorCode {
     TRANSACTION_NOT_FOUND(8001, "Transaction not found", HttpStatus.BAD_REQUEST),
     PAYMENT_HASH_DATA_FAIL(8002,"Hash data to payment MOMO fail",HttpStatus.BAD_REQUEST),
     CAN_NOT_WITHDRAW(8003,"Amount withdraw larger than balance in wallet",HttpStatus.BAD_REQUEST),
-    CAN_NOT_TRANSACTION(8004,"Balance no enough to process transaction. PLease deposite money",HttpStatus.BAD_REQUEST),
+    CAN_NOT_TRANSACTION(8004,"Balance not enough to process transaction. PLease deposite money into wallet",HttpStatus.BAD_REQUEST),
  PAYMENT_NOT_FOUND(8005,"Payment not found with transaction ref",HttpStatus.NOT_FOUND),
     // Order (9)
     ORDER_NOT_FOUND(9001, "Order not found with code", HttpStatus.NOT_FOUND),

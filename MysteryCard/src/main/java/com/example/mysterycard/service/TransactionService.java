@@ -15,5 +15,5 @@ public interface TransactionService {
     TransactionResponse createTransaction(TransactionRequest transactionRequest);
     Page<TransactionResponse> getAllByStatus(SearchRequest request, int page, int size);
     TransactionResponse getById(UUID transactionId);
-    TransactionResponse processTransaction(ProcessTransactionRequest request);
+    TransactionResponse processTransaction(UUID transactionId);
 }

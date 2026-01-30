@@ -2,7 +2,9 @@ package com.example.mysterycard.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -16,11 +18,15 @@ public class BlindBoxResult {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID blindBoxResultId;
-    private int quantity;
+    @CreationTimestamp
+    private LocalDateTime openedAt;
     @ManyToOne
     @JoinColumn(name = "blind_box_purchase_id")
     private BlindBoxPurChase blindBoxPurchase;
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "card_id")
     private Card card;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private Users owner;
 }

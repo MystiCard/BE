@@ -18,15 +18,19 @@ public class Card {
     private String name;
     @Enumerated(EnumType.STRING)
     private Rarity rarity;
-    private String imageUrl;
     @ManyToOne
     @JoinColumn(name="category_id")
     private Category category;
     @OneToMany(mappedBy = "card")
     private List<ListSeller> listSellers = new ArrayList<>();
-    @ManyToMany(mappedBy = "cardList")
-    private Set<BlindBox> blindBoxes = new HashSet<>();
-    @OneToOne(mappedBy = "card")
-    private BlindBoxResult blindBoxResult;
+    @OneToMany(mappedBy = "card")
+    private List<BlindBoxCard> blindBoxCards = new ArrayList<>();
+    @OneToMany(mappedBy = "card")
+    private List<BlindBoxResult> blindBoxResults = new ArrayList<>();
+    @OneToMany(mappedBy = "card",cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Image> images = new ArrayList<>();
+    private double basePrice;
+    private double minPrice;
+    private double maxPrice;
 
 }

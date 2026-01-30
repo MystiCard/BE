@@ -19,9 +19,10 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID categoryId;
     private String categoryName;
-    @OneToMany(mappedBy = "category")
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Card> cardlist = new ArrayList<>();
     public void addCard(Card card) {
-        cardlist.add(card); card.setCategory(this);
+        cardlist.add(card);
+        card.setCategory(this);
     }
 }

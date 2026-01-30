@@ -21,19 +21,14 @@ public class BlindBox {
     private String name;
     private String description;
     private String imageUrl;
-    private double price;
+    private double drawPrice;
+    private double allBoxPrice;
     @Enumerated(EnumType.STRING)
-    private BlindBoxStatus blindBoxStatus;
-    private int quantity;
-    @ManyToMany
-    @JoinTable(
-            name = "BlindBox_Card",
-            joinColumns = @JoinColumn(name = "blind_box_id"),
-            inverseJoinColumns = @JoinColumn(name = "card_id")
-    )
-    private Set<Card> cardList = new HashSet<>();
-    @ManyToMany(mappedBy = "blindBoxesList")
-    private Set<RateConfig> rateConfigList = new HashSet<>();
+    private BlindBoxStatus blindBoxStatus = BlindBoxStatus.ACTIVE;
+    @OneToMany(mappedBy = "blindBox", cascade = CascadeType.ALL , orphanRemoval = true)
+    private List<BlindBoxCard> blindBoxCards = new ArrayList<>();
+    @ManyToMany(mappedBy = "blindBoxesList",cascade = CascadeType.ALL)
+    private List<RateConfig> rateConfigList = new ArrayList<>();
     @OneToMany(mappedBy = "blindBox")
     private List<BlindBoxPurChase> blindBoxPurChaseList = new ArrayList<>();
     @OneToMany(mappedBy = "blindBox")

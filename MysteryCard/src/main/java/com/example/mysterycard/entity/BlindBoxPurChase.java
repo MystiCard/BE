@@ -2,6 +2,7 @@ package com.example.mysterycard.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -15,7 +16,9 @@ public class BlindBoxPurChase {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID blindBoxPurchaseId;
-    private Long price;
+    private double price;
+    private boolean isOpened = false;
+    @CreationTimestamp
     private LocalDateTime purchaseDate;
     @ManyToOne
     @JoinColumn(name ="buyer_id")

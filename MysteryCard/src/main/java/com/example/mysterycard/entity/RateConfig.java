@@ -17,8 +17,10 @@ public class RateConfig {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID rateConfigId;
+    @Enumerated(EnumType.STRING)
     private Rarity cardRarity;
     private double dropRate;
+    private double variancePercent;
   @ManyToMany
     @JoinTable(name = "rate_config_blind_box",
             joinColumns = @JoinColumn(name = "rate_config_id"),

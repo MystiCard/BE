@@ -52,4 +52,6 @@ public class Users {
     private Wallet wallet;
     @OneToMany(mappedBy = "user")
     private List<BankAccount> bankAccountslist = new ArrayList<>();
+    @OneToMany(mappedBy = "owner")
+    private List<BlindBoxResult> blindBoxResults = new ArrayList<>();
 }

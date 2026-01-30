@@ -144,6 +144,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Users getUser() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (email == null) {
+            throw new AppException(ErrorCode.INVALID_AUTHENCATION);
+        }
+        Users user = usersRepo.findByEmail(email);
+        return user;
+    }
+
+    @Override
     public UserResponse getUserById(UUID userId) {
         Users user = usersRepo.findByUserId(userId);
         if (user == null) {

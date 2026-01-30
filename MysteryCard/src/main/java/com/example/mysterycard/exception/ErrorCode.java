@@ -54,22 +54,17 @@ public enum ErrorCode {
 
     //Blind Box Purchase (10)
     BLIND_BOX_PURCHASE_NOT_FOUND(10001,"Blind Box Purchase Not Found",HttpStatus.NOT_FOUND),
-    ;
-    BANK_ACCOUNT_NOT_FOUND(7001, "Bank Account Not Found ", HttpStatus.NOT_FOUND),
-    BANK_CODE_EXISTED(7002, "Bank Code existed. Please input again bank code ", HttpStatus.BAD_REQUEST),
-    BANK_DUPLICATIN(7003, "You already have this bank account", HttpStatus.BAD_REQUEST),
 
-    // Transaction (8)
-    TRANSACTION_NOT_FOUND(8001, "Transaction not found", HttpStatus.BAD_REQUEST),
-    PAYMENT_HASH_DATA_FAIL(8002,"Hash data to payment MOMO fail",HttpStatus.BAD_REQUEST),
-    CAN_NOT_WITHDRAW(8003,"Amount withdraw larger than balance in wallet",HttpStatus.BAD_REQUEST),
-    CAN_NOT_TRANSACTION(8004,"Balance not enough to process transaction. PLease deposite money into wallet",HttpStatus.BAD_REQUEST),
- PAYMENT_NOT_FOUND(8005,"Payment not found with transaction ref",HttpStatus.NOT_FOUND),
-    // Order (9)
-    ORDER_NOT_FOUND(9001, "Order not found with code", HttpStatus.NOT_FOUND),
-  //BlindBox purchase (10)
-    BLIND_BOX_PURCHASE_NOT_FOUND(10001,"Blind box purchase not found",HttpStatus.NOT_FOUND),
-
+    // Transaction (11)
+    TRANSACTION_NOT_FOUND(11001, "Transaction not found", HttpStatus.BAD_REQUEST),
+    PAYMENT_HASH_DATA_FAIL(11002,"Hash data to payment MOMO fail",HttpStatus.BAD_REQUEST),
+    CAN_NOT_WITHDRAW(11003,"Amount withdraw larger than balance in wallet",HttpStatus.BAD_REQUEST),
+    CAN_NOT_TRANSACTION(11004,"Balance not enough to process transaction. PLease deposite money into wallet",HttpStatus.BAD_REQUEST),
+    PAYMENT_NOT_FOUND(11005,"Payment not found with transaction ref",HttpStatus.NOT_FOUND),
+    // Order (12)
+    ORDER_NOT_FOUND(12001, "Order not found with code", HttpStatus.NOT_FOUND),
+    //IMPORT EXPORT ERRORS(13)
+    FILE_IMPORT_ERROR(13001,"File import error. Please check your file",HttpStatus.BAD_REQUEST),
 
 ;
     int code;

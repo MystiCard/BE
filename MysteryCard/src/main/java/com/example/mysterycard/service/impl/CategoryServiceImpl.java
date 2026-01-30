@@ -10,11 +10,17 @@ import com.example.mysterycard.mapper.CardMapper;
 import com.example.mysterycard.mapper.CategoryMapper;
 import com.example.mysterycard.repository.CategoryRepo;
 import com.example.mysterycard.service.CategoryService;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.UUID;
+import java.io.InputStream;
+import java.util.*;
 
 @Service
 public class CategoryServiceImpl implements CategoryService {
@@ -66,6 +72,38 @@ public class CategoryServiceImpl implements CategoryService {
         Category cate = categoryRepo.findById(id) .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
         List<Card> cards = cate.getCardlist();
         return cards.stream().map(cardMapper::toResponse).toList();
+    }
+
+    @Override
+    public Map<String, List<String>> importCategories(MultipartFile file) {
+        List<String> addedCategories = new ArrayList<>();
+        List<String> skippedCategories = new ArrayList<>();
+        try {
+            InputStream inputStream = file.getInputStream();
+            Workbook workbook = new XSSFWorkbook(inputStream);{
+                Sheet sheet = workbook.getSheetAt(0);
+                for(Row row :sheet){
+                    Cell cell = row.getCell(0);
+                    if(cell != null){
+                        String categoryName = cell.getStringCellValue();
+                        if(!categoryRepo.existsCategoryByCategoryName(categoryName)){
+                            Category cate = Category.builder().categoryName(categoryName).build();
+                            categoryRepo.save(cate);
+                            addedCategories.add(categoryName);
+                        } else {
+                            skippedCategories.add(categoryName);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.FILE_IMPORT_ERROR);
+        }
+        Map<String, List<String>> result = new HashMap<>();
+        result.put("added", addedCategories);
+        result.put("skipped", skippedCategories);
+        return result;
+
     }
 
 

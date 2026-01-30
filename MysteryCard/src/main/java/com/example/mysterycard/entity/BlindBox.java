@@ -21,8 +21,8 @@ public class BlindBox {
     private String name;
     private String description;
     private String imageUrl;
-    private double drawPrice;
-    private double allBoxPrice;
+    private Long drawPrice;
+    private Long allBoxPrice;
     @Enumerated(EnumType.STRING)
     private BlindBoxStatus blindBoxStatus = BlindBoxStatus.ACTIVE;
     @OneToMany(mappedBy = "blindBox", cascade = CascadeType.ALL , orphanRemoval = true)

@@ -33,7 +33,7 @@ public class BlindBoxServiceImpl implements BlindBoxService {
     private final BlindBoxCardMapper blindBoxCardMapper;
     private final CardMapper cardMapper;
     private final UserService userService;
-    private final BlindBoxPurChaseRepo blindBoxPurChaseRepo;
+    private final BlindBoxPurchaseRepo blindBoxPurChaseRepo;
     private final BlindBoxPurChaseMapper blindBoxPurChaseMapper;
     @Override
     public BlindBoxResponse createBlindBox(BlindBoxRequest request) {
@@ -254,9 +254,10 @@ public class BlindBoxServiceImpl implements BlindBoxService {
 
         return probabilities;
     }
-    private double calculateEVWithRatio(BlindBox box) {
+    private Long calculateEVWithRatio(BlindBox box) {
         Map<Rarity, Double> probabilities = calculateRarityProbabilities(box);
         double ev = 0.0;
+        Long evLong = 0L;
 
         for (Map.Entry<Rarity, Double> entry : probabilities.entrySet()) {
             Rarity rarity = entry.getKey();
@@ -285,14 +286,15 @@ public class BlindBoxServiceImpl implements BlindBoxService {
                             .orElse(0.0);
 
                     ev += probability * avgValue;
+                    evLong = (long) ev;
                 }
             }
         }
 
-        return ev;
+        return evLong;
     }
 
-    public double calculateBlindBoxPrice(BlindBox box) {
+    public Long calculateBlindBoxPrice(BlindBox box) {
         double totalValue = box.getBlindBoxCards().stream()
                 .filter(BlindBoxCard::isStatus)
                 .mapToDouble(bc -> bc.getCard().getBasePrice())
@@ -300,8 +302,9 @@ public class BlindBoxServiceImpl implements BlindBoxService {
 
         double insuranceFactor = 1.03;
         double finalPrice = totalValue * insuranceFactor;
+        Long roundedPrice = Math.round(finalPrice);
 
-        return finalPrice;
+        return roundedPrice;
     }
 
 }

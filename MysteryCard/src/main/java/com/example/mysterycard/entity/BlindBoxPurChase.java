@@ -30,4 +30,7 @@ public class BlindBoxPurChase {
     private List<BlindBoxResult> blindBoxResultsList= new ArrayList<>();
     @OneToMany(mappedBy = "blindboxpurchase")
     private List<WalletTransaction> transactionList = new ArrayList<>();
+    @OneToOne
+    @JoinColumn(name = "shipment_id")
+    private Shipment shipment;
 }

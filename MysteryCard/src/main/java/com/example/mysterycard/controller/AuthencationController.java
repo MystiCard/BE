@@ -2,12 +2,15 @@ package com.example.mysterycard.controller;
 
 
 import com.example.mysterycard.base.ApiResponse;
+import com.example.mysterycard.dto.request.EmailVerifyRequest;
 import com.example.mysterycard.dto.request.LoginRequest;
 import com.example.mysterycard.dto.request.RefreshAccessTokenRequest;
+import com.example.mysterycard.dto.response.EmailVerifyResponse;
 import com.example.mysterycard.service.AuthencationSevice;
 import com.nimbusds.jose.JOSEException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
@@ -50,6 +53,16 @@ public class AuthencationController {
     public ApiResponse loginGoogle(OAuth2AuthenticationToken principal) throws JOSEException {
         log.info("Google login attempt for user: {}", principal.getName());
         return ApiResponse.success(authencationSevice.loginGoogle(principal));
+    }
+    @PostMapping("/verify-email")
+    public ResponseEntity<ApiResponse<EmailVerifyResponse>> verifyEmail(@RequestBody EmailVerifyRequest request) throws JOSEException {
+        return ResponseEntity.ok(ApiResponse.success(authencationSevice.verifyEmail(request)));
+    }
+    @GetMapping("/send-verify-code")
+    public ResponseEntity<ApiResponse<?>> sendVerifyEmail(@RequestParam String email)
+    {
+        authencationSevice.sendVerifyCode(email);
+        return ResponseEntity.ok(ApiResponse.success("Send code verify succesfully"));
     }
 
 }

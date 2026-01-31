@@ -5,6 +5,7 @@ import com.example.mysterycard.dto.request.RateConfigRequest;
 import com.example.mysterycard.service.RateConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -39,5 +40,9 @@ public class RateConfigController {
     public ApiResponse deleteRateConfig(@PathVariable UUID id) {
         rateConfigService.deleteRateConfig(id);
         return ApiResponse.success();
+    }
+    @PostMapping("/import")
+    public ApiResponse importCategories(@RequestParam("file") MultipartFile file) {
+        return ApiResponse.success(rateConfigService.importRateConfigs(file));
     }
 }

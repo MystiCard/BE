@@ -13,7 +13,7 @@ import java.util.*;
 @Setter
 public class BlindBox {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID blindBoxId;
     private String name;
     private String description;

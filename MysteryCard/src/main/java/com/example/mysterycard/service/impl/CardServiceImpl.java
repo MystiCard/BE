@@ -55,13 +55,13 @@ public class CardServiceImpl implements CardService {
 
     @Override
     public CardResponse createCard(CardRequest request) {
-        if(cardRepo.existsCardByName(request.getName())){
+        Category category = categoryRepo.findById(UUID.fromString(request.getCategoryId()))
+                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+        if(cardRepo.existsCardByNameAndRarityAndCategory(request.getName(), request.getRarity(), category)){
             throw new AppException(ErrorCode.CARD_DUPLICATE);
         }
         Card card = cardMapper.toCard(request);
-        UUID cateId = UUID.fromString(request.getCategoryId());
-        Category category = categoryRepo.findById(cateId).orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
-        category.addCard(card);
+            category.addCard(card);
         if (request.getImageUrl() != null) {
             Image img = new Image();
             img.setImageUrl(request.getImageUrl());
@@ -107,6 +107,10 @@ public class CardServiceImpl implements CardService {
         // Tải trước RateConfig vào memory để tránh query DB hàng nghìn lần trong hàm setMinMaxPrice
         List<RateConfig> allConfigs = rateConfigRepo.findAll();
 
+        Set<String> existingCardsSet = new HashSet<>(cardRepo.findAll().stream()
+                .map(c -> (c.getName() + "|" + c.getRarity() + "|" + c.getCategory().getCategoryName()).toLowerCase())
+                .toList());
+
         try (InputStream is = file.getInputStream();
              Workbook workbook = new XSSFWorkbook(is)) {
 
@@ -117,15 +121,22 @@ public class CardServiceImpl implements CardService {
 
                 try {
                     // 1. Đọc dữ liệu thô
-                    String name = dataFormatter.formatCellValue(row.getCell(1)).trim();
-                    String rarityStr = dataFormatter.formatCellValue(row.getCell(2)).trim();
-                    String imgUrl = dataFormatter.formatCellValue(row.getCell(3)).trim();
+                    String name = dataFormatter.formatCellValue(row.getCell(0)).trim();
+                    String rarityStr = dataFormatter.formatCellValue(row.getCell(1)).trim();
+                    String imgUrl = dataFormatter.formatCellValue(row.getCell(2)).trim();
                     String priceStr = dataFormatter.formatCellValue(row.getCell(4)).trim().replace(",", "");
                     String categoryName = dataFormatter.formatCellValue(row.getCell(5)).trim();
 
                     // 2. Validate nhanh
                     if (name.isEmpty() || rarityStr.isEmpty() || priceStr.isEmpty()) continue;
-                    if (cardRepo.existsCardByName(name)) {
+
+                    Category category = categoryCache.computeIfAbsent(categoryName.toLowerCase(), k -> {
+                        Category existing = categoryRepo.findByCategoryName(categoryName);
+                        return (existing != null) ? existing : categoryRepo.save(Category.builder().categoryName(categoryName).build());
+                    });
+                    // Kiểm tra trùng lặp trong DB
+                    String currentKey = (name + "|" + rarityStr + "|" + category.getCategoryName()).toLowerCase();
+                    if (existingCardsSet.contains(currentKey)) {
                         skipCount++;
                         continue;
                     }
@@ -135,10 +146,7 @@ public class CardServiceImpl implements CardService {
                     double basePrice = Double.parseDouble(priceStr);
 
                     // 4. Xử lý Category (Dùng Cache)
-                    Category category = categoryCache.computeIfAbsent(categoryName, nameKey -> {
-                        Category existing = categoryRepo.findByCategoryName(nameKey);
-                        return (existing != null) ? existing : categoryRepo.save(Category.builder().categoryName(nameKey).build());
-                    });
+
 
                     // 5. Khởi tạo Card
                     Card card = new Card();

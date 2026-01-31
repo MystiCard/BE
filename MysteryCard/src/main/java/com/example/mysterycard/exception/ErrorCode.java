@@ -48,6 +48,7 @@ public enum ErrorCode {
     BLIND_BOX_NOT_FOUND(8001,"Blind Box Not Found",HttpStatus.NOT_FOUND),
     BLIND_BOX_ALREADY_EXISTS(8002,"Blind Box Already Exists",HttpStatus.BAD_REQUEST),
     DRAW_CARD_FAILED(8003,"Draw Card Failed",HttpStatus.BAD_REQUEST),
+    EMPTY_BOX(8004,"Blind Box is empty. Please contact admin to refill",HttpStatus.BAD_REQUEST),
     //Rate Config (9)
     RATE_CONFIG_NOT_FOUND(9001,"Rate Config Not Found",HttpStatus.NOT_FOUND),
     RATE_CONFIG_ALREADY_EXISTS(9002,"Rate Config Already Exists",HttpStatus.BAD_REQUEST),

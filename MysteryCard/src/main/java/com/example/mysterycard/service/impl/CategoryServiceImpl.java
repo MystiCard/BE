@@ -78,14 +78,13 @@ public class CategoryServiceImpl implements CategoryService {
     public Map<String, List<String>> importCategories(MultipartFile file) {
         List<String> addedCategories = new ArrayList<>();
         List<String> skippedCategories = new ArrayList<>();
-        try {
-            InputStream inputStream = file.getInputStream();
-            Workbook workbook = new XSSFWorkbook(inputStream);{
+        try (InputStream inputStream = file.getInputStream();
+             Workbook workbook = new XSSFWorkbook(inputStream)){
                 Sheet sheet = workbook.getSheetAt(0);
                 for(Row row :sheet){
                     Cell cell = row.getCell(0);
                     if(cell != null){
-                        String categoryName = cell.getStringCellValue();
+                        String categoryName = cell.getStringCellValue().trim();
                         if(!categoryRepo.existsCategoryByCategoryName(categoryName)){
                             Category cate = Category.builder().categoryName(categoryName).build();
                             categoryRepo.save(cate);
@@ -95,7 +94,6 @@ public class CategoryServiceImpl implements CategoryService {
                         }
                     }
                 }
-            }
         } catch (Exception e) {
             throw new AppException(ErrorCode.FILE_IMPORT_ERROR);
         }

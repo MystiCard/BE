@@ -16,6 +16,7 @@ import com.example.mysterycard.service.BlindBoxService;
 import com.example.mysterycard.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -36,6 +37,7 @@ public class BlindBoxServiceImpl implements BlindBoxService {
     private final BlindBoxPurchaseRepo blindBoxPurChaseRepo;
     private final BlindBoxPurChaseMapper blindBoxPurChaseMapper;
     @Override
+    @Transactional
     public BlindBoxResponse createBlindBox(BlindBoxRequest request) {
         BlindBox blindBox = blindBoxMapper.toBlindBox(request);
         List<RateConfig> rateConfigList = rateConfigRepo.findAll();
@@ -45,21 +47,28 @@ public class BlindBoxServiceImpl implements BlindBoxService {
         }
         List<BlindBoxCard> boxCards = new ArrayList<>();
         for(UUID cardId : request.getCardIds()) {
-            Card card = cardRepo.findById(cardId).orElse(null);
+            Card card = cardRepo.findById(cardId)
+                    .orElseThrow(() -> new AppException(ErrorCode.CARD_NOT_FOUND));
             BlindBoxCard boxCard = new BlindBoxCard();
             boxCard.setBlindBox(blindBox);
             boxCard.setCard(card);
             boxCards.add(boxCard);
         }
         blindBox.setBlindBoxCards(boxCards);
-        double totalWeight = calculateTotalWeight(blindBox);
-        for(BlindBoxCard bc : blindBox.getBlindBoxCards()) {
-            double weight = getWeight(bc, blindBox);
-            double rate = (weight / totalWeight) * 100;
-            bc.setRate(rate);
+        Map<Rarity, Double> groupProbs = calculateRarityProbabilities(blindBox, boxCards);
+        Map<Rarity, Long> countPerRarity = boxCards.stream()
+                .collect(Collectors.groupingBy(bc -> bc.getCard().getRarity(), Collectors.counting()));
+
+        for (BlindBoxCard bc : boxCards) {
+            Rarity rarity = bc.getCard().getRarity();
+            double groupProb = groupProbs.getOrDefault(rarity, 0.0);
+            long count = countPerRarity.getOrDefault(rarity, 1L);
+            // Tỉ lệ của 1 thẻ = Tỉ lệ nhóm / số lượng thẻ trong nhóm đó
+            bc.setRate(groupProb / count);
         }
-        blindBox.setDrawPrice(calculateEVWithRatio(blindBox));
-        blindBox.setAllBoxPrice(calculateBlindBoxPrice(blindBox));
+
+        blindBox.setDrawPrice(calculateSmartEV(blindBox,boxCards));
+        blindBox.setAllBoxPrice(calculateBlindBoxPriceFromList(boxCards));
         blindBox = blindBoxRepo.save(blindBox);
         return blindBoxMapper.toBlindBoxResponse(blindBox);
     }
@@ -79,68 +88,67 @@ public class BlindBoxServiceImpl implements BlindBoxService {
                 .mapToDouble(bc -> getWeight(bc, box))
                 .sum();
     }
+    @Transactional
     @Override
     public DrawResultResponse drawCard(UUID id) {
+        // 1. Tìm purchase và LOCK BOX
         BlindBoxPurChase purchase = blindBoxPurChaseRepo.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.BLIND_BOX_PURCHASE_NOT_FOUND));
-        BlindBox box = purchase.getBlindBox();
-        List<BlindBoxCard> activeCards = box.getBlindBoxCards().stream()
-                .filter(BlindBoxCard::isStatus) .toList();
+        BlindBox box = blindBoxRepo.findByIdWithLock(purchase.getBlindBox().getBlindBoxId())
+                .orElseThrow(() -> new AppException(ErrorCode.BLIND_BOX_NOT_FOUND));
+
+        // 2. Lấy danh sách thẻ status = true (Dữ liệu tươi nhất từ DB)
+        List<BlindBoxCard> activeCards = blindBoxCardRepo.findAllByBlindBoxAndStatusTrue(box);
+        if (activeCards.isEmpty()) {
+            box.setBlindBoxStatus(BlindBoxStatus.OUT_OF_STOCK);
+            blindBoxRepo.save(box);
+            throw new AppException(ErrorCode.EMPTY_BOX);
+        }
+
+        // 3. Chọn Rarity và Thẻ
         Map<Rarity, List<BlindBoxCard>> grouped = activeCards.stream()
                 .collect(Collectors.groupingBy(bc -> bc.getCard().getRarity()));
+
         Rarity chosenRarity = chooseRarity(box, grouped);
-        System.out.println("Chosen Rarity: " + chosenRarity.name());
-        List<BlindBoxCard> candidates = grouped.getOrDefault(chosenRarity, List.of());
-        if (candidates.isEmpty()) {
-            throw new AppException(ErrorCode.DRAW_CARD_FAILED);
-        }
-        BlindBoxCard chosenCard = candidates.get(new Random().nextInt(candidates.size()));
+        List<BlindBoxCard> candidates = new ArrayList<>(grouped.get(chosenRarity));
+        Collections.shuffle(candidates);
+        BlindBoxCard chosenCard = candidates.get(0);
+
+        // 4. Đánh dấu thẻ đã mở (Chỉ lưu đúng 1 dòng này xuống DB)
         chosenCard.setStatus(false);
         blindBoxCardRepo.save(chosenCard);
 
-        CardResponse cardResponse =  cardMapper.toResponse(chosenCard.getCard());
-        DrawResultResponse drawResult = new DrawResultResponse();
-        drawResult.setCard(cardResponse);
-        drawResult.setDrawPrice(box.getDrawPrice());
-        double profitOrLoss =  chosenCard.getCard().getBasePrice() - box.getDrawPrice();
-        drawResult.setProfitOrLoss(profitOrLoss);
+        // 5. Cập nhật kinh tế Box dựa trên danh sách CÒN LẠI THỰC TẾ
+        List<BlindBoxCard> remainingCards = activeCards.stream()
+                .filter(c -> !c.getBlindBoxCardId().equals(chosenCard.getBlindBoxCardId()))
+                .toList();
 
-        updateRates(box);
-        box.setDrawPrice(calculateEVWithRatio(box));
-        box.setAllBoxPrice(calculateBlindBoxPrice(box));
+        if (remainingCards.isEmpty()) {
+            box.setBlindBoxStatus(BlindBoxStatus.OUT_OF_STOCK);
+            box.setDrawPrice(0L);
+            box.setAllBoxPrice(0L);
+        } else {
+            // Sử dụng remainingCards cho cả 2 hàm tính giá
+            box.setDrawPrice(calculateSmartEV(box, remainingCards));
+            box.setAllBoxPrice(calculateBlindBoxPriceFromList(remainingCards));
+        }
         blindBoxRepo.save(box);
+
+        // 6. Lưu kết quả mở thưởng
         BlindBoxResult result = new BlindBoxResult();
         result.setCard(chosenCard.getCard());
         result.setBlindBoxPurchase(purchase);
         result.setOwner(purchase.getBuyer());
         blindBoxCardResultRepo.save(result);
-//        Danh dau da mo
-//        purchase.setOpened(true);
-//        blindBoxPurChaseRepo.save(purchase);
 
+        // 7. Trả về Response
+        DrawResultResponse drawResult = new DrawResultResponse();
+        drawResult.setCard(cardMapper.toResponse(chosenCard.getCard()));
+        drawResult.setDrawPrice(purchase.getPrice()); // Giá lúc khách mua
+        drawResult.setProfitOrLoss(chosenCard.getCard().getBasePrice() - purchase.getPrice());
 
         return drawResult;
     }
-    private void updateRates(BlindBox box) {
-        double totalWeight = calculateTotalWeight(box);
-        if (totalWeight <= 0)
-            {   box.setBlindBoxStatus(BlindBoxStatus.OUT_OF_STOCK);
-                blindBoxRepo.save(box);
-                return;}
-
-        List<BlindBoxCard> activeCards = box.getBlindBoxCards().stream()
-                .filter(BlindBoxCard::isStatus)
-                .toList();
-
-        for (BlindBoxCard bc : activeCards) {
-            double weight = getWeight(bc, box);
-            double rate = (weight / totalWeight) * 100;
-            bc.setRate(rate);
-
-        }
-        blindBoxCardRepo.saveAll(activeCards);
-    }
-
     @Override
     public BlindBoxResponse getBlindBoxById(Long id) {
         BlindBox box = blindBoxRepo.findById(id)
@@ -187,42 +195,41 @@ public class BlindBoxServiceImpl implements BlindBoxService {
     }
 
     private Rarity chooseRarity(BlindBox box, Map<Rarity, List<BlindBoxCard>> grouped) {
-        double totalWeight = 0.0;
-        Map<Rarity, Double> rarityWeights = new HashMap<>();
+        List<RateConfig> activeConfigs = box.getRateConfigList().stream()
+                .filter(config -> grouped.containsKey(config.getCardRarity())
+                        && !grouped.get(config.getCardRarity()).isEmpty())
+                .toList();
 
-        // Lấy trọng số từ RateConfig cho từng loại hiếm
-        for (RateConfig config : box.getRateConfigList()) {
-            Rarity rarity = config.getCardRarity();
-            long count = grouped.getOrDefault(rarity, List.of()).size();
-            double weight = config.getDropRate() * count; // dropRate * số thẻ còn lại
-            rarityWeights.put(rarity, weight);
-            totalWeight += weight;
+        if (activeConfigs.isEmpty()) {
+            throw new AppException(ErrorCode.EMPTY_BOX);
         }
 
-        if (totalWeight <= 0) {
-            throw new AppException(ErrorCode.DRAW_CARD_FAILED);
-        }
+        // 2. Tính tổng dropRate của các nhóm còn lại (để chuẩn hóa về 100%)
+        double currentTotalWeight = activeConfigs.stream()
+                .mapToDouble(RateConfig::getDropRate)
+                .sum();
 
-        // Random chọn loại hiếm
-        double randomValue = Math.random() * totalWeight;
+        // 3. Random giá trị trong khoảng tổng trọng số mới
+        double randomValue = Math.random() * currentTotalWeight;
         double cumulative = 0.0;
 
-        for (Map.Entry<Rarity, Double> entry : rarityWeights.entrySet()) {
-            cumulative += entry.getValue();
+        for (RateConfig config : activeConfigs) {
+            cumulative += config.getDropRate();
             if (randomValue <= cumulative) {
-                return entry.getKey();
+                return config.getCardRarity();
             }
         }
 
-        throw new AppException(ErrorCode.DRAW_CARD_FAILED);
+        return activeConfigs.get(0).getCardRarity();
     }
 
     @Override
     public BlindBoxProbabilitiesResponse getProbabilities(Long blindBoxId) {
         BlindBox box = blindBoxRepo.findById(blindBoxId)
                 .orElseThrow(() -> new AppException(ErrorCode.BLIND_BOX_NOT_FOUND));
+        List<BlindBoxCard> activeCards = blindBoxCardRepo.findAllByBlindBoxAndStatusTrue(box);
 
-        Map<Rarity, Double> probabilities = calculateRarityProbabilities(box);
+        Map<Rarity, Double> probabilities = calculateRarityProbabilities(box,activeCards);
 
         List<BlindBoxProbabilitiesResponse.ProbabilityItem> items = probabilities.entrySet().stream()
                 .map(e -> new BlindBoxProbabilitiesResponse.ProbabilityItem(e.getKey(), e.getValue()))
@@ -230,81 +237,81 @@ public class BlindBoxServiceImpl implements BlindBoxService {
 
         return new BlindBoxProbabilitiesResponse(blindBoxId, items);
     }
-    private Map<Rarity, Double> calculateRarityProbabilities(BlindBox box) {
-        Map<Rarity, Double> rarityWeights = new HashMap<>();
-        double totalWeight = 0.0;
-
-        Map<Rarity, List<BlindBoxCard>> grouped = box.getBlindBoxCards().stream()
-                .filter(BlindBoxCard::isStatus)
-                .collect(Collectors.groupingBy(bc -> bc.getCard().getRarity()));
-
-        for (RateConfig config : box.getRateConfigList()) {
-            Rarity rarity = config.getCardRarity();
-            long count = grouped.getOrDefault(rarity, List.of()).size();
-            double weight = config.getDropRate() * count;
-            rarityWeights.put(rarity, weight);
-            totalWeight += weight;
-        }
+    private Map<Rarity, Double> calculateRarityProbabilities(BlindBox box, List<BlindBoxCard> activeCards) {
+        // 1. Xác định các nhóm Rarity nào thực sự còn thẻ (Status = true)
+        // Việc dùng Set giúp tra cứu nhanh hơn O(1)
+        Set<Rarity> activeRarities = activeCards.stream()
+                .map(bc -> bc.getCard().getRarity())
+                .collect(Collectors.toSet());
 
         Map<Rarity, Double> probabilities = new HashMap<>();
-        for (Map.Entry<Rarity, Double> entry : rarityWeights.entrySet()) {
-            double probability = (totalWeight > 0) ? (entry.getValue() / totalWeight) * 100 : 0.0;
-            probabilities.put(entry.getKey(), probability);
+
+        // 2. Tính tổng trọng số (DropRate) CHỈ của những nhóm còn thẻ
+        double totalActiveWeight = box.getRateConfigList().stream()
+                .filter(config -> activeRarities.contains(config.getCardRarity()))
+                .mapToDouble(RateConfig::getDropRate)
+                .sum();
+
+        // 3. Phân bổ lại tỷ lệ % dựa trên tổng trọng số mới
+        for (RateConfig config : box.getRateConfigList()) {
+            Rarity rarity = config.getCardRarity();
+            if (activeRarities.contains(rarity)) {
+                // Tỷ lệ mới = (Trọng số gốc / Tổng trọng số còn lại) * 100
+                double probability = (totalActiveWeight > 0)
+                        ? (config.getDropRate() / totalActiveWeight) * 100
+                        : 0.0;
+                probabilities.put(rarity, probability);
+            } else {
+                // Nhóm đã hết thẻ thì tỷ lệ bằng 0
+                probabilities.put(rarity, 0.0);
+            }
         }
 
         return probabilities;
     }
-    private Long calculateEVWithRatio(BlindBox box) {
-        Map<Rarity, Double> probabilities = calculateRarityProbabilities(box);
+    private Long calculateSmartEV(BlindBox box, List<BlindBoxCard> activeCards) {
+        int currentCount = activeCards.size();
+        // Giả sử box.getBlindBoxCards() chứa tổng số thẻ ban đầu
+        int initialCount = box.getBlindBoxCards().size();
+
+        // CHIẾN LƯỢC 1: Chốt hạ (15%)
+        if (currentCount <= (initialCount * 0.15) || currentCount < 10) {
+            double totalValue = activeCards.stream().mapToDouble(c -> c.getCard().getBasePrice()).sum();
+            return Math.round(totalValue / currentCount);
+        }
+
+        // CHIẾN LƯỢC 2: Xác suất chuẩn hóa
+        Map<Rarity, Double> probabilities = calculateRarityProbabilities(box, activeCards);
         double ev = 0.0;
-        Long evLong = 0L;
 
         for (Map.Entry<Rarity, Double> entry : probabilities.entrySet()) {
             Rarity rarity = entry.getKey();
-            double ratio = entry.getValue(); // %
+            double ratio = entry.getValue();
 
-            // Ngưỡng ratio cho từng loại
             double threshold = switch (rarity) {
-                case RARE -> 5.0;        // Rare chỉ cộng nếu ≥ 10%
-                case SUPER_RARE -> 5.0;   // SR chỉ cộng nếu ≥ 5%
-                case SECRET_RARE -> 10.0; // SC ≥ 10%
-                default -> 0.0;           // Common, Uncommon luôn cộng
+                case RARE -> 3.0;
+                case SUPER_RARE -> 2.0;
+                case ULTRA_RARE -> 1.0;
+                case SECRET_RARE -> 0.5;
+                default -> 0.0;
             };
 
             if (ratio >= threshold) {
-                double probability = ratio / 100.0;
-
-                List<BlindBoxCard> cards = box.getBlindBoxCards().stream()
-                        .filter(BlindBoxCard::isStatus)
-                        .filter(bc -> bc.getCard().getRarity() == rarity)
-                        .toList();
-
-                if (!cards.isEmpty()) {
-                    double avgValue = cards.stream()
-                            .mapToDouble(bc -> bc.getCard().getBasePrice()) // giả sử Card có field value
-                            .average()
-                            .orElse(0.0);
-
-                    ev += probability * avgValue;
-                    evLong = (long) ev;
-                }
+                double avgValue = activeCards.stream()
+                        .filter(c -> c.getCard().getRarity() == rarity)
+                        .mapToDouble(c -> c.getCard().getBasePrice()).average().orElse(0.0);
+                ev += (ratio / 100.0) * avgValue;
             }
         }
-
-        return evLong;
+        return Math.round(ev * 1.05); // Markup 5%
     }
 
-    public Long calculateBlindBoxPrice(BlindBox box) {
-        double totalValue = box.getBlindBoxCards().stream()
-                .filter(BlindBoxCard::isStatus)
+    public Long calculateBlindBoxPriceFromList(List<BlindBoxCard> activeCards) {
+        double totalValue = activeCards.stream()
                 .mapToDouble(bc -> bc.getCard().getBasePrice())
                 .sum();
 
-        double insuranceFactor = 1.03;
-        double finalPrice = totalValue * insuranceFactor;
-        Long roundedPrice = Math.round(finalPrice);
-
-        return roundedPrice;
+        return Math.round(totalValue * 1.03); // Giữ nguyên insurance 3% của bạn
     }
 
 }

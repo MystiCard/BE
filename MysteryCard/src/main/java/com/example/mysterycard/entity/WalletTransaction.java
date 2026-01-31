@@ -29,7 +29,7 @@ public class WalletTransaction {
     private StatusPayment statusTransaction;
     @Builder.Default
     private LocalDateTime createAt = LocalDateTime.now();
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "payment_id")
     private Payment payment;
     @ManyToOne
@@ -41,9 +41,6 @@ public class WalletTransaction {
     @ManyToOne
     @JoinColumn(name = "wallet_receive_id")
     private Wallet walletReceive;
-    @ManyToOne
-    @JoinColumn(name = "blindboxpurchase_id")
-    private BlindBoxPurChase blindboxpurchase;
     @ManyToOne
     @JoinColumn(name = "bank_id")
     private BankAccount bankAccount;

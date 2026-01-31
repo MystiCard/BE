@@ -20,14 +20,19 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
     private LocalDateTime orderDate;
+    private int quantity;
     @ManyToOne
     @JoinColumn(name = "buyer_id")
     private Users buyer;
-    @OneToOne
-    @JoinColumn(name = "shipment_id")
-    private Shipment shipment;
+    @OneToMany(mappedBy = "order")
+    private List<Shipment> shipment = new ArrayList<>();
     @OneToMany(mappedBy = "order")
     private List<WalletTransaction> transactionList = new ArrayList<>();
     @OneToMany(mappedBy = "order")
     private List<OrderItem> orderItemList = new ArrayList<>();
+    @ManyToOne
+    @JoinColumn(name = "blind_box_id")
+    private BlindBox blindBox;
+    @OneToMany(mappedBy = "order")
+    private List<BlindBoxResult> blindBoxResults = new ArrayList<>();
 }

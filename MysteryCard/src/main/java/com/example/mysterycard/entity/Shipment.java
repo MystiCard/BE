@@ -25,10 +25,8 @@ public class Shipment {
     private String shipperName;
     private String shipperContact;
     private String provider;
-    @OneToOne(mappedBy = "shipment")
+    @ManyToOne
+    @JoinColumn(name = "order_id")
     private Order order;
-    @OneToOne(mappedBy = "shipment")
-    private BlindBoxPurChase purChase;
-
 
 }

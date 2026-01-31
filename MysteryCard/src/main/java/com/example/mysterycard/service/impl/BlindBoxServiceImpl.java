@@ -9,12 +9,12 @@ import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.BlindBoxCardMapper;
 import com.example.mysterycard.mapper.BlindBoxMapper;
-import com.example.mysterycard.mapper.BlindBoxPurChaseMapper;
 import com.example.mysterycard.mapper.CardMapper;
 import com.example.mysterycard.repository.*;
 import com.example.mysterycard.service.BlindBoxService;
 import com.example.mysterycard.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BlindBoxServiceImpl implements BlindBoxService {
@@ -34,8 +35,7 @@ public class BlindBoxServiceImpl implements BlindBoxService {
     private final BlindBoxCardMapper blindBoxCardMapper;
     private final CardMapper cardMapper;
     private final UserService userService;
-    private final BlindBoxPurchaseRepo blindBoxPurChaseRepo;
-    private final BlindBoxPurChaseMapper blindBoxPurChaseMapper;
+    private final OrderRepo orderRepo;
     @Override
     @Transactional
     public BlindBoxResponse createBlindBox(BlindBoxRequest request) {
@@ -92,9 +92,9 @@ public class BlindBoxServiceImpl implements BlindBoxService {
     @Override
     public DrawResultResponse drawCard(UUID id) {
         // 1. Tìm purchase và LOCK BOX
-        BlindBoxPurChase purchase = blindBoxPurChaseRepo.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.BLIND_BOX_PURCHASE_NOT_FOUND));
-        BlindBox box = blindBoxRepo.findByIdWithLock(purchase.getBlindBox().getBlindBoxId())
+        Order order = orderRepo.findById(id).orElseThrow(
+                () -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+        BlindBox box = blindBoxRepo.findByIdWithLock(order.getBlindBox().getBlindBoxId())
                 .orElseThrow(() -> new AppException(ErrorCode.BLIND_BOX_NOT_FOUND));
 
         // 2. Lấy danh sách thẻ status = true (Dữ liệu tươi nhất từ DB)
@@ -137,15 +137,15 @@ public class BlindBoxServiceImpl implements BlindBoxService {
         // 6. Lưu kết quả mở thưởng
         BlindBoxResult result = new BlindBoxResult();
         result.setCard(chosenCard.getCard());
-        result.setBlindBoxPurchase(purchase);
-        result.setOwner(purchase.getBuyer());
+        result.setOrder(order);
+        result.setOwner(order.getBuyer());
         blindBoxCardResultRepo.save(result);
 
         // 7. Trả về Response
         DrawResultResponse drawResult = new DrawResultResponse();
         drawResult.setCard(cardMapper.toResponse(chosenCard.getCard()));
-        drawResult.setDrawPrice(purchase.getPrice()); // Giá lúc khách mua
-        drawResult.setProfitOrLoss(chosenCard.getCard().getBasePrice() - purchase.getPrice());
+        drawResult.setDrawPrice(order.getTotalAmount()); // Giá lúc khách mua
+        drawResult.setProfitOrLoss(chosenCard.getCard().getBasePrice() - order.getTotalAmount());
 
         return drawResult;
     }
@@ -177,13 +177,13 @@ public class BlindBoxServiceImpl implements BlindBoxService {
         BlindBox box = blindBoxRepo.findById(blindBoxId)
                 .orElseThrow(() -> new AppException(ErrorCode.BLIND_BOX_NOT_FOUND));
         Users users = userService.getUser();
-        BlindBoxPurChase purchase = new BlindBoxPurChase();
-        purchase.setBlindBox(box);
-        purchase.setBuyer(users);
-        purchase.setPrice(box.getDrawPrice());
+        Order order = new Order();
+        order.setBlindBox(box);
+        order.setBuyer(users);
+        order.setTotalAmount(box.getDrawPrice());
 
 
-        purchase = blindBoxPurChaseRepo.save(purchase);
+        order = orderRepo.save(order);
         return blindBoxPurChaseMapper.toResponse(purchase);
     }
 

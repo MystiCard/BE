@@ -1,7 +1,5 @@
 package com.example.mysterycard.exception;
 
-import com.example.mysterycard.entity.BlindBoxPurChase;
-import lombok.Data;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 

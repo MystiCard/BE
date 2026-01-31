@@ -39,11 +39,8 @@ public class Users {
     private Set<Role> rolelist = new HashSet<>();
     @OneToMany(mappedBy = "seller")
     private List<ListSeller> listSellers = new ArrayList<>();
-
     @OneToMany(mappedBy = "buyer")
     private List<Order> orderList = new ArrayList<>();
-    @OneToMany(mappedBy = "buyer")
-    private List<BlindBoxPurChase> blindBoxPurChaseList = new ArrayList<>();
     @OneToMany(mappedBy = "buyer")
     private List<Feedback> reviewerList = new ArrayList<>();
     @OneToMany(mappedBy = "seller")
@@ -54,4 +51,6 @@ public class Users {
     private List<BankAccount> bankAccountslist = new ArrayList<>();
     @OneToMany(mappedBy = "owner")
     private List<BlindBoxResult> blindBoxResults = new ArrayList<>();
+    @OneToMany(mappedBy = "user")
+    private List<WishList> wishLists = new ArrayList<>();
 }

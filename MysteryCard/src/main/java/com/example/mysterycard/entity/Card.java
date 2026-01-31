@@ -18,6 +18,9 @@ public class Card {
     private String name;
     @Enumerated(EnumType.STRING)
     private Rarity rarity;
+    private double basePrice;
+    private double minPrice;
+    private double maxPrice;
     @ManyToOne
     @JoinColumn(name="category_id")
     private Category category;
@@ -29,8 +32,8 @@ public class Card {
     private List<BlindBoxResult> blindBoxResults = new ArrayList<>();
     @OneToMany(mappedBy = "card",cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Image> images = new ArrayList<>();
-    private double basePrice;
-    private double minPrice;
-    private double maxPrice;
+ @OneToMany(mappedBy = "card")
+    private List<WishList> wishLists = new ArrayList<>();
+
 
 }

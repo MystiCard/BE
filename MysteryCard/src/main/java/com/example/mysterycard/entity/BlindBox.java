@@ -30,7 +30,7 @@ public class BlindBox {
     @ManyToMany(mappedBy = "blindBoxesList",cascade = CascadeType.ALL)
     private List<RateConfig> rateConfigList = new ArrayList<>();
     @OneToMany(mappedBy = "blindBox")
-    private List<BlindBoxPurChase> blindBoxPurChaseList = new ArrayList<>();
+    private List<Order> orderListd = new ArrayList<>();
     @OneToMany(mappedBy = "blindBox")
     private List<Feedback> blindBoxOpenList = new ArrayList<>();
 }

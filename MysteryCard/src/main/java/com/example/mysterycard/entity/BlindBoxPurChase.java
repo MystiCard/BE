@@ -16,7 +16,7 @@ public class BlindBoxPurChase {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID blindBoxPurchaseId;
-    private double price;
+    private Long price;
     private boolean isOpened = false;
     @CreationTimestamp
     private LocalDateTime purchaseDate;

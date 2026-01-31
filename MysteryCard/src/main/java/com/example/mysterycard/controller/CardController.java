@@ -6,6 +6,7 @@ import com.example.mysterycard.service.CardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -39,5 +40,10 @@ public class CardController {
     @PutMapping("/{id}")
     public ApiResponse updateCard(@PathVariable UUID id, @RequestBody CardRequest request) {
         return ApiResponse.success(cardService.updateCard(id, request));
+    }
+
+    @PostMapping("/import")
+    public ApiResponse importCategories(@RequestParam("file") MultipartFile file) {
+        return ApiResponse.success(cardService.importCards(file));
     }
 }

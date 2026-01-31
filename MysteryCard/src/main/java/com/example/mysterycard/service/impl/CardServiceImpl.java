@@ -14,11 +14,16 @@ import com.example.mysterycard.repository.CardRepo;
 import com.example.mysterycard.repository.CategoryRepo;
 import com.example.mysterycard.repository.RateConfigRepo;
 import com.example.mysterycard.service.CardService;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.UUID;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 
 @Service
 public class CardServiceImpl implements CardService {
@@ -87,5 +92,91 @@ public class CardServiceImpl implements CardService {
         card.setMinPrice(card.getBasePrice()-card.getBasePrice()*config.getVariancePercent());
         card.setMaxPrice(card.getBasePrice()+card.getBasePrice()*config.getVariancePercent());
         cardRepo.save(card);
+    }
+
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Integer> importCards(MultipartFile file) {
+        int addCount = 0;
+        int skipCount = 0;
+
+        Map<String, Category> categoryCache = new HashMap<>();
+        DataFormatter dataFormatter = new DataFormatter();
+
+        // Tải trước RateConfig vào memory để tránh query DB hàng nghìn lần trong hàm setMinMaxPrice
+        List<RateConfig> allConfigs = rateConfigRepo.findAll();
+
+        try (InputStream is = file.getInputStream();
+             Workbook workbook = new XSSFWorkbook(is)) {
+
+            Sheet sheet = workbook.getSheetAt(0);
+
+            for (Row row : sheet) {
+                if (row.getRowNum() == 0) continue; // Bỏ qua Header
+
+                try {
+                    // 1. Đọc dữ liệu thô
+                    String name = dataFormatter.formatCellValue(row.getCell(1)).trim();
+                    String rarityStr = dataFormatter.formatCellValue(row.getCell(2)).trim();
+                    String imgUrl = dataFormatter.formatCellValue(row.getCell(3)).trim();
+                    String priceStr = dataFormatter.formatCellValue(row.getCell(4)).trim().replace(",", "");
+                    String categoryName = dataFormatter.formatCellValue(row.getCell(5)).trim();
+
+                    // 2. Validate nhanh
+                    if (name.isEmpty() || rarityStr.isEmpty() || priceStr.isEmpty()) continue;
+                    if (cardRepo.existsCardByName(name)) {
+                        skipCount++;
+                        continue;
+                    }
+
+                    // 3. Xử lý Rarity & Price (Parse an toàn)
+                    Rarity rarity = Rarity.valueOf(rarityStr.toUpperCase());
+                    double basePrice = Double.parseDouble(priceStr);
+
+                    // 4. Xử lý Category (Dùng Cache)
+                    Category category = categoryCache.computeIfAbsent(categoryName, nameKey -> {
+                        Category existing = categoryRepo.findByCategoryName(nameKey);
+                        return (existing != null) ? existing : categoryRepo.save(Category.builder().categoryName(nameKey).build());
+                    });
+
+                    // 5. Khởi tạo Card
+                    Card card = new Card();
+                    card.setName(name);
+                    card.setRarity(rarity);
+                    card.setBasePrice(basePrice);
+                    card.setCategory(category); // Đảm bảo set category ngay
+
+                    // 6. Tính Min/Max Price ngay tại chỗ (Không gọi hàm cũ để tránh n+1 query)
+                    RateConfig config = allConfigs.stream()
+                            .filter(rc -> rc.getCardRarity() == rarity)
+                            .findFirst()
+                            .orElseThrow(() -> new RuntimeException("Rate config missing for: " + rarity));
+
+                    card.setMinPrice(basePrice * (1 - config.getVariancePercent()));
+                    card.setMaxPrice(basePrice * (1 + config.getVariancePercent()));
+
+                    // 7. Xử lý Image
+                    if (!imgUrl.isEmpty()) {
+                        Image img = new Image();
+                        img.setImageUrl(imgUrl);
+                        img.setCard(card);
+                        card.setImages(new ArrayList<>(List.of(img)));
+                    }
+
+                    cardRepo.save(card);
+                    addCount++;
+
+                } catch (Exception e) {
+                    // Log lỗi cho dòng cụ thể nhưng không làm sập cả quá trình import
+                    System.err.println("Lỗi tại dòng " + row.getRowNum() + ": " + e.getMessage());
+                    skipCount++;
+                }
+            }
+        } catch (IOException e) {
+            throw new AppException(ErrorCode.FILE_IMPORT_ERROR);
+        }
+
+        return Map.of("added", addCount, "skipped", skipCount);
     }
 }

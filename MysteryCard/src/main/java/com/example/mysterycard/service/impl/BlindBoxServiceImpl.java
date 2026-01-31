@@ -10,6 +10,7 @@ import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.BlindBoxCardMapper;
 import com.example.mysterycard.mapper.BlindBoxMapper;
 import com.example.mysterycard.mapper.CardMapper;
+import com.example.mysterycard.mapper.OrderMapper;
 import com.example.mysterycard.repository.*;
 import com.example.mysterycard.service.BlindBoxService;
 import com.example.mysterycard.service.UserService;
@@ -36,6 +37,7 @@ public class BlindBoxServiceImpl implements BlindBoxService {
     private final CardMapper cardMapper;
     private final UserService userService;
     private final OrderRepo orderRepo;
+    private final OrderMapper orderMapper;
     @Override
     @Transactional
     public BlindBoxResponse createBlindBox(BlindBoxRequest request) {
@@ -150,7 +152,7 @@ public class BlindBoxServiceImpl implements BlindBoxService {
         return drawResult;
     }
     @Override
-    public BlindBoxResponse getBlindBoxById(Long id) {
+    public BlindBoxResponse getBlindBoxById(UUID id) {
         BlindBox box = blindBoxRepo.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.BLIND_BOX_NOT_FOUND));
         return blindBoxMapper.toBlindBoxResponse(box);
@@ -165,7 +167,7 @@ public class BlindBoxServiceImpl implements BlindBoxService {
     }
 
     @Override
-    public List<BlindBoxCardResponse> getCardsInBlindBox(Long blindBoxId) {
+    public List<BlindBoxCardResponse> getCardsInBlindBox(UUID blindBoxId) {
         BlindBox box = blindBoxRepo.findById(blindBoxId)
                 .orElseThrow(() -> new AppException(ErrorCode.BLIND_BOX_NOT_FOUND));
         return box.getBlindBoxCards().stream()
@@ -173,7 +175,7 @@ public class BlindBoxServiceImpl implements BlindBoxService {
                 .toList();
     }
     @Override
-    public BlindBoxPurChaseResponse buyBlindBox(Long blindBoxId) {
+    public OrderResponse buyBlindBox(UUID blindBoxId) {
         BlindBox box = blindBoxRepo.findById(blindBoxId)
                 .orElseThrow(() -> new AppException(ErrorCode.BLIND_BOX_NOT_FOUND));
         Users users = userService.getUser();
@@ -184,11 +186,11 @@ public class BlindBoxServiceImpl implements BlindBoxService {
 
 
         order = orderRepo.save(order);
-        return blindBoxPurChaseMapper.toResponse(purchase);
+        return orderMapper.toOrderResponse(order);
     }
 
     @Override
-    public void deleteBlindBox(Long id) {
+    public void deleteBlindBox(UUID id) {
         BlindBox box = blindBoxRepo.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.BLIND_BOX_NOT_FOUND));
         blindBoxRepo.delete(box);
@@ -224,7 +226,7 @@ public class BlindBoxServiceImpl implements BlindBoxService {
     }
 
     @Override
-    public BlindBoxProbabilitiesResponse getProbabilities(Long blindBoxId) {
+    public BlindBoxProbabilitiesResponse getProbabilities(UUID blindBoxId) {
         BlindBox box = blindBoxRepo.findById(blindBoxId)
                 .orElseThrow(() -> new AppException(ErrorCode.BLIND_BOX_NOT_FOUND));
         List<BlindBoxCard> activeCards = blindBoxCardRepo.findAllByBlindBoxAndStatusTrue(box);

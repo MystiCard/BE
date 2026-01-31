@@ -15,4 +15,6 @@ public class OrderResponse {
     private OrderStatus status;
     private LocalDateTime orderDate;
     private int quantity;
+    private UUID buyerId;
+    private UUID blindBoxId;
 }

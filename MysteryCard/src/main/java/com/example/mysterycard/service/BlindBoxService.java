@@ -9,10 +9,10 @@ import java.util.UUID;
 public interface BlindBoxService {
     BlindBoxResponse createBlindBox(BlindBoxRequest request);
     DrawResultResponse drawCard(UUID id);
-    BlindBoxResponse getBlindBoxById(Long id);
+    BlindBoxResponse getBlindBoxById(UUID id);
     List<BlindBoxResponse> getAllBlindBoxes();
-    List<BlindBoxCardResponse> getCardsInBlindBox(Long blindBoxId);
-    BlindBoxPurChaseResponse buyBlindBox(Long blindBoxId);
-    void deleteBlindBox(Long id);
-    BlindBoxProbabilitiesResponse getProbabilities(Long blindBoxId);
+    List<BlindBoxCardResponse> getCardsInBlindBox(UUID blindBoxId);
+    OrderResponse buyBlindBox(UUID blindBoxId);
+    void deleteBlindBox(UUID id);
+    BlindBoxProbabilitiesResponse getProbabilities(UUID blindBoxId);
 }

@@ -32,25 +32,25 @@ public class BlindBoxController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse getBlindBoxById(@PathVariable("id") Long id) {
+    public ApiResponse getBlindBoxById(@PathVariable("id") UUID id) {
         return ApiResponse.success(blindBoxService.getBlindBoxById(id));
     }
 
     @GetMapping("/{id}/cards")
-    public ApiResponse getCardsInBlindBox(@PathVariable("id") Long blindBoxId) {
+    public ApiResponse getCardsInBlindBox(@PathVariable("id") UUID blindBoxId) {
         return ApiResponse.success(blindBoxService.getCardsInBlindBox(blindBoxId));
     }
     @PostMapping("/{id}/buy")
-    public ApiResponse buyBlindBox(@PathVariable("id") Long blindBoxId) {
+    public ApiResponse buyBlindBox(@PathVariable("id") UUID blindBoxId) {
         return ApiResponse.success(blindBoxService.buyBlindBox(blindBoxId));
     }
     @DeleteMapping("/{id}")
-    public ApiResponse deleteBlindBox(@PathVariable("id") Long id) {
+    public ApiResponse deleteBlindBox(@PathVariable("id") UUID id) {
         blindBoxService.deleteBlindBox(id);
         return ApiResponse.success();
     }
     @GetMapping("/{id}/probabilities")
-    public BlindBoxProbabilitiesResponse getProbabilities(@PathVariable Long id) {
+    public BlindBoxProbabilitiesResponse getProbabilities(@PathVariable UUID id) {
         return blindBoxService.getProbabilities(id);
     }
 

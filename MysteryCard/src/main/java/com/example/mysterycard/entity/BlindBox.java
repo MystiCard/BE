@@ -4,10 +4,7 @@ import com.example.mysterycard.enums.BlindBoxStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Table(name = "BlindBox")
@@ -17,7 +14,7 @@ import java.util.Set;
 public class BlindBox {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long blindBoxId;
+    private UUID blindBoxId;
     private String name;
     private String description;
     private String imageUrl;

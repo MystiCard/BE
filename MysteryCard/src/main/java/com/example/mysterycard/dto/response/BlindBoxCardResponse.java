@@ -7,7 +7,7 @@ import java.util.UUID;
 @Data
 public class BlindBoxCardResponse {
     private UUID blindBoxCardId;
-    private Long blindBoxId;
+    private UUID blindBoxId;
     private UUID cardId;
     private String cardName;
     private String rarity;

@@ -17,4 +17,5 @@ public interface CategoryService {
     CategoryResponse updateCate(UUID id, String categoryName);
     List<CardResponse> getCardsByCategoryId(UUID id);
     Map<String, List<String>> importCategories(MultipartFile file);
+    List<UUID> getCardIdsByCategoryId(UUID id);
 }

@@ -9,8 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface BlindBoxRepo extends JpaRepository<BlindBox, Long> {
+public interface BlindBoxRepo extends JpaRepository<BlindBox, UUID> {
     @Lock(LockModeType.PESSIMISTIC_WRITE) // Khóa để ghi
     @Query("SELECT b FROM BlindBox b WHERE b.blindBoxId = :id")
-    Optional<BlindBox> findByIdWithLock(Long id);
+    Optional<BlindBox> findByIdWithLock(UUID id);
 }

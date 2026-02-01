@@ -50,4 +50,8 @@ public class CategoryController {
     public ApiResponse importCategories(@RequestParam("file") MultipartFile file) {
         return ApiResponse.success(categoryService.importCategories(file));
     }
+    @GetMapping("/{id}/card-ids")
+    public ApiResponse getCardIdsByCategoryId(@PathVariable UUID id) {
+        return ApiResponse.success(categoryService.getCardIdsByCategoryId(id));
+    }
 }

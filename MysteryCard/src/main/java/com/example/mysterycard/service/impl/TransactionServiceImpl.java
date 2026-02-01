@@ -9,7 +9,6 @@ import com.example.mysterycard.enums.StatusPayment;
 import com.example.mysterycard.enums.TransactionType;
 import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
-import com.example.mysterycard.repository.BlindBoxPurchaseRepo;
 import com.example.mysterycard.mapper.PaymentMapper;
 import com.example.mysterycard.mapper.TransactionMapper;
 import com.example.mysterycard.repository.*;
@@ -20,10 +19,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 
@@ -36,7 +35,6 @@ public class TransactionServiceImpl implements TransactionService {
     private final PaymentMapper paymentMapper;
     private final PaymentService paymentService;
     private final OrderRepo orderRepo;
-    private final BlindBoxPurchaseRepo blindBoxPurchaseRepo;
     private final BankAccountRepo bankAccountRepo;
     private final UsersRepo usersRepo;
     private final PaymentRepo paymentRepo;
@@ -107,8 +105,14 @@ public class TransactionServiceImpl implements TransactionService {
         // rut tien/ nap tien thanh cong
         if (request.getTranferId() != null) {
             Payment payment = paymentRepo.findByTransactionRef(request.getTranferId().toString());
-            if (payment != null && payment.getWalletTransaction() != null) {
-                transaction = payment.getWalletTransaction();
+            if (payment != null ) {
+
+                List<WalletTransaction> walletTransactionList = transactionRepo.findByPaymentOrderByCreateAtDesc(payment);
+                if(walletTransactionList == null && walletTransactionList.isEmpty())
+                {
+                    throw new AppException(ErrorCode.TRANSACTION_NOT_FOUND);
+                }
+                transaction = walletTransactionList.get(0);
             } else {
                 throw new AppException(ErrorCode.TRANSACTION_NOT_FOUND);
             }
@@ -153,14 +157,6 @@ public class TransactionServiceImpl implements TransactionService {
             transaction.setWalletReceive(seller);
             transaction.setOrder(order);
             transaction.setStatusTransaction(StatusPayment.ESCROWED);
-        } else if (request.getBlindboxPurchaseId() != null) {
-            BlindBoxPurChase blindBoxPurChase = blindBoxPurchaseRepo.findById(request.getBlindboxPurchaseId()).orElseThrow(() ->
-                    new AppException(ErrorCode.BLIND_BOX_PURCHASE_NOT_FOUND)
-            );
-            amount = blindBoxPurChase.getPrice();
-            transaction.setWalletReceive(admin.getWallet());
-            transaction.setBlindboxpurchase(blindBoxPurChase);
-            transaction.setStatusTransaction(StatusPayment.SUCCESS);
         }
         transaction.setWalletSend(buyer);
         transaction.setAmount(amount);
@@ -211,8 +207,8 @@ public class TransactionServiceImpl implements TransactionService {
         }
         Wallet adminWallet = admin.getWallet();
         Order order = transaction.getOrder();
-        BlindBoxPurChase blindBoxPurChase = transaction.getBlindboxpurchase();
-        Shipment shipment = order  == null ? blindBoxPurChase.getShipment() : order.getShipment();
+       // xem lai
+        Shipment shipment =  order.getShipment().getLast();
         Wallet buyer = transaction.getWalletSend();
         if (order != null) {
             transaction.setStatusTransaction(StatusPayment.REFUNDED);
@@ -246,14 +242,6 @@ public class TransactionServiceImpl implements TransactionService {
                 seller.setBalance(seller.getBalance() + price);
                 adminWallet.setBalance(adminWallet.getBalance() - price);
 
-            }
-
-        } else if (blindBoxPurChase != null) {
-            ShippingStatus shippingStatus = transaction.getBlindboxpurchase().getShipment().getShipmentStatus();
-            if (shippingStatus.equals(ShippingStatus.LOST)) {
-                buyer.setBalance(buyer.getBalance() + transaction.getAmount());
-                adminWallet.setBalance(adminWallet.getBalance() - transaction.getAmount());
-                transaction.setStatusTransaction(StatusPayment.REFUNDED);
             }
         }
         usersRepo.save(admin);

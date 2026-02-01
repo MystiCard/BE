@@ -21,12 +21,13 @@ public class BlindBoxResult {
     @CreationTimestamp
     private LocalDateTime openedAt;
     @ManyToOne
-    @JoinColumn(name = "blind_box_purchase_id")
-    private BlindBoxPurChase blindBoxPurchase;
-    @ManyToOne
     @JoinColumn(name = "card_id")
     private Card card;
     @ManyToOne
     @JoinColumn(name = "user_id")
     private Users owner;
+    @ManyToOne
+    @JoinColumn(name = "order_id")
+    private Order order;
+
 }

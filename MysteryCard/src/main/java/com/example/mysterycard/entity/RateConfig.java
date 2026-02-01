@@ -11,8 +11,10 @@ import java.util.UUID;
 @Entity
 @Table(name = "RateConfig")
 @NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
+@Builder
 public class RateConfig {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

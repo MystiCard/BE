@@ -5,11 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @AllArgsConstructor
 public class BlindBoxProbabilitiesResponse {
-    private Long blindBoxId;
+    private UUID blindBoxId;
     private List<ProbabilityItem> probabilities;
 
     @Data

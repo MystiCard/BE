@@ -4,10 +4,7 @@ import com.example.mysterycard.enums.BlindBoxStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Table(name = "BlindBox")
@@ -16,8 +13,8 @@ import java.util.Set;
 @Setter
 public class BlindBox {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long blindBoxId;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID blindBoxId;
     private String name;
     private String description;
     private String imageUrl;
@@ -30,7 +27,7 @@ public class BlindBox {
     @ManyToMany(mappedBy = "blindBoxesList",cascade = CascadeType.ALL)
     private List<RateConfig> rateConfigList = new ArrayList<>();
     @OneToMany(mappedBy = "blindBox")
-    private List<BlindBoxPurChase> blindBoxPurChaseList = new ArrayList<>();
+    private List<Order> orderListd = new ArrayList<>();
     @OneToMany(mappedBy = "blindBox")
     private List<Feedback> blindBoxOpenList = new ArrayList<>();
 }

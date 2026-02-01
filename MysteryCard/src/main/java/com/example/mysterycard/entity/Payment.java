@@ -5,9 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "Payment")
@@ -26,7 +24,7 @@ public class Payment {
     private String payType;
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
-     @OneToOne(mappedBy = "payment")
-    private WalletTransaction walletTransaction;
+     @OneToMany(mappedBy = "payment")
+    private List<WalletTransaction> walletTransactions = new ArrayList<>();
 
 }

@@ -22,6 +22,6 @@ public class TransactionRequest {
     private TransactionType transactionType;
     @NotNull(message = "Amount  is required")
     private UUID orderId; // neu ma thanh toan cho order
-    private UUID blindboxPurchaseId; // neu ma mua blindbox
+
 
 }

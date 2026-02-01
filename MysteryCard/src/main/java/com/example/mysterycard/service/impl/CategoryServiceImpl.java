@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class CategoryServiceImpl implements CategoryService {
@@ -104,5 +105,12 @@ public class CategoryServiceImpl implements CategoryService {
 
     }
 
+    public List<UUID> getCardIdsByCategoryId(UUID id) {
+        Category cate = categoryRepo.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
+        return cate.getCardlist().stream()
+                .map(Card::getCardId)
+                .collect(Collectors.toList());
+    }
 }

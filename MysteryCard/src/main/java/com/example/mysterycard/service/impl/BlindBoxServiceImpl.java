@@ -13,6 +13,7 @@ import com.example.mysterycard.mapper.CardMapper;
 import com.example.mysterycard.mapper.OrderMapper;
 import com.example.mysterycard.repository.*;
 import com.example.mysterycard.service.BlindBoxService;
+import com.example.mysterycard.service.CategoryService;
 import com.example.mysterycard.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,8 @@ public class BlindBoxServiceImpl implements BlindBoxService {
     private final UserService userService;
     private final OrderRepo orderRepo;
     private final OrderMapper orderMapper;
+    private final CategoryService categoryService;
+
     @Override
     @Transactional
     public BlindBoxResponse createBlindBox(BlindBoxRequest request) {
@@ -48,7 +51,13 @@ public class BlindBoxServiceImpl implements BlindBoxService {
             rc.getBlindBoxesList().add(blindBox);
         }
         List<BlindBoxCard> boxCards = new ArrayList<>();
-        for(UUID cardId : request.getCardIds()) {
+        List<UUID> listIds;
+        if(request.getCategoryId()!=null){
+            listIds = categoryService.getCardIdsByCategoryId(UUID.fromString(request.getCategoryId()));
+        } else {
+         listIds = request.getCardIds();
+        }
+        for(UUID cardId : listIds) {
             Card card = cardRepo.findById(cardId)
                     .orElseThrow(() -> new AppException(ErrorCode.CARD_NOT_FOUND));
             BlindBoxCard boxCard = new BlindBoxCard();
@@ -71,8 +80,7 @@ public class BlindBoxServiceImpl implements BlindBoxService {
 
         blindBox.setDrawPrice(calculateSmartEV(blindBox,boxCards));
         blindBox.setAllBoxPrice(calculateBlindBoxPriceFromList(boxCards));
-        blindBox = blindBoxRepo.save(blindBox);
-        return blindBoxMapper.toBlindBoxResponse(blindBox);
+        return blindBoxMapper.toBlindBoxResponse(blindBoxRepo.save(blindBox));
     }
 
     private double getWeight(BlindBoxCard bc, BlindBox box){
@@ -273,39 +281,56 @@ public class BlindBoxServiceImpl implements BlindBoxService {
     }
     private Long calculateSmartEV(BlindBox box, List<BlindBoxCard> activeCards) {
         int currentCount = activeCards.size();
-        // Giả sử box.getBlindBoxCards() chứa tổng số thẻ ban đầu
         int initialCount = box.getBlindBoxCards().size();
+        double fillRate = (double) currentCount / initialCount;
 
-        // CHIẾN LƯỢC 1: Chốt hạ (15%)
+        // 1. CHIẾN LƯỢC CHỐT HẠ (End-game)
         if (currentCount <= (initialCount * 0.15) || currentCount < 10) {
-            double totalValue = activeCards.stream().mapToDouble(c -> c.getCard().getBasePrice()).sum();
-            return Math.round(totalValue / currentCount);
+            double totalValue = activeCards.stream()
+                    .mapToDouble(c -> c.getCard().getBasePrice()).sum();
+            return Math.round((totalValue / currentCount) * 1.05); // Cộng 5% phí sàn
         }
 
-        // CHIẾN LƯỢC 2: Xác suất chuẩn hóa
-        Map<Rarity, Double> probabilities = calculateRarityProbabilities(box, activeCards);
-        double ev = 0.0;
+        // Group cards theo Rarity trước để tránh stream nhiều lần trong vòng lặp
+        Map<Rarity, List<BlindBoxCard>> cardsByRarity = activeCards.stream()
+                .collect(Collectors.groupingBy(c -> c.getCard().getRarity()));
 
-        for (Map.Entry<Rarity, Double> entry : probabilities.entrySet()) {
-            Rarity rarity = entry.getKey();
-            double ratio = entry.getValue();
+        double totalEV = 0.0;
 
-            double threshold = switch (rarity) {
-                case RARE -> 3.0;
-                case SUPER_RARE -> 2.0;
-                case ULTRA_RARE -> 1.0;
-                case SECRET_RARE -> 0.5;
-                default -> 0.0;
-            };
+        for (Rarity rarity : Rarity.values()) {
+            List<BlindBoxCard> cards = cardsByRarity.getOrDefault(rarity, Collections.emptyList());
+            if (cards.isEmpty()) continue;
 
-            if (ratio >= threshold) {
-                double avgValue = activeCards.stream()
-                        .filter(c -> c.getCard().getRarity() == rarity)
-                        .mapToDouble(c -> c.getCard().getBasePrice()).average().orElse(0.0);
-                ev += (ratio / 100.0) * avgValue;
-            }
+            double currentProb = (double) cards.size() / currentCount;
+            double avgPrice = cards.stream().mapToDouble(c -> c.getCard().getBasePrice()).average().orElse(0.0);
+
+            // 2. HỆ SỐ NHÂN MỀM (Dynamic Multipliers)
+            double multiplier = calculateMultiplier(rarity, fillRate);
+
+            totalEV += currentProb * avgPrice * multiplier;
         }
-        return Math.round(ev * 1.05); // Markup 5%
+
+        // 3. GIÁ SÀN BẢO VỆ (Floor Price)
+        // Đảm bảo giá Box không thấp hơn trung bình thẻ Common/Uncommon hiện có
+        double floorPrice = activeCards.stream()
+                .filter(c -> c.getCard().getRarity() == Rarity.COMMON || c.getCard().getRarity() == Rarity.UNCOMMON)
+                .mapToDouble(c -> c.getCard().getBasePrice()).average().orElse(3000.0);
+
+        totalEV = Math.max(totalEV, floorPrice);
+
+        return Math.round(totalEV * 1.05);
+    }
+
+    // Hàm hỗ trợ tính Multiplier mượt mà
+    private double calculateMultiplier(Rarity rarity, double fillRate) {
+        return switch (rarity) {
+            case COMMON, UNCOMMON -> 1.0;
+            case RARE -> fillRate > 0.8 ? 0.4 : 1.2;
+            case SUPER_RARE -> fillRate > 0.7 ? 0.0 : 1.5;
+            case ULTRA_RARE -> fillRate > 0.5 ? 0.0 : 2.5;
+            case SECRET_RARE -> fillRate > 0.3 ? 0.0 : 5.0;
+            default -> 1.0;
+        };
     }
 
     public Long calculateBlindBoxPriceFromList(List<BlindBoxCard> activeCards) {
@@ -315,5 +340,6 @@ public class BlindBoxServiceImpl implements BlindBoxService {
 
         return Math.round(totalValue * 1.03); // Giữ nguyên insurance 3% của bạn
     }
+
 
 }

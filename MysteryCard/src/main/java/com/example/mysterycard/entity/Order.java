@@ -3,6 +3,7 @@ package com.example.mysterycard.entity;
 import com.example.mysterycard.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -18,7 +19,8 @@ public class Order {
     private UUID orderId;
     private Long totalAmount;
     @Enumerated(EnumType.STRING)
-    private OrderStatus status;
+    private OrderStatus status= OrderStatus.CREATED;
+    @CreationTimestamp
     private LocalDateTime orderDate;
     private int quantity;
     @ManyToOne

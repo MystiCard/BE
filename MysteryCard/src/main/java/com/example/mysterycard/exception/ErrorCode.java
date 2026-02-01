@@ -28,6 +28,7 @@ public enum ErrorCode {
     //CATEGORY ERRORS(4)
     CATEGORY_NOT_FOUND(4001, "Category not found", HttpStatus.NOT_FOUND),
     CATEGORY_DUPLICATE(4002, "Category already exists", HttpStatus.CONFLICT),
+    EMPTY_CATEGORY_OR_CARDS(4003, "Cannot delete category because it contains sub-categories or cards", HttpStatus.BAD_REQUEST),
 
     //CARD ERRORS(6)
     CARD_NOT_FOUND(6001, "Card not found", HttpStatus.NOT_FOUND),

@@ -21,6 +21,10 @@ public class Payment {
     private String provider;
     private String transactionRef;
     private Long amount;
+    private String content;
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    private StatusPayment statusPayment = StatusPayment.PENDING;
     private String payType;
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();

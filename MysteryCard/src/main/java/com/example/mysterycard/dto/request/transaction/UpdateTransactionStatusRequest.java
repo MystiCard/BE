@@ -9,7 +9,6 @@ import java.util.UUID;
 @Data
 @Builder
 public class UpdateTransactionStatusRequest {
-    private UUID transactionId;
     private StatusPayment statusPayment;
     private UUID tranferId;
     private String message;

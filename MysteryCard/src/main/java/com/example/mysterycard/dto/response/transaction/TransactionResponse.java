@@ -19,21 +19,8 @@ public class TransactionResponse {
     private double amount;
     private StatusPayment statusTransaction;
     private LocalDateTime createAt;
-    private PaymentResponse paymentResponse;
     private String message;
     private BankAccountResponse bankAccountResponse;
 
-    @Builder
-    @Data
-    public static class PaymentResponse {
-        private UUID paymentId;
-        private String provider;
-        private Double amount;
-        private String transactionRef;
-        private StatusPayment status;
-        private LocalDateTime createdAt;
-        private String message;
 
-
-    }
 }

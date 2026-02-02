@@ -3,6 +3,7 @@ package com.example.mysterycard.configuration;
 import com.example.mysterycard.entity.Permision;
 import com.example.mysterycard.entity.Role;
 import com.example.mysterycard.entity.Users;
+import com.example.mysterycard.enums.RoleCode;
 import com.example.mysterycard.repository.PermisionRepo;
 import com.example.mysterycard.repository.RoleRepo;
 import com.example.mysterycard.repository.UsersRepo;
@@ -51,6 +52,12 @@ public class DataSender implements CommandLineRunner {
                 "Người mua thẻ/ ban thẻ",
                 Set.of(p3,p4, p5)
         );
+        Role shipment = createRole(
+                RoleCode.SHIPMENT.toString(),
+                "Shipper",
+                "Người update status shipment",
+                Set.of(p3,p4, p5)
+        );
 
         /* ================= USERS ================= */
 
@@ -73,6 +80,12 @@ public class DataSender implements CommandLineRunner {
                 "123456",
                 "Blind Box Buyer",
                 Set.of(userRole)
+        );
+        createUserIfNotExist(
+                "shipper@mysterycard.com",
+                "123456",
+                "Blind Box Buyer",
+                Set.of(shipment)
         );
 
         System.out.println("✅ Data seeding completed!");

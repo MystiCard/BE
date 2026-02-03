@@ -2,6 +2,7 @@ package com.example.mysterycard.controller;
 
 import com.example.mysterycard.base.ApiResponse;
 import com.example.mysterycard.dto.request.CardRequest;
+import com.example.mysterycard.dto.request.WishListRequest;
 import com.example.mysterycard.service.CardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,5 +46,23 @@ public class CardController {
     @PostMapping("/import")
     public ApiResponse importCategories(@RequestParam("file") MultipartFile file) {
         return ApiResponse.success(cardService.importCards(file));
+    }
+    @PostMapping("/wishlist/{cardId}" )
+    public ApiResponse addToWishList(@PathVariable UUID cardId, @RequestBody WishListRequest request){
+        return ApiResponse.success(cardService.addToWishList(cardId, request));
+    }
+    @DeleteMapping("/wishlist/{wishListId}" )
+    public ApiResponse removeFromWishList(@PathVariable UUID wishListId){
+        cardService.removeFromWishList(wishListId);
+        return ApiResponse.success();
+    }
+    @PutMapping("/wishlist/{wishListId}" )
+    public ApiResponse changeExpectPrice(@PathVariable UUID wishListId, @RequestParam Long newExpectPrice){
+        return ApiResponse.success(cardService.changeExpectPrice(wishListId, newExpectPrice));
+    }
+    @GetMapping("/wishlist")
+    public ApiResponse getUserWishList(@RequestParam(defaultValue = "0") int page,
+                                       @RequestParam(defaultValue = "10") int size ) {
+        return ApiResponse.success(cardService.getUserWishList(page,size));
     }
 }

@@ -65,6 +65,9 @@ public enum ErrorCode {
     ORDER_NOT_FOUND(12001, "Order not found with code", HttpStatus.NOT_FOUND),
     //IMPORT EXPORT ERRORS(13)
     FILE_IMPORT_ERROR(13001,"File import error. Please check your file",HttpStatus.BAD_REQUEST),
+
+    //WishList (14)
+    WISHLIST_NOT_FOUND(14001,"WishList not found",HttpStatus.NOT_FOUND),
     // SHipment (14)
     SHIPMENT_NOT_FOUND(14001,"Shipment not found",HttpStatus.NOT_FOUND),
     //Tracking(15)

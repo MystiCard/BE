@@ -3,6 +3,7 @@ package com.example.mysterycard.entity;
 import com.example.mysterycard.enums.Status;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -21,7 +22,8 @@ public class ListSeller {
     private UUID listSellerId;
     private double price;
     private int quantity;
-    private Status status;
+    private Status status= Status.AVAILABLE;
+    @CreationTimestamp
     private LocalDateTime createdAt;
     @ManyToOne
     @JoinColumn(name = "card_id")

@@ -13,6 +13,10 @@ import com.example.mysterycard.service.CardService;
 import com.example.mysterycard.service.ListSellerService;
 import com.example.mysterycard.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -38,10 +42,10 @@ public class ListSellerServiceImpl implements ListSellerService {
         ListSeller savedListSeller = listSellerRepo.save(listSeller);
         return listSellerMapper.toResponse(savedListSeller);
     }
-    public List<SellResponse> getListSellersByCardId(UUID cardId) {
-        Card card = cardRepo.findById(cardId).orElseThrow(() -> new AppException(ErrorCode.CARD_NOT_FOUND));
-        List<ListSeller> listSellers = card.getListSellers();
-        return listSellers.stream().map(listSellerMapper::toResponse).toList();
+    public Page<SellResponse> getListSellersByCardId(UUID cardId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("price").descending());
+        Page<ListSeller> listSellers = listSellerRepo.findByCard_CardId(cardId, pageable);
+        return listSellers.map(listSellerMapper::toResponse);
     }
 
 }

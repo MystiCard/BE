@@ -61,7 +61,8 @@ public class CardController {
         return ApiResponse.success(cardService.changeExpectPrice(wishListId, newExpectPrice));
     }
     @GetMapping("/wishlist")
-    public ApiResponse getUserWishList() {
-        return ApiResponse.success(cardService.getUserWishList());
+    public ApiResponse getUserWishList(@RequestParam(defaultValue = "0") int page,
+                                       @RequestParam(defaultValue = "10") int size ) {
+        return ApiResponse.success(cardService.getUserWishList(page,size));
     }
 }

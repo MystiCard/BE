@@ -19,6 +19,10 @@ import com.example.mysterycard.service.UserService;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -217,9 +221,9 @@ public class CardServiceImpl implements CardService {
         WishList updatedWishList = wishListRepo.save(wishList);
         return wishListMapper.toResponse(updatedWishList);
     }
-    public List<WishListResponse> getUserWishList() {
-        Users user = userService.getUser();
-        List<WishList> wishLists = user.getWishLists();
-        return wishLists.stream().map(wishListMapper::toResponse).toList();
+    public Page<WishListResponse> getUserWishList(int page , int size) {
+        Pageable pageable = PageRequest.of(page,size, Sort.by("expectPrice").descending());
+        Page<WishList> wishLists = wishListRepo.findByUser_UserId(userService.getMyInfor().getUserId(), pageable);
+        return wishLists.map(wishListMapper::toResponse);
     }
 }

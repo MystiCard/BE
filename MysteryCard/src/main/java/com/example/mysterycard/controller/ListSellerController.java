@@ -19,7 +19,9 @@ public class ListSellerController {
         return ApiResponse.success(listSellerService.createListSeller(request, id));
     }
     @GetMapping("/{id}")
-    public ApiResponse getListSellersByCardId(@PathVariable UUID id) {
-        return ApiResponse.success(listSellerService.getListSellersByCardId(id));
+    public ApiResponse getListSellersByCardId(@PathVariable UUID id,
+                                             @RequestParam(defaultValue = "0") int page,
+                                             @RequestParam(defaultValue = "10") int size)  {
+        return ApiResponse.success(listSellerService.getListSellersByCardId(id, page, size));
     }
 }

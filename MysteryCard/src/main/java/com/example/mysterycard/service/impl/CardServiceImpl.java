@@ -1,19 +1,21 @@
 package com.example.mysterycard.service.impl;
 
 import com.example.mysterycard.dto.request.CardRequest;
+import com.example.mysterycard.dto.request.WishListRequest;
 import com.example.mysterycard.dto.response.CardResponse;
-import com.example.mysterycard.entity.Card;
-import com.example.mysterycard.entity.Category;
-import com.example.mysterycard.entity.Image;
-import com.example.mysterycard.entity.RateConfig;
+import com.example.mysterycard.dto.response.WishListResponse;
+import com.example.mysterycard.entity.*;
 import com.example.mysterycard.enums.Rarity;
 import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.CardMapper;
+import com.example.mysterycard.mapper.WishListMapper;
 import com.example.mysterycard.repository.CardRepo;
 import com.example.mysterycard.repository.CategoryRepo;
 import com.example.mysterycard.repository.RateConfigRepo;
+import com.example.mysterycard.repository.WishListRepo;
 import com.example.mysterycard.service.CardService;
+import com.example.mysterycard.service.UserService;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,9 +35,14 @@ public class CardServiceImpl implements CardService {
     private CategoryRepo categoryRepo;
     @Autowired
     private RateConfigRepo rateConfigRepo;
-
+    @Autowired
+    private WishListMapper wishListMapper;
+    @Autowired
+    private WishListRepo wishListRepo;
     @Autowired
     private CardMapper cardMapper;
+    @Autowired
+    private UserService userService;
     @Override
     public CardResponse getCardById(UUID id) {
         Card card = cardRepo.findById(id).orElseThrow(()-> new AppException(ErrorCode.CARD_NOT_FOUND));
@@ -186,5 +193,33 @@ public class CardServiceImpl implements CardService {
         }
 
         return Map.of("added", addCount, "skipped", skipCount);
+    }
+
+    public WishListResponse addToWishList(UUID cardId, WishListRequest request) {
+        Card card = cardRepo.findById(cardId).orElseThrow(() -> new AppException(ErrorCode.CARD_NOT_FOUND));
+        WishList wishList = wishListMapper.toEntity(request);
+        Users user = userService.getUser();
+        wishList.setUser(user);
+        user.getWishLists().add(wishList);
+        wishList.setCard(card);
+        WishList savedWishList = wishListRepo.save(wishList);
+        return wishListMapper.toResponse(savedWishList);
+    }
+
+    public void removeFromWishList(UUID wishListId) {
+        WishList wishList = wishListRepo.findById(wishListId).orElseThrow(() -> new AppException(ErrorCode.WISHLIST_NOT_FOUND));
+        wishListRepo.delete(wishList);
+    }
+
+    public WishListResponse changeExpectPrice(UUID wishListId, Long newExpectPrice) {
+        WishList wishList = wishListRepo.findById(wishListId).orElseThrow(() -> new AppException(ErrorCode.WISHLIST_NOT_FOUND));
+        wishList.setExpectPrice(newExpectPrice);
+        WishList updatedWishList = wishListRepo.save(wishList);
+        return wishListMapper.toResponse(updatedWishList);
+    }
+    public List<WishListResponse> getUserWishList() {
+        Users user = userService.getUser();
+        List<WishList> wishLists = user.getWishLists();
+        return wishLists.stream().map(wishListMapper::toResponse).toList();
     }
 }

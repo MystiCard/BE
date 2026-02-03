@@ -1,7 +1,9 @@
 package com.example.mysterycard.service;
 
 import com.example.mysterycard.dto.request.CardRequest;
+import com.example.mysterycard.dto.request.WishListRequest;
 import com.example.mysterycard.dto.response.CardResponse;
+import com.example.mysterycard.dto.response.WishListResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -15,4 +17,8 @@ public interface CardService {
     CardResponse createCard(CardRequest request);
     CardResponse updateCard(UUID id, CardRequest request);
     Map<String, Integer> importCards(MultipartFile file);
+    List<WishListResponse> getUserWishList();
+    WishListResponse changeExpectPrice(UUID wishListId, Long newExpectPrice);
+    void removeFromWishList(UUID wishListId);
+    WishListResponse addToWishList(UUID cardId, WishListRequest request);
 }

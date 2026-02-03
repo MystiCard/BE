@@ -66,6 +66,8 @@ public enum ErrorCode {
     //IMPORT EXPORT ERRORS(13)
     FILE_IMPORT_ERROR(13001,"File import error. Please check your file",HttpStatus.BAD_REQUEST),
 
+    //WishList (14)
+    WISHLIST_NOT_FOUND(14001,"WishList not found",HttpStatus.NOT_FOUND),
 ;
     int code;
     String message;

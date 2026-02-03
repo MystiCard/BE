@@ -53,7 +53,7 @@ public class DataSender implements CommandLineRunner {
                 Set.of(p3,p4, p5)
         );
         Role shipment = createRole(
-                RoleCode.SHIPMENT.toString(),
+                RoleCode.SHIPPER.toString(),
                 "Shipper",
                 "Người update status shipment",
                 Set.of(p3,p4, p5)
@@ -65,6 +65,8 @@ public class DataSender implements CommandLineRunner {
                 "admin@mysterycard.com",
                 "123456",
                 "Admin System",
+                "3695"
+                ,"90752",
                 Set.of(adminRole)
         );
 
@@ -72,6 +74,8 @@ public class DataSender implements CommandLineRunner {
                 "seller@mysterycard.com",
                 "123456",
                 "Card Seller",
+                "1694",
+                "480802",
                 Set.of(userRole)
         );
 
@@ -79,12 +83,16 @@ public class DataSender implements CommandLineRunner {
                 "buyer@mysterycard.com",
                 "123456",
                 "Blind Box Buyer",
+                "1482",
+                "11003",
                 Set.of(userRole)
         );
         createUserIfNotExist(
                 "shipper@mysterycard.com",
                 "123456",
                 "Blind Box Buyer",
+                "3695",
+                "90760",
                 Set.of(shipment)
         );
 
@@ -115,7 +123,7 @@ private Role createRole(String code, String name, String desc, Set<Permision> pe
             });
 }
 
-private void createUserIfNotExist(String email, String password, String name, Set<Role> roles) {
+private void createUserIfNotExist(String email, String password, String name, String districtId, String wardId,Set<Role> roles) {
     if (userRepository.existsByEmail(email)) return;
 
     Users user = Users.builder()
@@ -123,6 +131,8 @@ private void createUserIfNotExist(String email, String password, String name, Se
             .password(passwordEncoder.encode(password))
             .name(name)
             .active(true)
+            .districtId(districtId)
+            .wardId(wardId)
             .build();
 
     user.setRolelist(roles);

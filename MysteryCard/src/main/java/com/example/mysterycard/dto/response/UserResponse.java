@@ -20,4 +20,6 @@ public class UserResponse {
     private String address;
     private String phone;
     private WalletResponse walletResponse;
+    private String districtId;
+    private String wardId;
 }

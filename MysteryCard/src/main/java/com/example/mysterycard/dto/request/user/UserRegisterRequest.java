@@ -27,4 +27,8 @@ public class UserRegisterRequest {
     @NotNull(message = "Phone is required")
     @Pattern(regexp = "^(0|\\+84)(3|5|7|8|9)[0-9]{8}$",message = "Phone must be start 0 or +84 followed by 9 digit  ")
     private String phone;
+    @NotNull(message = "District ID is required")
+    private String districtId;
+    @NotNull(message = "Ward Id is required")
+    private String wardId;
 }

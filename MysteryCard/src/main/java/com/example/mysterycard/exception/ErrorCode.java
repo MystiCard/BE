@@ -68,6 +68,10 @@ public enum ErrorCode {
 
     //WishList (14)
     WISHLIST_NOT_FOUND(14001,"WishList not found",HttpStatus.NOT_FOUND),
+    // SHipment (14)
+    SHIPMENT_NOT_FOUND(14001,"Shipment not found",HttpStatus.NOT_FOUND),
+    //Tracking(15)
+    TRACKING_NOT_FOUND(15001,"Tracking not found ",HttpStatus.NOT_FOUND),
 ;
     int code;
     String message;

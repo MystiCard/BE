@@ -20,4 +20,5 @@ public interface UserService {
     UserResponse getUserById(UUID userId);
     void addRole(AddRemoveRoleRequest request);
     void removeRole(AddRemoveRoleRequest request);
+    Page<UserResponse> getShipper(int page, int size);
 }

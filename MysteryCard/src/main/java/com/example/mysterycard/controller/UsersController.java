@@ -70,4 +70,11 @@ public class UsersController {
         userService.addRole(request);
         return ResponseEntity.ok(ApiResponse.success("Add role sucessfully"));
     }
+    @GetMapping("/shipper")
+    public ResponseEntity<ApiResponse<Page<UserResponse>>> getListShipper(
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(userService.getShipper(page,size)));
+    }
 }

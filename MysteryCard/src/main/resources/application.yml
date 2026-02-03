@@ -18,7 +18,15 @@ spring:
           auth: true
           starttls:
             enable: true
-
+ghn:
+  token: 5fb05b03-fc2a-11f0-84e6-16a0a09c770f
+  shopId: 6241154
+  url-fee: https://online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee
+  length: 15
+  width: 15
+  height: 5
+  weight: 300
+  service_id: 53321
 
 
 

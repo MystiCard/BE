@@ -5,14 +5,18 @@ import com.example.mysterycard.dto.request.user.UserRegisterRequest;
 import com.example.mysterycard.dto.response.RoleResponse;
 import com.example.mysterycard.dto.response.UserResponse;
 import com.example.mysterycard.entity.Role;
+import com.example.mysterycard.entity.Shipment;
 import com.example.mysterycard.entity.Users;
 import com.example.mysterycard.enums.Gender;
+import com.example.mysterycard.enums.RoleCode;
+import com.example.mysterycard.enums.ShippingStatus;
 import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.PermisionMapper;
 import com.example.mysterycard.mapper.RoleMapper;
 import com.example.mysterycard.mapper.UserMapper;
 import com.example.mysterycard.repository.RoleRepo;
+import com.example.mysterycard.repository.ShipmentRepo;
 import com.example.mysterycard.repository.UsersRepo;
 import com.example.mysterycard.service.RoleService;
 import com.example.mysterycard.service.UserService;
@@ -53,6 +57,7 @@ public class UserServiceImpl implements UserService {
     @Value("${avartar.default.female}")
     private String femaleAvartar;
     private final WalletService walletService;
+    private final ShipmentRepo shipmentRepo;
 
     @Override
     @Transactional
@@ -66,7 +71,7 @@ public class UserServiceImpl implements UserService {
         Users user = userMapper.requestToEntity(request);
         user.setRolelist(new HashSet<>());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        Role roleUser = roleRepo.findByRoleCode("USER");
+        Role roleUser = roleRepo.findByRoleCode(RoleCode.USER.toString());
         user.getRolelist().add(roleUser);
         if (avatar == null) {
             if (request.getGender().equals(Gender.FEMALE)) {
@@ -99,6 +104,8 @@ public class UserServiceImpl implements UserService {
         if (usersRepo.existsByPhone(request.getPhone()) && !user.getPhone().equals(request.getPhone())) {
             throw new AppException(ErrorCode.PHONE_EXISTED);
         }
+        user.setDistrictId(request.getDistrictId());
+        user.setWardId(request.getWardId());
         user.setAddress(request.getAddress());
         user.setGender(request.getGender());
         user.setName(request.getName());
@@ -204,5 +211,24 @@ public class UserServiceImpl implements UserService {
         }
         usersRepo.save(user);
 
+    }
+//  them role vao
+    @Override
+    public Page<UserResponse> getShipper(int page, int size) {
+        Pageable pageable = PageRequest.of(page-1,size);
+        List<ShippingStatus> list = List.of(ShippingStatus.PENDING,ShippingStatus.PICKED_UP,ShippingStatus.IN_TRANSIT,ShippingStatus.ASIGNED);
+          List<Shipment> shipmentList = shipmentRepo.findByShipmentStatusIn(list);
+          List<UUID> listIds = null;
+          if(!shipmentList.isEmpty())
+          {
+               listIds = shipmentList.stream().map(Shipment::getShipmentId).collect(Collectors.toList());
+          }
+          Role role = roleRepo.findByRoleCode(RoleCode.SHIPPER.toString());
+          List<UUID> userIds = null;
+          if(role != null)
+          {
+              userIds = role.getUsers().stream().map(user -> user.getUserId()).collect(Collectors.toList());
+          }
+        return usersRepo.findAllByUserIdIsNotInAndShipmentListNull(listIds,pageable,userIds).map(userMapper::requestToResponse);
     }
 }

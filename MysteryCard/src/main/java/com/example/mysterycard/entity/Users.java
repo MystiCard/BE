@@ -27,6 +27,8 @@ public class Users {
     private int tokenVersion = 0;
     private String avatarUrl;
     private String address;
+    private String districtId;
+    private String wardId;
     @Builder.Default
     private boolean active = true;
     @Builder.Default
@@ -53,4 +55,6 @@ public class Users {
     private List<BlindBoxResult> blindBoxResults = new ArrayList<>();
     @OneToMany(mappedBy = "user")
     private List<WishList> wishLists = new ArrayList<>();
+    @OneToMany(mappedBy = "shipper")
+    private List<Shipment> shipmentList = new ArrayList<>();
 }

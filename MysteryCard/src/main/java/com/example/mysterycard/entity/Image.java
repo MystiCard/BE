@@ -1,9 +1,7 @@
 package com.example.mysterycard.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.UUID;
 @Entity
@@ -11,6 +9,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Setter
+@AllArgsConstructor
+@Builder
 public class Image {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -19,4 +19,7 @@ public class Image {
     @ManyToOne
     @JoinColumn(name="card_id")
     private Card card;
+    @ManyToOne
+    @JoinColumn(name="tracking_id")
+    private Tracking tracking;
 }

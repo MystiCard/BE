@@ -13,15 +13,18 @@ import java.util.*;
 @NoArgsConstructor
 @Getter
 @Setter
+@Builder
+@AllArgsConstructor
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID orderId;
-    private Long totalAmount;
+    private Double totalAmount;
     @Enumerated(EnumType.STRING)
     private OrderStatus status= OrderStatus.CREATED;
     @CreationTimestamp
-    private LocalDateTime orderDate;
+    @Builder.Default
+    private LocalDateTime orderDate = LocalDateTime.now();
     private int quantity;
     @ManyToOne
     @JoinColumn(name = "buyer_id")

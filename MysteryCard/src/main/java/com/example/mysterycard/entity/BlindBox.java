@@ -18,7 +18,7 @@ public class BlindBox {
     private String name;
     private String description;
     private String imageUrl;
-    private Long drawPrice;
+    private double drawPrice;
     private Long allBoxPrice;
     @Enumerated(EnumType.STRING)
     private BlindBoxStatus blindBoxStatus = BlindBoxStatus.ACTIVE;

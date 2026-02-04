@@ -54,7 +54,7 @@ public class TransactionServiceImpl implements TransactionService {
     public String createTransactionDeposite(DepositeRequest request) {
         Wallet wallet = getWallet(request.getUserId());
         WalletTransaction walletTransaction = WalletTransaction.builder()
-                .amount(request.getAmount())
+                .amount(Double.valueOf(request.getAmount()))
                 .transactionType(TransactionType.DEPOSTIE)
                 .statusTransaction(StatusPayment.PENDING)
                 .walletReceive(wallet)
@@ -82,7 +82,7 @@ public class TransactionServiceImpl implements TransactionService {
             throw new AppException(ErrorCode.CAN_NOT_WITHDRAW);
         }
         WalletTransaction walletTransaction = WalletTransaction.builder()
-                .amount(request.getAmount())
+                .amount(Double.valueOf(request.getAmount()))
                 .walletSend(wallet)
                 .bankAccount(bankAccount)
                 .statusTransaction(StatusPayment.PENDING)
@@ -99,7 +99,7 @@ public class TransactionServiceImpl implements TransactionService {
         Payment payment = Payment.builder()
                 .provider(request.getProvider())
                 .transactionRef(UUID.randomUUID().toString())
-                .amount(walletTransaction.getAmount())
+                .amount(Math.round(walletTransaction.getAmount()))
                 .content("Withdraw money from wallet")
                 .build();
         paymentRepo.save(payment);
@@ -144,7 +144,7 @@ public class TransactionServiceImpl implements TransactionService {
         if (admin == null) {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
-        Long amount = null;
+        Double amount = null;
         Wallet seller =  admin.getWallet();
         transaction.setStatusTransaction(StatusPayment.SUCCESS);
         if (request.getOrderId() != null && request.getSellerId() != null) {
@@ -215,7 +215,7 @@ public class TransactionServiceImpl implements TransactionService {
             transaction.setStatusTransaction(StatusPayment.REFUNDED);
             OrderStatus orderStatus = order.getStatus();
             ShippingStatus shippingStatus = shipment.getShipmentStatus();
-            Long price = (transaction.getAmount() - shipment.getShipmentFee());
+            double price = (transaction.getAmount() - shipment.getShipmentFee());
             if (orderStatus.equals(OrderStatus.COMPLETED) && transaction.getStatusTransaction().equals(StatusPayment.ESCROWED)) {
                 seller.setBalance(seller.getBalance() + price );
                 adminWallet.setBalance(adminWallet.getBalance() - price);
@@ -227,7 +227,7 @@ public class TransactionServiceImpl implements TransactionService {
                     adminWallet.setBalance(adminWallet.getBalance() - transaction.getAmount());
 
                 }else if(shippingStatus.equals(ShippingStatus.RETURNED)) {
-                    Long refund_money = transaction.getAmount() - shipment.getShipmentFee();
+                    double refund_money = transaction.getAmount() - shipment.getShipmentFee();
                     buyer.setBalance(buyer.getBalance() + refund_money);
                     adminWallet.setBalance(adminWallet.getBalance() - refund_money);
                 }else if(shippingStatus.equals(ShippingStatus.LOST)) {

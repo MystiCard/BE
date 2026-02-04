@@ -1,11 +1,10 @@
 package com.example.mysterycard.controller;
 
 import com.example.mysterycard.base.ApiResponse;
+import com.example.mysterycard.dto.request.CalculateFeeRequest;
 import com.example.mysterycard.dto.request.AsignShipperRequest;
 import com.example.mysterycard.dto.request.UpdateShipmentRequest;
-import com.example.mysterycard.dto.request.user.UserRegisterRequest;
 import com.example.mysterycard.dto.response.ShipmentResponse;
-import com.example.mysterycard.enums.StatusPayment;
 import com.example.mysterycard.service.ShipmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -55,4 +54,11 @@ public class ShipmentController {
     ){
         return ResponseEntity.ok(ApiResponse.success(shipmentService.update(request,fileList)));
     }
+    @PostMapping("/calculate-fee")
+    public ResponseEntity<ApiResponse<Long>> calculate(
+            @RequestBody CalculateFeeRequest request
+    ){
+        return ResponseEntity.ok(ApiResponse.success(shipmentService.calculatFeeShip(request)));
+    }
+
 }

@@ -72,6 +72,8 @@ public enum ErrorCode {
     SHIPMENT_NOT_FOUND(14001,"Shipment not found",HttpStatus.NOT_FOUND),
     //Tracking(15)
     TRACKING_NOT_FOUND(15001,"Tracking not found ",HttpStatus.NOT_FOUND),
+ // List seller(16)
+ LIST_SELLER_NOT_FOUND(16001,"List seller  not found ",HttpStatus.NOT_FOUND),
 ;
     int code;
     String message;

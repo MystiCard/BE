@@ -1,5 +1,6 @@
 package com.example.mysterycard.service.impl;
 
+import com.example.mysterycard.dto.request.CalculateFeeRequest;
 import com.example.mysterycard.dto.request.*;
 import com.example.mysterycard.dto.response.ShipmentResponse;
 import com.example.mysterycard.entity.Order;
@@ -28,7 +29,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -68,7 +68,14 @@ public class ShipemenServiceImpl implements ShipmentService {
         );
       Shipment shipment = shipmentMapper.requestToEntity(request);
       shipment.setOrder(order);
-      shipment.setShipmentFee(calculatFeeShip(order,request));
+      shipment.setShipmentFee(calculatFeeShip(
+              CalculateFeeRequest.builder()
+                      .totalAmount(order.getTotalAmount())
+                      .fromDistrictId(request.getFromDistrictId())
+                      .toWardId(request.getToWardId())
+                      .toDistrictId(request.getToDistrictId())
+                      .build()
+      ));
         // create tracking
         trackingService.createTracking(
                 TrackingRequest.builder()
@@ -141,18 +148,18 @@ public class ShipemenServiceImpl implements ShipmentService {
 
         return shipmentMapper.entityToResponse(shipmentRepo.save(shipment));
     }
-
-    public Long calculatFeeShip(Order order,ShipmentRequest request) {
+ @Override
+    public Long calculatFeeShip(CalculateFeeRequest request) {
         org.springframework.http.HttpHeaders headers = new HttpHeaders();
         headers.set("Token",ghnToken);
         headers.set("shop_id",shopId);
         headers.setContentType(MediaType.APPLICATION_JSON);
         CalculateShipmentFeeRequest calRequest = CalculateShipmentFeeRequest.builder()
                 .serviceId(serviceId)
-                .insuranceValue(order.getTotalAmount())
+                .insuranceValue(Math.round(request.getTotalAmount()))
                 .coupon(null)
-                .fromDistrictId(request.getToDistrictId())
-                .toDistrictId(request.getToWardId())
+                .fromDistrictId(request.getFromDistrictId())
+                .toDistrictId(request.getToDistrictId())
                 .toWardCode(request.getToWardId())
                 .height(height)
                 .length(length)
@@ -167,5 +174,14 @@ public class ShipemenServiceImpl implements ShipmentService {
         );
         log.info("Response {}", response.getBody());
         return Long.parseLong(response.getBody().get("total").toString());
+    }
+
+    @Override
+    public ShipmentResponse changeAddressShip(ChangeAddressShipmentRequest request) {
+        Shipment shipment = shipmentRepo.findById(request.getShipmentId()).orElseThrow(
+                ()-> new AppException(ErrorCode.SHIPMENT_NOT_FOUND)
+        );
+
+        return null;
     }
 }

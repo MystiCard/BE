@@ -21,6 +21,7 @@ public class Order {
     private UUID orderId;
     private Double totalAmount;
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private OrderStatus status= OrderStatus.CREATED;
     @CreationTimestamp
     @Builder.Default
@@ -29,8 +30,7 @@ public class Order {
     @ManyToOne
     @JoinColumn(name = "buyer_id")
     private Users buyer;
-    @OneToMany(mappedBy = "order")
-    private List<Shipment> shipment = new ArrayList<>();
+
     @OneToMany(mappedBy = "order")
     private List<WalletTransaction> transactionList = new ArrayList<>();
     @OneToMany(mappedBy = "order")

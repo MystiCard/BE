@@ -5,7 +5,9 @@ import com.example.mysterycard.dto.request.OrderCardRequest;
 import com.example.mysterycard.dto.response.OrderCardResponse;
 import com.example.mysterycard.dto.response.ShipmentResponse;
 import com.example.mysterycard.service.OrderService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +20,7 @@ public class OrderController {
 
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<OrderCardResponse>> createOrder(
-            @RequestBody OrderCardRequest request
+            @RequestBody @Valid OrderCardRequest request
             ){
         return ResponseEntity.ok(ApiResponse.success(orderService.createOrder(request)));
     }

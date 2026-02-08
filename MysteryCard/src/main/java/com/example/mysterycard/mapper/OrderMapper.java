@@ -6,11 +6,10 @@ import com.example.mysterycard.entity.Order;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring",uses = {OrderItemMapper.class})
+@Mapper(componentModel = "spring")
 public interface OrderMapper {
     @Mapping(source = "buyer.userId", target = "buyerId")
     @Mapping(source = "blindBox.blindBoxId", target = "blindBoxId")
     OrderResponse toOrderResponse(Order order);
-    @Mapping(target = "orderItems",source = "orderItemList")
     OrderCardResponse entityToResponse(Order order);
 }

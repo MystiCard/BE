@@ -16,8 +16,7 @@ public class OrderCardResponse {
     private Long totalAmount;
     private OrderStatus status;
     private LocalDateTime orderDate;
-    private int quantity;
-    private double shipfee;
+
     List<OrderItemResponse> orderItems;
 
 }

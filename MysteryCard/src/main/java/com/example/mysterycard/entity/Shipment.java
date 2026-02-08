@@ -31,9 +31,22 @@ public class Shipment {
     private String buyerPhone;
     private String sellerPhone;
     private String sellerAddress;
-    @ManyToOne
-    @JoinColumn(name = "order_id")
-    private Order order;
+    @ManyToMany
+    @JoinTable(
+            name = "orderDetail_Shipment",
+            joinColumns = @JoinColumn(name = "shipment_id"),
+            inverseJoinColumns = @JoinColumn(name = "order_detail_id")
+
+    )
+    private Set<OrderItem> orderItems = new HashSet<>();
+    @ManyToMany
+    @JoinTable(
+            name = "blind_box_result_shipment",
+            joinColumns = @JoinColumn(name = "shipment_id"),
+            inverseJoinColumns = @JoinColumn(name = "blind_box_id")
+
+    )
+    private Set<BlindBoxResult> blindBoxResults = new HashSet<>();
     @ManyToOne
     @JoinColumn(name = "shipper_id")
     private Users shipper;

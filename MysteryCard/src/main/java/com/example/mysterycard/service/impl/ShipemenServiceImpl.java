@@ -4,12 +4,14 @@ import com.example.mysterycard.dto.request.CalculateFeeRequest;
 import com.example.mysterycard.dto.request.*;
 import com.example.mysterycard.dto.response.ShipmentResponse;
 import com.example.mysterycard.entity.Order;
+import com.example.mysterycard.entity.OrderItem;
 import com.example.mysterycard.entity.Shipment;
 import com.example.mysterycard.entity.Users;
 import com.example.mysterycard.enums.ShippingStatus;
 import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.ShipmentMapper;
+import com.example.mysterycard.repository.OrderItemsRepo;
 import com.example.mysterycard.repository.OrderRepo;
 import com.example.mysterycard.repository.ShipmentRepo;
 import com.example.mysterycard.repository.UsersRepo;
@@ -53,29 +55,21 @@ public class ShipemenServiceImpl implements ShipmentService {
     private   int weight;
     @Value("${ghn.width}")
     private int width;
-    @Value("${ghn.width}")
+    @Value("${ghn.service_id}")
     private   Long serviceId;
     private final ShipmentMapper shipmentMapper;
     private final ShipmentRepo shipmentRepo;
     private final RestTemplate restTemplate = new RestTemplate();
     private final TrackingService trackingService;
-    private final OrderRepo orderRepo;
+    private final OrderItemsRepo orderItemsRepo;
     private final UsersRepo usersRepo;
     @Override
     public ShipmentResponse createsShipment(ShipmentRequest request) {
-        Order order = orderRepo.findById(request.getOrderId()).orElseThrow(
-                () -> new AppException(ErrorCode.ORDER_NOT_FOUND)
+        OrderItem orderItem = orderItemsRepo.findById(request.getOrderItemId()).orElseThrow(
+                () -> new AppException(ErrorCode.ORDER_ITEMS_NOT_FOUND)
         );
       Shipment shipment = shipmentMapper.requestToEntity(request);
-      shipment.setOrder(order);
-      shipment.setShipmentFee(calculatFeeShip(
-              CalculateFeeRequest.builder()
-                      .totalAmount(order.getTotalAmount())
-                      .fromDistrictId(request.getFromDistrictId())
-                      .toWardId(request.getToWardId())
-                      .toDistrictId(request.getToDistrictId())
-                      .build()
-      ));
+      shipment.getOrderItems().add(orderItem);
         // create tracking
         trackingService.createTracking(
                 TrackingRequest.builder()
@@ -86,11 +80,11 @@ public class ShipemenServiceImpl implements ShipmentService {
 
     @Override
     @Transactional
-    public List<ShipmentResponse> getShipmentByOrder(UUID orderId) {
-        Order order = orderRepo.findById(orderId).orElseThrow(
-                () -> new AppException(ErrorCode.ORDER_NOT_FOUND)
+    public List<ShipmentResponse> getShipmentByOrderItems(UUID orderItemId) {
+        OrderItem orderItem = orderItemsRepo.findById(orderItemId).orElseThrow(
+                () -> new AppException(ErrorCode.ORDER_ITEMS_NOT_FOUND)
         );
-        return shipmentRepo.findByOrder(order).stream().map(shipmentMapper::entityToResponse).collect(Collectors.toList());
+        return shipmentRepo.findByOrderItems(Set.of(orderItem)).stream().map(shipmentMapper::entityToResponse).collect(Collectors.toList());
     }
 
     @Override
@@ -155,12 +149,12 @@ public class ShipemenServiceImpl implements ShipmentService {
         headers.set("shop_id",shopId);
         headers.setContentType(MediaType.APPLICATION_JSON);
         CalculateShipmentFeeRequest calRequest = CalculateShipmentFeeRequest.builder()
-                .serviceId(serviceId)
-                .insuranceValue(Math.round(request.getTotalAmount()))
+                .service_id(serviceId)
+                .insurance_value(Math.round(request.getTotalAmount()))
                 .coupon(null)
-                .fromDistrictId(request.getFromDistrictId())
-                .toDistrictId(request.getToDistrictId())
-                .toWardCode(request.getToWardId())
+                .from_district_id(request.getFromDistrictId())
+                .to_district_id(request.getToDistrictId())
+                .to_ward_code(request.getToWardId())
                 .height(height)
                 .length(length)
                 .weight(weight)
@@ -173,15 +167,39 @@ public class ShipemenServiceImpl implements ShipmentService {
                 Map.class
         );
         log.info("Response {}", response.getBody());
-        return Long.parseLong(response.getBody().get("total").toString());
+     Map<String, Object> body = response.getBody();
+
+     Map<String, Object> data = (Map<String, Object>) body.get("data");
+
+     Long total = Long.parseLong(data.get("total").toString());
+
+     return total;
     }
 
     @Override
     public ShipmentResponse changeAddressShip(ChangeAddressShipmentRequest request) {
-        Shipment shipment = shipmentRepo.findById(request.getShipmentId()).orElseThrow(
-                ()-> new AppException(ErrorCode.SHIPMENT_NOT_FOUND)
-        );
-
+//        Shipment shipment = shipmentRepo.findById(request.getShipmentId()).orElseThrow(
+//                ()-> new AppException(ErrorCode.SHIPMENT_NOT_FOUND)
+//        );
+//        Long shipfee = calculatFeeShip(
+//                CalculateFeeRequest.builder()
+//                        .totalAmount(shipment.getOrder().getTotalAmount())
+//                        .fromDistrictId(request.getFromDistrictId())
+//                        .toWardId(String.valueOf(request.getToWardId()))
+//                        .toDistrictId(request.getToDistrictId())
+//                        .build()
+//        );
+//        Long ship = shipfee - shipment.getShipmentFee();
+//        Order order = shipment.getOrder();
+//        order.setTotalAmount(order.getTotalAmount() + ship);
+//
+//        shipment.setShipmentFee(shipfee);
+//        shipment.setBuyerAddress(request.getBuyerAddress());
+//        shipment.setSellerAddress(request.getSellerAddress());
+//        shipment.setFromDistrictId(request.getFromDistrictId());
+//        shipment.setToDistrictId(request.getToDistrictId());
+//        shipment.setToWardId(request.getToWardId());
+//        return shipmentMapper.entityToResponse(shipmentRepo.save(shipment));
         return null;
     }
 }

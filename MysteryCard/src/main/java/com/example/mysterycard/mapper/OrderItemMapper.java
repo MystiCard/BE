@@ -6,5 +6,5 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface OrderItemMapper {
-    OrderItemResponse entityToResponse(OrderItem orderItem);
+    OrderItemResponse.OrderDetailResponse entityToResponse(OrderItem orderItem);
 }

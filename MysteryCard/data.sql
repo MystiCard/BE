@@ -1,172 +1,167 @@
--- 1. BẢNG USERS (Bao phủ Gender: MALE, FEMALE)
-INSERT INTO users (user_id, name, email, password, phone, gender, active, token_version, create_at, address)
-VALUES ('u0000000-0000-0000-0000-000000000001', 'Admin User', 'admin@test.com', 'hash_pass', '0901234567', 'MALE', true,
-        1, NOW(), '123 Admin St'),
-       ('u0000000-0000-0000-0000-000000000002', 'Nguyen Van A', 'vana@test.com', 'hash_pass', '0901234568', 'MALE',
-        true, 1, NOW(), '456 User St'),
-       ('u0000000-0000-0000-0000-000000000003', 'Tran Thi B', 'thib@test.com', 'hash_pass', '0901234569', 'FEMALE',
-        true, 1, NOW(), '789 User St'),
-       ('u0000000-0000-0000-0000-000000000004', 'Le Van C', 'vanc@test.com', 'hash_pass', '0901234570', 'MALE', false,
-        1, NOW(), '101 User St'),
-       ('u0000000-0000-0000-0000-000000000005', 'Pham Thi D', 'thid@test.com', 'hash_pass', '0901234571', 'FEMALE',
-        true, 2, NOW(), '202 User St');
+-- ==========================================================
+-- 1. CÁC BẢNG ĐỘC LẬP (Không có khóa ngoại)
+-- ==========================================================
 
--- 2. BẢNG ROLES & PERMISION
-INSERT INTO roles (role_code, role_name, description, active, created_at)
-VALUES ('ADMIN', 'Administrator', 'Full system access', true, NOW()),
-       ('SELLER', 'Seller', 'Can list cards for sale', true, NOW()),
-       ('BUYER', 'Buyer', 'Can purchase boxes and cards', true, NOW()),
-       ('SHIPPER', 'Shipper', 'Delivery staff', true, NOW()),
-       ('SUPPORT', 'Support', 'Customer service', true, NOW());
+-- BẢNG ROLES
+INSERT INTO roles (role_code, role_name, description, active)
+VALUES ('ADMIN', 'Quản trị viên', 'Toàn quyền hệ thống', true),
+       ('SELLER', 'Người bán', 'Đăng bán thẻ và box', true),
+       ('BUYER', 'Người mua', 'Mua box và thẻ', true),
+       ('SHIPPER', 'Giao hàng', 'Nhận và giao đơn hàng', true),
+       ('SUPPORT', 'Hỗ trợ', 'Chăm sóc khách hàng', true);
 
-INSERT INTO permision (permision_code, permision_name, description, active, created_at)
-VALUES ('MANAGE_BOX', 'Manage Blind Box', 'CRUD blind boxes', true, NOW()),
-       ('VIEW_ORDER', 'View Orders', 'Can see order list', true, NOW()),
-       ('LIST_CARD', 'List Card', 'Can sell cards', true, NOW()),
-       ('SHIP_ORDER', 'Ship Order', 'Can update shipping status', true, NOW()),
-       ('USER_SUPPORT', 'Support Access', 'Can chat with users', true, NOW());
+-- BẢNG PERMISION
+INSERT INTO permision (permision_code, permision_name, description, active)
+VALUES ('PERM_001', 'MANAGE_SYSTEM', 'Quyền quản trị', true),
+       ('PERM_002', 'POST_ITEM', 'Quyền đăng bài', true),
+       ('PERM_003', 'BUY_ITEM', 'Quyền mua hàng', true),
+       ('PERM_004', 'UPDATE_SHIP', 'Cập nhật giao hàng', true),
+       ('PERM_005', 'VIEW_REPORT', 'Xem báo cáo', true);
 
--- 3. BẢNG CARD_CATEGORY
+-- BẢNG CARD_CATEGORY
 INSERT INTO card_category (category_id, category_name)
-VALUES ('c1000000-0000-0000-0000-000000000001', 'Pokemon'),
-       ('c1000000-0000-0000-0000-000000000002', 'Yu-Gi-Oh'),
-       ('c1000000-0000-0000-0000-000000000003', 'Dragon Ball'),
-       ('c1000000-0000-0000-0000-000000000004', 'One Piece'),
-       ('c1000000-0000-0000-0000-000000000005', 'Magic The Gathering');
+VALUES ('11111111-1111-1111-1111-111111111111', 'Pokemon'),
+       ('22222222-2222-2222-2222-222222222222', 'Yu-Gi-Oh'),
+       ('33333333-3333-3333-3333-333333333333', 'Dragon Ball'),
+       ('44444444-4444-4444-4444-444444444444', 'One Piece'),
+       ('55555555-5555-5555-5555-555555555555', 'Magic The Gathering');
 
--- 4. BẢNG CARD (Bao phủ Rarity: COMMON -> ULTRA_RARE)
-INSERT INTO card (card_id, category_id, name, rarity, base_price, min_price, max_price)
-VALUES ('cd000000-0000-0000-0000-000000000001', 'c1000000-0000-0000-0000-000000000001', 'Pikachu', 'COMMON', 10.0, 5.0,
-        20.0),
-       ('cd000000-0000-0000-0000-000000000002', 'c1000000-0000-0000-0000-000000000001', 'Charizard', 'ULTRA_RARE',
-        500.0, 400.0, 1000.0),
-       ('cd000000-0000-0000-0000-000000000003', 'c1000000-0000-0000-0000-000000000002', 'Blue-Eyes White Dragon',
-        'SECRET_RARE', 300.0, 250.0, 600.0),
-       ('cd000000-0000-0000-0000-000000000004', 'c1000000-0000-0000-0000-000000000003', 'Goku UI', 'SUPER_RARE', 150.0,
-        100.0, 300.0),
-       ('cd000000-0000-0000-0000-000000000005', 'c1000000-0000-0000-0000-000000000004', 'Luffy Gear 5', 'RARE', 80.0,
-        60.0, 120.0);
-
--- 5. BẢNG BLIND_BOX (Bao phủ Status: DRAFT -> ENDED)
-INSERT INTO blind_box (blind_box_id, name, draw_price, all_box_price, blind_box_status, description)
-VALUES ('bb000000-0000-0000-0000-000000000001', 'Spring Series 2024', 50, 5000, 'ACTIVE', 'Fresh cards for spring'),
-       ('bb000000-0000-0000-0000-000000000002', 'Legendary Pack', 200, 20000, 'UPCOMING', 'Exclusive legendaries'),
-       ('bb000000-0000-0000-0000-000000000003', 'Basic Pack', 20, 2000, 'OUT_OF_STOCK', 'Entry level cards'),
-       ('bb000000-0000-0000-0000-000000000004', 'Testing Box', 10, 1000, 'DRAFT', 'Internal testing'),
-       ('bb000000-0000-0000-0000-000000000005', 'Winter 2023', 45, 4500, 'ENDED', 'Old season box');
-
--- 6. BẢNG ORDERS (Bao phủ Status: CREATED -> CANCELLED)
-INSERT INTO orders (order_id, buyer_id, blind_box_id, order_date, total_amount, quantity, status)
-VALUES ('o0000000-0000-0000-0000-000000000001', 'u0000000-0000-0000-0000-000000000002',
-        'bb000000-0000-0000-0000-000000000001', NOW(), 100, 2, 'PAID'),
-       ('o0000000-0000-0000-0000-000000000002', 'u0000000-0000-0000-0000-000000000003',
-        'bb000000-0000-0000-0000-000000000001', NOW(), 50, 1, 'COMPLETED'),
-       ('o0000000-0000-0000-0000-000000000003', 'u0000000-0000-0000-0000-000000000002',
-        'bb000000-0000-0000-0000-000000000003', NOW(), 40, 2, 'SHIPPED'),
-       ('o0000000-0000-0000-0000-000000000004', 'u0000000-0000-0000-0000-000000000004',
-        'bb000000-0000-0000-0000-000000000001', NOW(), 50, 1, 'CANCELLED'),
-       ('o0000000-0000-0000-0000-000000000005', 'u0000000-0000-0000-0000-000000000002',
-        'bb000000-0000-0000-0000-000000000002', NOW(), 200, 1, 'CREATED');
-
--- 7. BẢNG PAYMENT (Bao phủ Status: PENDING -> RELEASED)
-INSERT INTO payment (payment_id, amount, status_payment, pay_type, provider, created_at)
-VALUES ('p0000000-0000-0000-0000-000000000001', 100, 'SUCCESS', 'CREDIT_CARD', 'STRIPE', NOW()),
-       ('p0000000-0000-0000-0000-000000000002', 50, 'PENDING', 'E_WALLET', 'MOMO', NOW()),
-       ('p0000000-0000-0000-0000-000000000003', 40, 'FAILED', 'BANK_TRANSFER', 'VNPAY', NOW()),
-       ('p0000000-0000-0000-0000-000000000004', 200, 'RELEASED', 'CREDIT_CARD', 'STRIPE', NOW()),
-       ('p0000000-0000-0000-0000-000000000005', 150, 'REFUNDED', 'E_WALLET', 'PAYPAL', NOW());
-
--- 8. BẢNG WALLET (Bao phủ Status: ACTIVE, INACTIVE, SUSPENDED)
-INSERT INTO wallet (wallet_id, user_id, balance, wallet_status)
-VALUES ('w0000000-0000-0000-0000-000000000001', 'u0000000-0000-0000-0000-000000000001', 1000000.0, 'ACTIVE'),
-       ('w0000000-0000-0000-0000-000000000002', 'u0000000-0000-0000-0000-000000000002', 500.0, 'ACTIVE'),
-       ('w0000000-0000-0000-0000-000000000003', 'u0000000-0000-0000-0000-000000000003', 0.0, 'INACTIVE'),
-       ('w0000000-0000-0000-0000-000000000004', 'u0000000-0000-0000-0000-000000000004', 100.0, 'SUSPENDED'),
-       ('w0000000-0000-0000-0000-000000000005', 'u0000000-0000-0000-0000-000000000005', 2000.0, 'ACTIVE');
-
--- 9. BẢNG WALLET_TRANSACTION (Bao phủ Type: DEPOSTIE, PAYMENT, WITHDRAW, etc.)
-INSERT INTO wallet_transaction (wallet_transaction_id, wallet_send_id, wallet_receive_id, amount, transaction_type,
-                                status_transaction, create_at)
-VALUES ('wt000000-0000-0000-0000-000000000001', NULL, 'w0000000-0000-0000-0000-000000000002', 1000, 'DEPOSTIE',
-        'SUCCESS', NOW()),
-       ('wt000000-0000-0000-0000-000000000002', 'w0000000-0000-0000-0000-000000000002',
-        'w0000000-0000-0000-0000-000000000001', 100, 'PAYMENT', 'SUCCESS', NOW()),
-       ('wt000000-0000-0000-0000-000000000003', 'w0000000-0000-0000-0000-000000000002', NULL, 50, 'WITHDRAW', 'PENDING',
-        NOW()),
-       ('wt000000-0000-0000-0000-000000000004', 'w0000000-0000-0000-0000-000000000001',
-        'w0000000-0000-0000-0000-000000000002', 200, 'REFUND', 'SUCCESS', NOW()),
-       ('wt000000-0000-0000-0000-000000000005', 'w0000000-0000-0000-0000-000000000001',
-        'w0000000-0000-0000-0000-000000000003', 300, 'TRANSFER', 'SUCCESS', NOW());
-
--- 10. BẢNG SHIPMENT (Bao phủ Status: PENDING -> DELIVERED)
-INSERT INTO shipment (tracking_id, order_id, shipper_id, shipment_status, shipping_status, shipment_fee, create_at)
-VALUES ('tr000000-0000-0000-0000-000000000001', 'o0000000-0000-0000-0000-000000000001',
-        'u0000000-0000-0000-0000-000000000001', 'DELIVERED', 'DELIVERED', 5, NOW()),
-       ('tr000000-0000-0000-0000-000000000002', 'o0000000-0000-0000-0000-000000000002',
-        'u0000000-0000-0000-0000-000000000001', 'IN_TRANSIT', 'IN_TRANSIT', 5, NOW()),
-       ('tr000000-0000-0000-0000-000000000003', 'o0000000-0000-0000-0000-000000000003',
-        'u0000000-0000-0000-0000-000000000001', 'PENDING', 'PENDING', 5, NOW()),
-       ('tr000000-0000-0000-0000-000000000004', 'o0000000-0000-0000-0000-000000000004',
-        'u0000000-0000-0000-0000-000000000001', 'FAILED', 'FAILED', 5, NOW()),
-       ('tr000000-0000-0000-0000-000000000005', 'o0000000-0000-0000-0000-000000000005',
-        'u0000000-0000-0000-0000-000000000001', 'RETURNED', 'RETURNED', 5, NOW());
-
--- 11. BẢNG LIST_SELLER (Status 0 hoặc 1)
-INSERT INTO list_seller (list_seller_id, card_id, seller_id, price, quantity, status, created_at)
-VALUES ('ls000000-0000-0000-0000-000000000001', 'cd000000-0000-0000-0000-000000000001',
-        'u0000000-0000-0000-0000-000000000002', 15.0, 5, 1, NOW()),
-       ('ls000000-0000-0000-0000-000000000002', 'cd000000-0000-0000-0000-000000000002',
-        'u0000000-0000-0000-0000-000000000002', 800.0, 1, 1, NOW()),
-       ('ls000000-0000-0000-0000-000000000003', 'cd000000-0000-0000-0000-000000000001',
-        'u0000000-0000-0000-0000-000000000003', 14.0, 10, 1, NOW()),
-       ('ls000000-0000-0000-0000-000000000004', 'cd000000-0000-0000-0000-000000000004',
-        'u0000000-0000-0000-0000-000000000002', 160.0, 2, 0, NOW()),
-       ('ls000000-0000-0000-0000-000000000005', 'cd000000-0000-0000-0000-000000000005',
-        'u0000000-0000-0000-0000-000000000003', 90.0, 1, 1, NOW());
-
--- 12. BẢNG RATE_CONFIG (Bao phủ Rarity)
+-- BẢNG RATE_CONFIG (Bao phủ Rarity)
 INSERT INTO rate_config (rate_config_id, card_rarity, drop_rate, variance_percent)
-VALUES ('rc000000-0000-0000-0000-000000000001', 'COMMON', 0.6, 5.0),
-       ('rc000000-0000-0000-0000-000000000002', 'UNCOMMON', 0.25, 2.0),
-       ('rc000000-0000-0000-0000-000000000003', 'RARE', 0.1, 1.0),
-       ('rc000000-0000-0000-0000-000000000004', 'SUPER_RARE', 0.04, 0.5),
-       ('rc000000-0000-0000-0000-000000000005', 'ULTRA_RARE', 0.01, 0.1);
+VALUES ('f1111111-1111-1111-1111-111111111111', 'COMMON', 0.6, 5.0),
+       ('f2222222-2222-2222-2222-222222222222', 'UNCOMMON', 0.25, 2.0),
+       ('f3333333-3333-3333-3333-333333333333', 'RARE', 0.1, 1.0),
+       ('f4444444-4444-4444-4444-444444444444', 'SUPER_RARE', 0.04, 0.5),
+       ('f5555555-5555-5555-5555-555555555555', 'ULTRA_RARE', 0.01, 0.1);
 
--- 13. CÁC BẢNG QUAN HỆ & PHỤ TRỢ (Ít nhất 5 dòng)
+-- ==========================================================
+-- 2. NHÓM NGƯỜI DÙNG & VÍ
+-- ==========================================================
+
+-- BẢNG USERS (Gender: MALE, FEMALE)
+INSERT INTO users (user_id, name, email, password, phone, gender, active, address, token_version, district_id, ward_id)
+VALUES ('a0000000-0000-0000-0000-000000000001', 'Nguyen Van Admin', 'admin@test.com',
+        '$2a$10$viEPZiMSXv5nnGFQkXb5du6PIP0ACDmQx35T5UrUWwF1P6Bph9yBq', '0900000001', 'MALE',
+        true, '123 District 1, HCM', 0, '3695', '90752'),
+       ('a0000000-0000-0000-0000-000000000002', 'Tran Thi Buyer', 'buyer@test.com',
+        '$2a$10$viEPZiMSXv5nnGFQkXb5du6PIP0ACDmQx35T5UrUWwF1P6Bph9yBq', '0900000002', 'FEMALE',
+        true, '456 District 7, HCM', 0, '1454', '21211'),
+       ('a0000000-0000-0000-0000-000000000003', 'Le Van Seller', 'seller@test.com',
+        '$2a$10$viEPZiMSXv5nnGFQkXb5du6PIP0ACDmQx35T5UrUWwF1P6Bph9yBq', '0900000003', 'MALE',
+        true, '789 District 3, HCM', 0, '1444', '20314'),
+       ('a0000000-0000-0000-0000-000000000004', 'Pham Shipper', 'shipper@test.com',
+        '$2a$10$viEPZiMSXv5nnGFQkXb5du6PIP0ACDmQx35T5UrUWwF1P6Bph9yBq', '0900000004', 'MALE',
+        true, '101 District 5, HCM', 0, '1446', '20501'),
+       ('a0000000-0000-0000-0000-000000000005', 'Hoang Bi Khoa', 'locked@test.com',
+        '$2a$10$viEPZiMSXv5nnGFQkXb5du6PIP0ACDmQx35T5UrUWwF1P6Bph9yBq', '0900000005', 'FEMALE',
+        false, '202 District 2, HCM', 0, '1443', '20202');
+
+-- BẢNG WALLET (Status: ACTIVE, INACTIVE, SUSPENDED)
+INSERT INTO wallet (wallet_id, user_id, balance, wallet_status)
+VALUES ('b1111111-1111-1111-1111-111111111111', 'a0000000-0000-0000-0000-000000000001', 10000000, 'ACTIVE'),
+       ('b2222222-2222-2222-2222-222222222222', 'a0000000-0000-0000-0000-000000000002', 500000, 'ACTIVE'),
+       ('b3333333-3333-3333-3333-333333333333', 'a0000000-0000-0000-0000-000000000003', 2000000, 'ACTIVE'),
+       ('b4444444-4444-4444-4444-444444444444', 'a0000000-0000-0000-0000-000000000004', 0, 'INACTIVE'),
+       ('b5555555-5555-5555-5555-555555555555', 'a0000000-0000-0000-0000-000000000005', 100, 'SUSPENDED');
+
+-- ==========================================================
+-- 3. NHÓM SẢN PHẨM & BLIND BOX
+-- ==========================================================
+
+-- BẢNG CARD (Rarity: Đầy đủ các loại)
+INSERT INTO card (card_id, category_id, name, rarity, base_price, min_price, max_price)
+VALUES ('c1111111-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'Pikachu VMAX', 'ULTRA_RARE',
+        500, 400, 1000),
+       ('c2222222-0000-0000-0000-000000000002', '11111111-1111-1111-1111-111111111111', 'Charmander', 'COMMON', 10, 5,
+        20),
+       ('c3333333-0000-0000-0000-000000000003', '22222222-2222-2222-2222-222222222222', 'Blue-Eyes White Dragon',
+        'SECRET_RARE', 300, 250, 600),
+       ('c4444444-0000-0000-0000-000000000004', '33333333-3333-3333-3333-333333333333', 'Goku Ultra Instinct',
+        'SUPER_RARE', 150, 100, 300),
+       ('c5555555-0000-0000-0000-000000000005', '44444444-4444-4444-4444-444444444444', 'Luffy Gear 5', 'RARE', 80, 60,
+        120);
+
+-- BẢNG BLIND_BOX (Status: DRAFT, ACTIVE, OUT_OF_STOCK, DISABLED, UPCOMING, ENDED)
+INSERT INTO blind_box (blind_box_id, name, draw_price, all_box_price, blind_box_status, description)
+VALUES ('d1111111-1111-1111-1111-111111111111', 'Pokemon Genesis', 50, 5000, 'ACTIVE', 'Thế hệ đầu tiên'),
+       ('d2222222-2222-2222-2222-222222222222', 'Yugi Legend', 100, 10000, 'UPCOMING', 'Sắp ra mắt'),
+       ('d3333333-3333-3333-3333-333333333333', 'Draft Box Test', 10, 1000, 'DRAFT', 'Bản nháp'),
+       ('d4444444-4444-4444-4444-444444444444', 'Spring Anime 2024', 60, 6000, 'OUT_OF_STOCK', 'Đã hết hàng'),
+       ('d5555555-5555-5555-5555-555555555555', 'Winter 2023 Collection', 40, 4000, 'ENDED', 'Đã kết thúc');
+
+-- ==========================================================
+-- 4. NHÓM ĐƠN HÀNG & THANH TOÁN
+-- ==========================================================
+
+-- BẢNG ORDERS (Status: CREATED, PAID, PROCESSING, SHIPPED, COMPLETED, CANCELLED, REFUNDED)
+INSERT INTO orders (order_id, buyer_id, blind_box_id, total_amount, quantity, status, order_date)
+VALUES ('e1111111-1111-1111-1111-111111111111', 'a0000000-0000-0000-0000-000000000002',
+        'd1111111-1111-1111-1111-111111111111', 100, 2, 'PAID', NOW()),
+       ('e2222222-2222-2222-2222-222222222222', 'a0000000-0000-0000-0000-000000000002',
+        'd1111111-1111-1111-1111-111111111111', 50, 1, 'COMPLETED', NOW()),
+       ('e3333333-3333-3333-3333-333333333333', 'a0000000-0000-0000-0000-000000000002',
+        'd4444444-4444-4444-4444-444444444444', 120, 2, 'SHIPPED', NOW()),
+       ('e4444444-4444-4444-4444-444444444444', 'a0000000-0000-0000-0000-000000000002',
+        'd1111111-1111-1111-1111-111111111111', 50, 1, 'CANCELLED', NOW()),
+       ('e5555555-5555-5555-5555-555555555555', 'a0000000-0000-0000-0000-000000000002',
+        'd2222222-2222-2222-2222-222222222222', 100, 1, 'CREATED', NOW());
+
+-- BẢNG PAYMENT (Status: PENDING, SUCCESS, FAILED, REFUNDED, ESCROWED, RELEASED)
+INSERT INTO payment (payment_id, amount, status_payment, provider)
+VALUES ('91111111-1111-1111-1111-111111111111', 100, 'SUCCESS', 'STRIPE'),
+       ('92222222-2222-2222-2222-222222222222', 50, 'PENDING', 'VNPAY'),
+       ('93333333-3333-3333-3333-333333333333', 120, 'RELEASED', 'MOMO'),
+       ('94444444-4444-4444-4444-444444444444', 50, 'FAILED', 'BANK_TRANSFER'),
+       ('95555555-5555-5555-5555-555555555555', 200, 'REFUNDED', 'STRIPE');
+
+-- ==========================================================
+-- 5. CÁC BẢNG LIÊN KẾT KHÁC
+-- ==========================================================
+
+-- BẢNG USER_ROLES
 INSERT INTO user_roles (user_id, role_id)
-VALUES ('u0000000-0000-0000-0000-000000000001', 'ADMIN'),
-       ('u0000000-0000-0000-0000-000000000002', 'SELLER'),
-       ('u0000000-0000-0000-0000-000000000003', 'BUYER'),
-       ('u0000000-0000-0000-0000-000000000004', 'BUYER'),
-       ('u0000000-0000-0000-0000-000000000001', 'SHIPPER');
+VALUES ('a0000000-0000-0000-0000-000000000001', 'ADMIN'),
+       ('a0000000-0000-0000-0000-000000000002', 'BUYER'),
+       ('a0000000-0000-0000-0000-000000000003', 'SELLER'),
+       ('a0000000-0000-0000-0000-000000000004', 'SHIPPER'),
+       ('a0000000-0000-0000-0000-000000000005', 'BUYER');
 
-INSERT INTO blind_box_card (blind_box_card_id, blind_box_id, card_id, rate, status)
-VALUES ('bbc00000-0000-0000-0000-000000000001', 'bb000000-0000-0000-0000-000000000001',
-        'cd000000-0000-0000-0000-000000000001', 0.5, true),
-       ('bbc00000-0000-0000-0000-000000000002', 'bb000000-0000-0000-0000-000000000001',
-        'cd000000-0000-0000-0000-000000000002', 0.05, true),
-       ('bbc00000-0000-0000-0000-000000000003', 'bb000000-0000-0000-0000-000000000002',
-        'cd000000-0000-0000-0000-000000000003', 0.1, true),
-       ('bbc00000-0000-0000-0000-000000000004', 'bb000000-0000-0000-0000-000000000003',
-        'cd000000-0000-0000-0000-000000000001', 0.8, true),
-       ('bbc00000-0000-0000-0000-000000000005', 'bb000000-0000-0000-0000-000000000001',
-        'cd000000-0000-0000-0000-000000000005', 0.2, true);
+-- BẢNG LIST_SELLER (Status 0: OFF, 1: ON)
+INSERT INTO list_seller (list_seller_id, card_id, seller_id, price, quantity, status)
+VALUES ('81111111-1111-1111-1111-111111111111', 'c1111111-0000-0000-0000-000000000001',
+        'a0000000-0000-0000-0000-000000000003', 450, 1, 1),
+       ('82222222-2222-2222-2222-222222222222', 'c2222222-0000-0000-0000-000000000002',
+        'a0000000-0000-0000-0000-000000000003', 12, 10, 1),
+       ('83333333-3333-3333-3333-333333333333', 'c3333333-0000-0000-0000-000000000003',
+        'a0000000-0000-0000-0000-000000000003', 300, 2, 1),
+       ('84444444-4444-4444-4444-444444444444', 'c4444444-0000-0000-0000-000000000004',
+        'a0000000-0000-0000-0000-000000000003', 160, 5, 1),
+       ('85555555-5555-5555-5555-555555555555', 'c5555555-0000-0000-0000-000000000005',
+        'a0000000-0000-0000-0000-000000000003', 90, 0, 0);
 
-INSERT INTO feed_back (feed_back_id, buyer_id, seller_id, blind_box_id, rating, comment, created_at)
-VALUES ('fb000000-0000-0000-0000-000000000001', 'u0000000-0000-0000-0000-000000000002',
-        'u0000000-0000-0000-0000-000000000001', 'bb000000-0000-0000-0000-000000000001', 5, 'Great box!', NOW()),
-       ('fb000000-0000-0000-0000-000000000002', 'u0000000-0000-0000-0000-000000000003',
-        'u0000000-0000-0000-0000-000000000002', 'bb000000-0000-0000-0000-000000000001', 4, 'Good quality', NOW()),
-       ('fb000000-0000-0000-0000-000000000003', 'u0000000-0000-0000-0000-000000000004',
-        'u0000000-0000-0000-0000-000000000002', 'bb000000-0000-0000-0000-000000000001', 1, 'Scam!', NOW()),
-       ('fb000000-0000-0000-0000-000000000004', 'u0000000-0000-0000-0000-000000000002',
-        'u0000000-0000-0000-0000-000000000001', 'bb000000-0000-0000-0000-000000000002', 5, 'Love it', NOW()),
-       ('fb000000-0000-0000-0000-000000000005', 'u0000000-0000-0000-0000-000000000003',
-        'u0000000-0000-0000-0000-000000000002', 'bb000000-0000-0000-0000-000000000003', 3, 'Average', NOW());
+-- BẢNG SHIPMENT (Status: PENDING, PICKED_UP, IN_TRANSIT, DELIVERED, FAILED, RETURNED, LOST)
+INSERT INTO shipment (tracking_id, order_id, shipper_id, shipment_status, shipping_status, shipment_fee, shipment_id)
+VALUES ('71111111-1111-1111-1111-111111111111', 'e2222222-2222-2222-2222-222222222222',
+        'a0000000-0000-0000-0000-000000000004', 'DELIVERED', 'DELIVERED', 5, '71111111-1111-1111-1111-111111111111'),
+       ('72222222-2222-2222-2222-222222222222', 'e3333333-3333-3333-3333-333333333333',
+        'a0000000-0000-0000-0000-000000000004', 'IN_TRANSIT', 'IN_TRANSIT', 5, '72222222-2222-2222-2222-222222222222'),
+       ('73333333-3333-3333-3333-333333333333', 'e1111111-1111-1111-1111-111111111111',
+        'a0000000-0000-0000-0000-000000000004', 'PENDING', 'PENDING', 5, '73333333-3333-3333-3333-333333333333'),
+       ('74444444-4444-4444-4444-444444444444', 'e4444444-4444-4444-4444-444444444444',
+        'a0000000-0000-0000-0000-000000000004', 'FAILED', 'FAILED', 5, '74444444-4444-4444-4444-444444444444'),
+       ('75555555-5555-5555-5555-555555555555', 'e5555555-5555-5555-5555-555555555555',
+        'a0000000-0000-0000-0000-000000000004', 'LOST', 'LOST', 5, '75555555-5555-5555-5555-555555555555');
 
-INSERT INTO email_verify (email, code, wrong_number, expiry_date)
-VALUES ('vana@test.com', '123456', 0, NOW() + INTERVAL '10 minutes'),
-       ('thib@test.com', '654321', 1, NOW() + INTERVAL '10 minutes'),
-       ('vanc@test.com', '111222', 0, NOW() - INTERVAL '1 hour'),
-       ('thid@test.com', '333444', 3, NOW() + INTERVAL '10 minutes'),
-       ('admin@test.com', '000000', 0, NOW() + INTERVAL '10 minutes');
+-- BẢNG WALLET_TRANSACTION (Transaction_type: DEPOSTIE, PAYMENT, REFUND, WITHDRAW...)
+INSERT INTO wallet_transaction (wallet_transaction_id, wallet_receive_id, wallet_send_id, amount, transaction_type,
+                                status_transaction)
+VALUES ('aa111111-1111-1111-1111-111111111111', 'b2222222-2222-2222-2222-222222222222', NULL, 1000, 'DEPOSTIE',
+        'SUCCESS'),
+       ('aa222222-2222-2222-2222-222222222222', 'b1111111-1111-1111-1111-111111111111',
+        'b2222222-2222-2222-2222-222222222222', 100, 'PAYMENT', 'SUCCESS'),
+       ('aa333333-3333-3333-3333-333333333333', NULL, 'b2222222-2222-2222-2222-222222222222', 200, 'WITHDRAW',
+        'PENDING'),
+       ('aa444444-4444-4444-4444-444444444444', 'b2222222-2222-2222-2222-222222222222',
+        'b1111111-1111-1111-1111-111111111111', 100, 'REFUND', 'SUCCESS'),
+       ('aa555555-5555-5555-5555-555555555555', 'b3333333-3333-3333-3333-333333333333',
+        'b1111111-1111-1111-1111-111111111111', 500, 'TRANSFER', 'SUCCESS');

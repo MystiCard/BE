@@ -15,7 +15,7 @@ import java.util.UUID;
 public interface ShipmentService {
     ShipmentResponse createsShipment(ShipmentRequest shipmentRequest);
 
-    List<ShipmentResponse> getShipmentByOrder(UUID orderId);
+    List<ShipmentResponse> getShipmentByOrderItems(UUID orderItems);
 
     Page<ShipmentResponse> myShipment(boolean complete, int page, int size);
 

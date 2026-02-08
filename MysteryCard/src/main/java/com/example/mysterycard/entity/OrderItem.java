@@ -3,9 +3,7 @@ package com.example.mysterycard.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "OrderItem")
@@ -26,4 +24,6 @@ public class OrderItem {
     @ManyToOne
     @JoinColumn(name = "listSeller_id")
     private ListSeller listSeller;
+    @ManyToMany(mappedBy = "orderItems")
+    private Set<Shipment> shipments = new HashSet<>();
 }

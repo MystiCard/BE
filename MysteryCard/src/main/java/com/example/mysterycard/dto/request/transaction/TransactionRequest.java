@@ -21,7 +21,7 @@ public class TransactionRequest {
     @NotNull(message = "Transaction Type is required")
     private TransactionType transactionType;
     @NotNull(message = "Amount  is required")
-    private UUID orderId; // neu ma thanh toan cho order
+    private UUID orderId;
 
 
 }

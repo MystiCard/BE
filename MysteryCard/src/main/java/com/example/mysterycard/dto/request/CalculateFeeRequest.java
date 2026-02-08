@@ -9,5 +9,5 @@ public class CalculateFeeRequest {
     private double totalAmount;
     private Long fromDistrictId;
     private Long toDistrictId;
-    private Long toWardId;
+    private String toWardId;
 }

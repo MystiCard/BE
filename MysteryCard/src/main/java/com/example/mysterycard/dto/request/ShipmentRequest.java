@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Data
 public class ShipmentRequest {
-    private UUID orderId;
+    private UUID orderItemId;
     private String buyerAddress;
     private Long fromDistrictId;
     private Long toDistrictId;
@@ -19,4 +19,5 @@ public class ShipmentRequest {
     private String buyerPhone;
     private String sellerPhone;
     private String sellerAddress;
+    private Long shipmentFee;
 }

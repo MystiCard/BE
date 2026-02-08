@@ -19,6 +19,7 @@ import com.example.mysterycard.service.PaymentService;
 import com.example.mysterycard.service.TransactionService;
 import com.example.mysterycard.specification.TransactionSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -48,6 +49,8 @@ public class TransactionServiceImpl implements TransactionService {
     private final PaymentRepo paymentRepo;
     private final SumariesRepository sumariesRepository;
     private final SumariesMapper sumariesMapper;
+    @Value("${admin.email}")
+    private  String adminEmail;
 
     @Transactional
     @Override
@@ -139,7 +142,7 @@ public class TransactionServiceImpl implements TransactionService {
     public TransactionResponse createTransaction(TransactionRequest request) {
         Wallet buyer = getWallet(request.getBuyerId());
         WalletTransaction transaction = transactionMapper.requestToEnity(request);
-        Users admin = usersRepo.findByEmail("admin@mysterycard.com");
+        Users admin = usersRepo.findByEmail(adminEmail);
         String message = "Transaction for Blind Box";
         if (admin == null) {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
@@ -155,7 +158,7 @@ public class TransactionServiceImpl implements TransactionService {
             transaction.setOrder(order);
             if(order.getBlindBox() == null)
             {
-                message = "Transaction for buy Card";
+                 message = "Transaction for buy Card";
                  seller = getWallet(request.getSellerId());
                 transaction.setStatusTransaction(StatusPayment.ESCROWED);
             }
@@ -197,52 +200,51 @@ public class TransactionServiceImpl implements TransactionService {
     @Transactional
     @Override
     public TransactionResponse processTransaction(UUID transactionId) {
-        WalletTransaction transaction = transactionRepo.findById(transactionId).orElseThrow(
-                () -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND)
-        );
-        Users admin = usersRepo.findByEmail("admin@mysterycard.com");
-
-        if (admin == null) {
-            throw new AppException(ErrorCode.USER_NOT_FOUND);
-        }
-        Wallet adminWallet = admin.getWallet();
-        Order order = transaction.getOrder();
-       // xem lai
-        Shipment shipment =  order.getShipment().getLast();
-        Wallet buyer = transaction.getWalletSend();
-        Wallet seller = transaction.getWalletReceive();
-        if (order != null) {
-            transaction.setStatusTransaction(StatusPayment.REFUNDED);
-            OrderStatus orderStatus = order.getStatus();
-            ShippingStatus shippingStatus = shipment.getShipmentStatus();
-            double price = (transaction.getAmount() - shipment.getShipmentFee());
-            if (orderStatus.equals(OrderStatus.COMPLETED) && transaction.getStatusTransaction().equals(StatusPayment.ESCROWED)) {
-                seller.setBalance(seller.getBalance() + price );
-                adminWallet.setBalance(adminWallet.getBalance() - price);
-                transaction.setStatusTransaction(StatusPayment.RELEASED);
-            } else if (orderStatus.equals(OrderStatus.CANCELLED) ) {
-
-                if(shippingStatus.equals(ShippingStatus.PENDING) && order.getBlindBox() == null) {
-                    buyer.setBalance(buyer.getBalance() + transaction.getAmount());
-                    adminWallet.setBalance(adminWallet.getBalance() - transaction.getAmount());
-
-                }else if(shippingStatus.equals(ShippingStatus.RETURNED)) {
-                    double refund_money = transaction.getAmount() - shipment.getShipmentFee();
-                    buyer.setBalance(buyer.getBalance() + refund_money);
-                    adminWallet.setBalance(adminWallet.getBalance() - refund_money);
-                }else if(shippingStatus.equals(ShippingStatus.LOST)) {
-                    buyer.setBalance(buyer.getBalance() + transaction.getAmount());
-                    adminWallet.setBalance(adminWallet.getBalance() - transaction.getAmount());
-                    seller.setBalance(seller.getBalance() + price);
-                    adminWallet.setBalance(adminWallet.getBalance() - price);
-
-                }
-
-
-            }
-        }
-        usersRepo.save(admin);
-        return transactionMapper.entityToResponse(transactionRepo.save(transaction));
+//        WalletTransaction transaction = transactionRepo.findById(transactionId).orElseThrow(
+//                () -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND)
+//        );
+//        Users admin = usersRepo.findByEmail(adminEmail);
+//
+//        if (admin == null) {
+//            throw new AppException(ErrorCode.USER_NOT_FOUND);
+//        }
+//        Wallet adminWallet = admin.getWallet();
+//        Order order = transaction.getOrder();
+//       // xem lai
+//        Shipment shipment =  order.getShipment().getLast();
+//        Wallet buyer = transaction.getWalletSend();
+//        Wallet seller = transaction.getWalletReceive();
+//        if (order != null) {
+//            transaction.setStatusTransaction(StatusPayment.REFUNDED);
+//            OrderStatus orderStatus = order.getStatus();
+//            ShippingStatus shippingStatus = shipment.getShipmentStatus();
+//            double price = (transaction.getAmount() - shipment.getShipmentFee());
+//            if (orderStatus.equals(OrderStatus.COMPLETED) && transaction.getStatusTransaction().equals(StatusPayment.ESCROWED)) {
+//                seller.setBalance(seller.getBalance() + price );
+//                adminWallet.setBalance(adminWallet.getBalance() - price);
+//                transaction.setStatusTransaction(StatusPayment.RELEASED);
+//            } else if (orderStatus.equals(OrderStatus.CANCELLED) ) {
+//
+//                if(shippingStatus.equals(ShippingStatus.PENDING) && order.getBlindBox() == null) {
+//                    buyer.setBalance(buyer.getBalance() + transaction.getAmount());
+//                    adminWallet.setBalance(adminWallet.getBalance() - transaction.getAmount());
+//
+//                }else if(shippingStatus.equals(ShippingStatus.RETURNED)) {
+//                    double refund_money = transaction.getAmount() - shipment.getShipmentFee();
+//                    buyer.setBalance(buyer.getBalance() + refund_money);
+//                    adminWallet.setBalance(adminWallet.getBalance() - refund_money);
+//                }else if(shippingStatus.equals(ShippingStatus.LOST)) {
+//                    buyer.setBalance(buyer.getBalance() + transaction.getAmount());
+//                    adminWallet.setBalance(adminWallet.getBalance() - transaction.getAmount());
+//                    seller.setBalance(seller.getBalance() + price);
+//                    adminWallet.setBalance(adminWallet.getBalance() - price);
+//                }
+//
+//            }
+//        }
+//        usersRepo.save(admin);
+//        return transactionMapper.entityToResponse(transactionRepo.save(transaction));
+        return null;
     }
 
     @Override

@@ -63,6 +63,8 @@ public enum ErrorCode {
     PAYMENT_NOT_FOUND(11005,"Payment not found with transaction ref",HttpStatus.NOT_FOUND),
     // Order (12)
     ORDER_NOT_FOUND(12001, "Order not found with code", HttpStatus.NOT_FOUND),
+    QUANTITY_OVER_AVAIABLE(12002,"Order quantity larger than quantity avaiable",HttpStatus.BAD_REQUEST),
+ ORDER_ITEMS_NOT_FOUND(12002,"Order items not found",HttpStatus.NOT_FOUND),
     //IMPORT EXPORT ERRORS(13)
     FILE_IMPORT_ERROR(13001,"File import error. Please check your file",HttpStatus.BAD_REQUEST),
 

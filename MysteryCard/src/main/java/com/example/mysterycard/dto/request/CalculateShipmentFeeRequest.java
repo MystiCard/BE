@@ -7,17 +7,17 @@ import lombok.Data;
 @Builder
 public class CalculateShipmentFeeRequest {
 
-    private Long serviceId;
+    private Long service_id;
 
-    private Long insuranceValue;
+    private Long insurance_value;
 
     private String coupon;
 
-    private Long fromDistrictId;
+    private Long from_district_id;
 
-    private Long toDistrictId;
+    private Long to_district_id;
 
-    private Long toWardCode;
+    private String to_ward_code;
 
     private Integer height;
 

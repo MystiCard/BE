@@ -1,5 +1,6 @@
 package com.example.mysterycard.mapper;
 
+import com.example.mysterycard.dto.request.ChangeAddressShipmentRequest;
 import com.example.mysterycard.dto.request.ShipmentRequest;
 import com.example.mysterycard.dto.response.ShipmentResponse;
 import com.example.mysterycard.entity.Shipment;

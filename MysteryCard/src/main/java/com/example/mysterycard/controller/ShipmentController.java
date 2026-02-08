@@ -23,9 +23,9 @@ import java.util.UUID;
 public class ShipmentController {
     private final ShipmentService shipmentService;
     @GetMapping("/orders/{orderid}")
-    public ResponseEntity<ApiResponse<List<ShipmentResponse>>> findShipmentsByOrderId(
+    public ResponseEntity<ApiResponse<List<ShipmentResponse>>> findShipmentsByOrderItemsId(
             @PathVariable("orderid") UUID orderid) {
-        return ResponseEntity.ok(ApiResponse.success(shipmentService.getShipmentByOrder(orderid)));
+        return ResponseEntity.ok(ApiResponse.success(shipmentService.getShipmentByOrderItems(orderid)));
     }
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<Page<ShipmentResponse>>> getMeShipments(

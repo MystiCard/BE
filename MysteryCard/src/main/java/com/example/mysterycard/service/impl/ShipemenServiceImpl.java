@@ -3,18 +3,12 @@ package com.example.mysterycard.service.impl;
 import com.example.mysterycard.dto.request.CalculateFeeRequest;
 import com.example.mysterycard.dto.request.*;
 import com.example.mysterycard.dto.response.ShipmentResponse;
-import com.example.mysterycard.entity.Order;
-import com.example.mysterycard.entity.OrderItem;
-import com.example.mysterycard.entity.Shipment;
-import com.example.mysterycard.entity.Users;
+import com.example.mysterycard.entity.*;
 import com.example.mysterycard.enums.ShippingStatus;
 import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.ShipmentMapper;
-import com.example.mysterycard.repository.OrderItemsRepo;
-import com.example.mysterycard.repository.OrderRepo;
-import com.example.mysterycard.repository.ShipmentRepo;
-import com.example.mysterycard.repository.UsersRepo;
+import com.example.mysterycard.repository.*;
 import com.example.mysterycard.service.ShipmentService;
 import com.example.mysterycard.service.TrackingService;
 import lombok.RequiredArgsConstructor;
@@ -62,7 +56,9 @@ public class ShipemenServiceImpl implements ShipmentService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final TrackingService trackingService;
     private final OrderItemsRepo orderItemsRepo;
+    private final OrderRepo orderRepo;
     private final UsersRepo usersRepo;
+    private final ListSellerRepo listSellerRepo;
     @Override
     public ShipmentResponse createsShipment(ShipmentRequest request) {
         OrderItem orderItem = orderItemsRepo.findById(request.getOrderItemId()).orElseThrow(
@@ -175,31 +171,26 @@ public class ShipemenServiceImpl implements ShipmentService {
 
      return total;
     }
-
+    @Transactional
     @Override
-    public ShipmentResponse changeAddressShip(ChangeAddressShipmentRequest request) {
-//        Shipment shipment = shipmentRepo.findById(request.getShipmentId()).orElseThrow(
-//                ()-> new AppException(ErrorCode.SHIPMENT_NOT_FOUND)
-//        );
-//        Long shipfee = calculatFeeShip(
-//                CalculateFeeRequest.builder()
-//                        .totalAmount(shipment.getOrder().getTotalAmount())
-//                        .fromDistrictId(request.getFromDistrictId())
-//                        .toWardId(String.valueOf(request.getToWardId()))
-//                        .toDistrictId(request.getToDistrictId())
-//                        .build()
-//        );
-//        Long ship = shipfee - shipment.getShipmentFee();
-//        Order order = shipment.getOrder();
-//        order.setTotalAmount(order.getTotalAmount() + ship);
-//
-//        shipment.setShipmentFee(shipfee);
-//        shipment.setBuyerAddress(request.getBuyerAddress());
-//        shipment.setSellerAddress(request.getSellerAddress());
-//        shipment.setFromDistrictId(request.getFromDistrictId());
-//        shipment.setToDistrictId(request.getToDistrictId());
-//        shipment.setToWardId(request.getToWardId());
-//        return shipmentMapper.entityToResponse(shipmentRepo.save(shipment));
-        return null;
+    public Long changeAddressShip(ChangeAddressShipmentRequest request) {
+
+        Order order = orderRepo.findById(request.getOrderId()).orElseThrow(
+                ()-> new AppException(ErrorCode.ORDER_NOT_FOUND)
+        );
+
+        ListSeller ls = listSellerRepo.findById(request.getListsellerId())
+                .orElseThrow(() -> new AppException(ErrorCode.LIST_SELLER_NOT_FOUND));
+        Long shipfee = calculatFeeShip(
+                CalculateFeeRequest.builder()
+                        .totalAmount(request.getTotalPrice())
+                        .fromDistrictId(Long.valueOf(ls.getSeller().getDistrictId()))
+                        .toWardId(String.valueOf(request.getToWardId()))
+                        .toDistrictId(request.getToDistrictId())
+                        .build()
+        );
+        order.setTotalAmount(order.getTotalAmount()-request.getOldShipmentFee()+shipfee);
+        orderRepo.save(order);
+        return shipfee;
     }
 }

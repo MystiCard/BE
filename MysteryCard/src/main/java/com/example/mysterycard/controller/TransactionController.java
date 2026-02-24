@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -40,7 +41,7 @@ public class TransactionController {
         return ResponseEntity.ok(ApiResponse.success(transactionService.createRequestWithdraw(transactionRequest)));
     }
     @PostMapping("/pay-with-wallet")
-    public ResponseEntity<ApiResponse<TransactionResponse>> payWithWallet(@RequestBody @Valid TransactionRequest transactionRequest) {
+    public ResponseEntity<ApiResponse<List<TransactionResponse>>> payWithWallet(@RequestBody @Valid TransactionRequest transactionRequest) {
         return ResponseEntity.ok(ApiResponse.success(transactionService.createTransaction(transactionRequest)));
     }
     @PreAuthorize("hasRole('ADMIN')")

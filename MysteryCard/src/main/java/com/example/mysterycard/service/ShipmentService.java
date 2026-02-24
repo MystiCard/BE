@@ -25,6 +25,6 @@ public interface ShipmentService {
 
     ShipmentResponse update(UpdateShipmentRequest request, List<MultipartFile> list);
     Long calculatFeeShip(CalculateFeeRequest request);
-    ShipmentResponse changeAddressShip(ChangeAddressShipmentRequest request);
+    Long changeAddressShip(ChangeAddressShipmentRequest request);
 }
 

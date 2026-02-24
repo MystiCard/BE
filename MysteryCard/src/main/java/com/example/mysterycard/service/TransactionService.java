@@ -8,6 +8,7 @@ import com.example.mysterycard.enums.Status;
 import com.example.mysterycard.enums.StatusPayment;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface TransactionService {
@@ -15,7 +16,7 @@ public interface TransactionService {
     TransactionResponse createRequestWithdraw(WithdrawRequest request);
     String addminApproveWithdraw(ApproveRequest request);
     TransactionResponse callBackDepositeAndWithdraw(UpdateTransactionStatusRequest request);
-    TransactionResponse createTransaction(TransactionRequest transactionRequest);
+    List<TransactionResponse> createTransaction(TransactionRequest transactionRequest);
     Page<TransactionResponse> searchByPaymentId(SearchRequest request, UUID paymentId, int page, int size);
     TransactionResponse getById(UUID transactionId);
     TransactionResponse processTransaction(UUID transactionId);

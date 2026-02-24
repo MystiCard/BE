@@ -14,13 +14,9 @@ import java.util.UUID;
 
 @Data
 public class TransactionRequest {
-    @NotNull(message = "Buyer Id is required")
-    private UUID buyerId;
-    @NotNull(message = "Seller Id is required")
-    private UUID sellerId;
     @NotNull(message = "Transaction Type is required")
     private TransactionType transactionType;
-    @NotNull(message = "Amount  is required")
+    @NotNull(message = "Order Id  is required")
     private UUID orderId;
 
 

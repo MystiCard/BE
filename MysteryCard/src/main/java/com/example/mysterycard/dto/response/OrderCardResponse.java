@@ -16,7 +16,6 @@ public class OrderCardResponse {
     private Long totalAmount;
     private OrderStatus status;
     private LocalDateTime orderDate;
-
     List<OrderItemResponse> orderItems;
 
 }

@@ -3,6 +3,7 @@ package com.example.mysterycard.controller;
 import com.example.mysterycard.base.ApiResponse;
 import com.example.mysterycard.dto.request.CalculateFeeRequest;
 import com.example.mysterycard.dto.request.AsignShipperRequest;
+import com.example.mysterycard.dto.request.ChangeAddressShipmentRequest;
 import com.example.mysterycard.dto.request.UpdateShipmentRequest;
 import com.example.mysterycard.dto.response.ShipmentResponse;
 import com.example.mysterycard.service.ShipmentService;
@@ -56,9 +57,9 @@ public class ShipmentController {
     }
     @PostMapping("/calculate-fee")
     public ResponseEntity<ApiResponse<Long>> calculate(
-            @RequestBody CalculateFeeRequest request
-    ){
-        return ResponseEntity.ok(ApiResponse.success(shipmentService.calculatFeeShip(request)));
+            @RequestBody ChangeAddressShipmentRequest request
+            ){
+        return ResponseEntity.ok(ApiResponse.success(shipmentService.changeAddressShip(request)));
     }
 
 }

@@ -25,13 +25,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.access.method.P;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -49,6 +50,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final PaymentRepo paymentRepo;
     private final SumariesRepository sumariesRepository;
     private final SumariesMapper sumariesMapper;
+    private final ListSellerRepo listSellerRepo;
     @Value("${admin.email}")
     private  String adminEmail;
 
@@ -139,43 +141,66 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Transactional
     @Override
-    public TransactionResponse createTransaction(TransactionRequest request) {
-        Wallet buyer = getWallet(request.getBuyerId());
-        WalletTransaction transaction = transactionMapper.requestToEnity(request);
+    public List<TransactionResponse> createTransaction(TransactionRequest request) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Users buyerUser = usersRepo.findByEmail(email);
+        if (buyerUser == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        Wallet buyer = getWallet(buyerUser.getUserId());
+
         Users admin = usersRepo.findByEmail(adminEmail);
-        String message = "Transaction for Blind Box";
         if (admin == null) {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
-        Double amount = null;
-        Wallet seller =  admin.getWallet();
-        transaction.setStatusTransaction(StatusPayment.SUCCESS);
-        if (request.getOrderId() != null && request.getSellerId() != null) {
-            Order order = orderRepo.findById(request.getOrderId()).orElseThrow(
-                    () -> new AppException(ErrorCode.ORDER_NOT_FOUND)
-            );
-            amount = order.getTotalAmount();
-            transaction.setOrder(order);
-            if(order.getBlindBox() == null)
-            {
-                 message = "Transaction for buy Card";
-                 seller = getWallet(request.getSellerId());
-                transaction.setStatusTransaction(StatusPayment.ESCROWED);
-            }
+        Order order = orderRepo.findById(request.getOrderId()).orElseThrow(
+                () -> new AppException(ErrorCode.ORDER_NOT_FOUND)
+        );
+        Wallet seller = admin.getWallet();
+
+        if (order.getBlindBox() != null) {
+            WalletTransaction transaction = transactionMapper.requestToEnity(request);
+            transaction.setStatusTransaction(StatusPayment.SUCCESS);
+            return createTransactionForBlindBox(buyer, seller, order, transaction);
         }
+        List<TransactionResponse> responseList = new ArrayList<>();
+        for (OrderItem item : order.getOrderItemList()){
+            String message = "Transaction for buy Card";
+            WalletTransaction transaction = transactionMapper.requestToEnity(request);
+            transaction.setStatusTransaction(StatusPayment.ESCROWED);
+            transaction.setMessage(message);
+            transaction.setWalletReceive(item.getListSeller().getSeller().getWallet());
+            transaction.setWalletSend(buyer);
+            Double amount = item.getPrice() * item.getQuantity();
+            transaction.setAmount(amount);
+            if (buyer.getBalance() < amount) {
+                transaction.setStatusTransaction(StatusPayment.FAILED);
+                transaction.setMessage(ErrorCode.CAN_NOT_TRANSACTION.getMessage());
+            } else {
+                admin.getWallet().setBalance(admin.getWallet().getBalance() + amount);
+                usersRepo.save(admin);
+                buyer.setBalance(buyer.getBalance() - amount);
+            }
+                responseList.add(transactionMapper.entityToResponse(transactionRepo.save(transaction)));
+            }
+
+        return responseList;
+    }
+    public List<TransactionResponse> createTransactionForBlindBox(Wallet buyer, Wallet seller, Order order, WalletTransaction transaction) {
+        String message = "Transaction for Blind Box";
         transaction.setMessage(message);
         transaction.setWalletReceive(seller);
         transaction.setWalletSend(buyer);
-        transaction.setAmount(amount);
-        if (buyer.getBalance() < amount) {
+        transaction.setAmount(order.getTotalAmount());
+        if (buyer.getBalance() < order.getTotalAmount()) {
             transaction.setStatusTransaction(StatusPayment.FAILED);
             transaction.setMessage(ErrorCode.CAN_NOT_TRANSACTION.getMessage());
         } else {
-            admin.getWallet().setBalance(admin.getWallet().getBalance() + amount);
-            usersRepo.save(admin);
-            buyer.setBalance(buyer.getBalance() - amount);
+            seller.setBalance(seller.getBalance() + order.getTotalAmount());
+            usersRepo.save(seller.getOnwer());
+            buyer.setBalance(buyer.getBalance() - order.getTotalAmount());
         }
-        return transactionMapper.entityToResponse(transactionRepo.save(transaction));
+        return List.of(transactionMapper.entityToResponse(transactionRepo.save(transaction)));
     }
 
     @Override

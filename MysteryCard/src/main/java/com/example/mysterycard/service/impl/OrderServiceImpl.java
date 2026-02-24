@@ -115,7 +115,6 @@ totalAmount+=shipfee;
                         .build();
                 allOrderItemsResponse.add(orderItemResponse);
                 }
-
             }
         order.setTotalAmount(totalAmount);
         OrderCardResponse orderCardResponse = orderMapper.entityToResponse(orderRepo.save(order));

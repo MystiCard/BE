@@ -1,14 +1,12 @@
 package com.example.mysterycard.service.impl;
 
 import com.example.mysterycard.dto.request.TransactionReportRequest;
+import com.example.mysterycard.dto.request.UpdateShipmentRequest;
 import com.example.mysterycard.dto.request.transaction.*;
 import com.example.mysterycard.dto.response.TransactionReportResponse;
 import com.example.mysterycard.dto.response.transaction.TransactionResponse;
 import com.example.mysterycard.entity.*;
-import com.example.mysterycard.enums.OrderStatus;
-import com.example.mysterycard.enums.ShippingStatus;
-import com.example.mysterycard.enums.StatusPayment;
-import com.example.mysterycard.enums.TransactionType;
+import com.example.mysterycard.enums.*;
 import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.PaymentMapper;
@@ -16,6 +14,7 @@ import com.example.mysterycard.mapper.SumariesMapper;
 import com.example.mysterycard.mapper.TransactionMapper;
 import com.example.mysterycard.repository.*;
 import com.example.mysterycard.service.PaymentService;
+import com.example.mysterycard.service.ShipmentService;
 import com.example.mysterycard.service.TransactionService;
 import com.example.mysterycard.specification.TransactionSpecification;
 import lombok.RequiredArgsConstructor;
@@ -50,7 +49,9 @@ public class TransactionServiceImpl implements TransactionService {
     private final PaymentRepo paymentRepo;
     private final SumariesRepository sumariesRepository;
     private final SumariesMapper sumariesMapper;
+    private final ShipmentService shipmentService;
     private final ListSellerRepo listSellerRepo;
+    private final WalletRepo walletRepo;
     @Value("${admin.email}")
     private  String adminEmail;
 
@@ -141,7 +142,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Transactional
     @Override
-    public List<TransactionResponse> createTransaction(TransactionRequest request) {
+    public TransactionResponse createTransaction(TransactionRequest request) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Users buyerUser = usersRepo.findByEmail(email);
         if (buyerUser == null) {
@@ -156,51 +157,55 @@ public class TransactionServiceImpl implements TransactionService {
         Order order = orderRepo.findById(request.getOrderId()).orElseThrow(
                 () -> new AppException(ErrorCode.ORDER_NOT_FOUND)
         );
+        // blind box
+        WalletTransaction transaction = transactionMapper.requestToEnity(request);
+        transaction.setStatusTransaction(StatusPayment.SUCCESS);
         Wallet seller = admin.getWallet();
-
-        if (order.getBlindBox() != null) {
-            WalletTransaction transaction = transactionMapper.requestToEnity(request);
-            transaction.setStatusTransaction(StatusPayment.SUCCESS);
-            return createTransactionForBlindBox(buyer, seller, order, transaction);
-        }
-        List<TransactionResponse> responseList = new ArrayList<>();
-        for (OrderItem item : order.getOrderItemList()){
-            String message = "Transaction for buy Card";
-            WalletTransaction transaction = transactionMapper.requestToEnity(request);
+        String message = "Transaction for Blind Box";
+        if(order.getBlindBox() == null) {
+            message = "Transaction for buy Card";
             transaction.setStatusTransaction(StatusPayment.ESCROWED);
+        }
             transaction.setMessage(message);
-            transaction.setWalletReceive(item.getListSeller().getSeller().getWallet());
+            transaction.setWalletReceive(seller);
             transaction.setWalletSend(buyer);
-            Double amount = item.getPrice() * item.getQuantity();
-            transaction.setAmount(amount);
-            if (buyer.getBalance() < amount) {
+            transaction.setAmount(order.getTotalAmount());
+            if (buyer.getBalance() < order.getTotalAmount()) {
                 transaction.setStatusTransaction(StatusPayment.FAILED);
                 transaction.setMessage(ErrorCode.CAN_NOT_TRANSACTION.getMessage());
             } else {
-                admin.getWallet().setBalance(admin.getWallet().getBalance() + amount);
+                admin.getWallet().setBalance(admin.getWallet().getBalance() + order.getTotalAmount());
                 usersRepo.save(admin);
-                buyer.setBalance(buyer.getBalance() - amount);
+                buyer.setBalance(buyer.getBalance() - order.getTotalAmount());
+                order.setStatus(OrderStatus.PAID);
+                UpdateStatusShipment(order);
+                updateQuanity(order);
             }
-                responseList.add(transactionMapper.entityToResponse(transactionRepo.save(transaction)));
-            }
-
-        return responseList;
+        return transactionMapper.entityToResponse(transactionRepo.save(transaction));
     }
-    public List<TransactionResponse> createTransactionForBlindBox(Wallet buyer, Wallet seller, Order order, WalletTransaction transaction) {
-        String message = "Transaction for Blind Box";
-        transaction.setMessage(message);
-        transaction.setWalletReceive(seller);
-        transaction.setWalletSend(buyer);
-        transaction.setAmount(order.getTotalAmount());
-        if (buyer.getBalance() < order.getTotalAmount()) {
-            transaction.setStatusTransaction(StatusPayment.FAILED);
-            transaction.setMessage(ErrorCode.CAN_NOT_TRANSACTION.getMessage());
-        } else {
-            seller.setBalance(seller.getBalance() + order.getTotalAmount());
-            usersRepo.save(seller.getOnwer());
-            buyer.setBalance(buyer.getBalance() - order.getTotalAmount());
+    public void UpdateStatusShipment(Order order){
+        for(OrderItem orderItem : order.getOrderItemList())
+        {
+            orderItem.getShipments().forEach(shipment -> {
+                if(shipment.getShipmentStatus() == null)
+                {
+                    shipmentService.update(
+                            UpdateShipmentRequest.builder()
+                                    .shipmentId(shipment.getShipmentId())
+                                    .shippingStatus(ShippingStatus.PENDING)
+                                    .build(),null
+                    );
+                }
+            });
         }
-        return List.of(transactionMapper.entityToResponse(transactionRepo.save(transaction)));
+    }
+    public void updateQuanity(Order order)
+    {
+        for(OrderItem orderItem : order.getOrderItemList())
+        {
+            orderItem.getListSeller().setQuantity(orderItem.getListSeller().getQuantity() - orderItem.getQuantity());
+            listSellerRepo.save(orderItem.getListSeller());
+        }
     }
 
     @Override
@@ -224,52 +229,37 @@ public class TransactionServiceImpl implements TransactionService {
     }
     @Transactional
     @Override
-    public TransactionResponse processTransaction(UUID transactionId) {
-//        WalletTransaction transaction = transactionRepo.findById(transactionId).orElseThrow(
-//                () -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND)
-//        );
-//        Users admin = usersRepo.findByEmail(adminEmail);
-//
-//        if (admin == null) {
-//            throw new AppException(ErrorCode.USER_NOT_FOUND);
-//        }
-//        Wallet adminWallet = admin.getWallet();
-//        Order order = transaction.getOrder();
-//       // xem lai
-//        Shipment shipment =  order.getShipment().getLast();
-//        Wallet buyer = transaction.getWalletSend();
-//        Wallet seller = transaction.getWalletReceive();
-//        if (order != null) {
-//            transaction.setStatusTransaction(StatusPayment.REFUNDED);
-//            OrderStatus orderStatus = order.getStatus();
-//            ShippingStatus shippingStatus = shipment.getShipmentStatus();
-//            double price = (transaction.getAmount() - shipment.getShipmentFee());
-//            if (orderStatus.equals(OrderStatus.COMPLETED) && transaction.getStatusTransaction().equals(StatusPayment.ESCROWED)) {
-//                seller.setBalance(seller.getBalance() + price );
-//                adminWallet.setBalance(adminWallet.getBalance() - price);
-//                transaction.setStatusTransaction(StatusPayment.RELEASED);
-//            } else if (orderStatus.equals(OrderStatus.CANCELLED) ) {
-//
-//                if(shippingStatus.equals(ShippingStatus.PENDING) && order.getBlindBox() == null) {
-//                    buyer.setBalance(buyer.getBalance() + transaction.getAmount());
-//                    adminWallet.setBalance(adminWallet.getBalance() - transaction.getAmount());
-//
-//                }else if(shippingStatus.equals(ShippingStatus.RETURNED)) {
-//                    double refund_money = transaction.getAmount() - shipment.getShipmentFee();
-//                    buyer.setBalance(buyer.getBalance() + refund_money);
-//                    adminWallet.setBalance(adminWallet.getBalance() - refund_money);
-//                }else if(shippingStatus.equals(ShippingStatus.LOST)) {
-//                    buyer.setBalance(buyer.getBalance() + transaction.getAmount());
-//                    adminWallet.setBalance(adminWallet.getBalance() - transaction.getAmount());
-//                    seller.setBalance(seller.getBalance() + price);
-//                    adminWallet.setBalance(adminWallet.getBalance() - price);
-//                }
-//
-//            }
-//        }
-//        usersRepo.save(admin);
-//        return transactionMapper.entityToResponse(transactionRepo.save(transaction));
-        return null;
+    public TransactionResponse releasePrice(OrderItem orderItem) {
+        Users admin = usersRepo.findByEmail(adminEmail);
+        if (admin == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        Wallet send = admin.getWallet();
+        // Truong hop nhan duoc hang
+        Wallet recive = orderItem.getListSeller().getSeller().getWallet();
+        Double price = orderItem.getPrice() * orderItem.getQuantity();
+        String message = "Release price for orderItem: " + orderItem.getOrderItemId();
+        if(orderItem.getOrderItemStatus().equals(OrderItemStatus.CANCELLED))
+        {
+          recive = orderItem.getOrder().getBuyer().getWallet();
+          Shipment shipment  = orderItem.getShipments().stream().toList().getLast();
+          message = "Refund for orderItem: " + orderItem.getOrderItemId();
+          if(shipment.getShipmentStatus().equals(ShippingStatus.CANCELLED)){
+              price +=shipment.getShipmentFee();
+          }
+        }
+        WalletTransaction transaction = WalletTransaction.builder()
+                .amount(orderItem.getPrice() * orderItem.getQuantity())
+                .walletReceive(recive)
+                .walletSend(send)
+                .transactionType(TransactionType.TRANSFER)
+                .statusTransaction(StatusPayment.SUCCESS)
+                .message(message)
+                .build();
+        recive.setBalance(recive.getBalance() + (price));
+        send.setBalance(send.getBalance() - (price));
+        walletRepo.saveAll(List.of(recive,send));
+        return transactionMapper.entityToResponse(transactionRepo.save(transaction));
     }
 
     @Override

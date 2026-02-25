@@ -65,6 +65,7 @@ public enum ErrorCode {
     ORDER_NOT_FOUND(12001, "Order not found with code", HttpStatus.NOT_FOUND),
     QUANTITY_OVER_AVAIABLE(12002,"Order quantity larger than quantity avaiable",HttpStatus.BAD_REQUEST),
  ORDER_ITEMS_NOT_FOUND(12002,"Order items not found",HttpStatus.NOT_FOUND),
+    CAN_NOT_CANCEL_ORDER_ITEM(12003,"Can not cancel order item with this status",HttpStatus.BAD_REQUEST),
     //IMPORT EXPORT ERRORS(13)
     FILE_IMPORT_ERROR(13001,"File import error. Please check your file",HttpStatus.BAD_REQUEST),
 

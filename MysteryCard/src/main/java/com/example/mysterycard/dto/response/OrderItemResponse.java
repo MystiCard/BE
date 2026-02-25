@@ -1,5 +1,6 @@
 package com.example.mysterycard.dto.response;
 
+import com.example.mysterycard.enums.OrderItemStatus;
 import lombok.Builder;
 import lombok.Data;
 
@@ -10,6 +11,7 @@ import java.util.UUID;
 @Builder
 public class OrderItemResponse {
     private double shipfee;
+    private ShipmentResponse shipmentResponse;
     List<OrderDetailResponse> orderDetailResponseList;
     @Builder
     @Data
@@ -17,6 +19,6 @@ public class OrderItemResponse {
         private UUID orderItemId;
         private int quantity;
         private double price;
-
+        private OrderItemStatus orderItemStatus;
 
     }}

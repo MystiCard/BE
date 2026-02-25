@@ -27,8 +27,9 @@ select s from Shipment s where s.shipper is null or s.shipmentStatus = :status
 
 """)
     Page<Shipment> findAllByNotHaveShipper(ShippingStatus status, Pageable pageable);
-
     List<Shipment> findByShipmentStatusIn(Collection<ShippingStatus> shipmentStatuses);
-
     List<Shipment> findByOrderItems(Set<OrderItem> orderItems);
+
+
+    List<Shipment> findByShipmentStatus(ShippingStatus shipmentStatus);
 }

@@ -9,5 +9,5 @@ public enum TransactionType {
     SELLER_PAYOUT,   // Trả tiền cho người bán
     ADJUSTMENT,      // Điều chỉnh số dư thủ công (admin)
     PENALTY,          // Phạt / trừ tiền do vi phạm
-    REQUEST_WITHDRAW
+    REQUEST_WITHDRAW,
 }

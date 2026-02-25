@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ShipmentService {
-    ShipmentResponse createsShipment(ShipmentRequest shipmentRequest);
+    ShipmentResponse createsShipment(ShipmentRequest request);
 
     List<ShipmentResponse> getShipmentByOrderItems(UUID orderItems);
 

@@ -9,4 +9,6 @@ public enum ShippingStatus {
     FAILED,
     RETURNED
     ,LOST
+    ,RECEIVED,
+    CANCELLED
 }

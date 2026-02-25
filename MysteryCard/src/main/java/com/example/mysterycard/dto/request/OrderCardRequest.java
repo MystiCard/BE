@@ -23,11 +23,6 @@ public class OrderCardRequest {
     @NotNull(message = "Phone is required")
     @Pattern(regexp = "^(0|\\+84)(3|5|7|8|9)[0-9]{8}$",message = "Phone must be start 0 or +84 followed by 9 digit  ")
     private String buyerPhone;
-    @NotNull(message = "Phone is required")
-    @Pattern(regexp = "^(0|\\+84)(3|5|7|8|9)[0-9]{8}$",message = "Phone must be start 0 or +84 followed by 9 digit  ")
-    private String sellerPhone;
-    @Size(min = 5, message = "Address mus be large than 5 character")
-    private String sellerAddress;
     @NotNull(message = "Order items not null")
     private List<OrderItems> orderItemsList;
     @Data

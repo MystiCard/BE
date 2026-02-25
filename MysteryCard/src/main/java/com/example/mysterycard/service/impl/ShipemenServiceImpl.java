@@ -61,16 +61,25 @@ public class ShipemenServiceImpl implements ShipmentService {
     private final ListSellerRepo listSellerRepo;
     @Override
     public ShipmentResponse createsShipment(ShipmentRequest request) {
-        OrderItem orderItem = orderItemsRepo.findById(request.getOrderItemId()).orElseThrow(
-                () -> new AppException(ErrorCode.ORDER_ITEMS_NOT_FOUND)
-        );
-      Shipment shipment = shipmentMapper.requestToEntity(request);
-      shipment.getOrderItems().add(orderItem);
-        // create tracking
-        trackingService.createTracking(
-                TrackingRequest.builder()
-                        .shipmentId(shipment.getShipmentId())
-                .build());
+        List<ShipmentResponse> list = new ArrayList<>();
+
+            Shipment shipment = shipmentMapper.requestToEntity(request);
+            // create tracking
+
+             for (UUID orderItemId : request.getOrderItemId()) {
+                 OrderItem orderItem = orderItemsRepo.findById(orderItemId).orElseThrow(
+                         () -> new AppException(ErrorCode.ORDER_ITEMS_NOT_FOUND)
+                 );
+                 shipment.getOrderItems().add(orderItem);
+                 shipment.setFromDistrictId(Long.valueOf(orderItem.getListSeller().getSeller().getDistrictId()));
+                 shipment.setSellerAddress(orderItem.getListSeller().getSeller().getAddress());
+                 shipment.setSellerPhone(orderItem.getListSeller().getSeller().getPhone());
+                 shipmentRepo.save(shipment);
+             }
+            trackingService.createTracking(
+                    TrackingRequest.builder()
+                            .shipmentId(shipment.getShipmentId())
+                            .build());
         return shipmentMapper.entityToResponse(shipment);
     }
 
@@ -124,11 +133,13 @@ public class ShipemenServiceImpl implements ShipmentService {
     }
 
     @Override
+    @Transactional
     public ShipmentResponse update(UpdateShipmentRequest request, List<MultipartFile> fileList) {
         Shipment shipment = shipmentRepo.findById(request.getShipmentId()).orElseThrow(
                 ()-> new AppException(ErrorCode.SHIPMENT_NOT_FOUND)
         );
         shipment.setShipmentStatus(request.getShippingStatus());
+        shipmentRepo.save(shipment);
         trackingService.createTracking(
                 TrackingRequest.builder()
                         .shipmentId(shipment.getShipmentId())

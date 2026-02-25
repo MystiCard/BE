@@ -21,9 +21,8 @@ public class Shipment {
     private String buyerAddress;
     @Builder.Default
     private LocalDateTime createAt = LocalDateTime.now();
-    @Builder.Default
     @Enumerated(EnumType.STRING)
-    private ShippingStatus shipmentStatus = ShippingStatus.PENDING;
+    private ShippingStatus shipmentStatus ;
     private Long shipmentFee;
     private Long fromDistrictId;
     private Long toDistrictId;
@@ -38,6 +37,7 @@ public class Shipment {
             inverseJoinColumns = @JoinColumn(name = "order_detail_id")
 
     )
+    @Builder.Default
     private Set<OrderItem> orderItems = new HashSet<>();
     @ManyToMany
     @JoinTable(

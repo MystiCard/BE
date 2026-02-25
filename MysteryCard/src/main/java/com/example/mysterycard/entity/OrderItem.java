@@ -1,5 +1,6 @@
 package com.example.mysterycard.entity;
 
+import com.example.mysterycard.enums.OrderItemStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,6 +19,9 @@ public class OrderItem {
     private UUID orderItemId;
     private int quantity;
     private double price;
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    private OrderItemStatus orderItemStatus = OrderItemStatus.CONFIRMED;
     @ManyToOne
     @JoinColumn(name = "order_id")
     private Order order;

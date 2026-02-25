@@ -5,19 +5,19 @@ import com.example.mysterycard.enums.ShippingStatus;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.ManyToOne;
+import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
 import java.util.UUID;
 
 @Data
+@Builder
 public class ShipmentRequest {
-    private UUID orderItemId;
+    private List<UUID> orderItemId;
     private String buyerAddress;
-    private Long fromDistrictId;
     private Long toDistrictId;
     private Long toWardId;
     private String buyerPhone;
-    private String sellerPhone;
-    private String sellerAddress;
     private Long shipmentFee;
 }

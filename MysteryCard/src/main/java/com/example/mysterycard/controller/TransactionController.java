@@ -41,7 +41,7 @@ public class TransactionController {
         return ResponseEntity.ok(ApiResponse.success(transactionService.createRequestWithdraw(transactionRequest)));
     }
     @PostMapping("/pay-with-wallet")
-    public ResponseEntity<ApiResponse<List<TransactionResponse>>> payWithWallet(@RequestBody @Valid TransactionRequest transactionRequest) {
+    public ResponseEntity<ApiResponse<TransactionResponse>> payWithWallet(@RequestBody @Valid TransactionRequest transactionRequest) {
         return ResponseEntity.ok(ApiResponse.success(transactionService.createTransaction(transactionRequest)));
     }
     @PreAuthorize("hasRole('ADMIN')")

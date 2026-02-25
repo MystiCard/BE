@@ -22,7 +22,7 @@ public class Order {
     private Double totalAmount;
     @Enumerated(EnumType.STRING)
     @Builder.Default
-    private OrderStatus status= OrderStatus.CREATED;
+    private OrderStatus status = OrderStatus.CREATED;
     @CreationTimestamp
     @Builder.Default
     private LocalDateTime orderDate = LocalDateTime.now();
@@ -30,7 +30,6 @@ public class Order {
     @ManyToOne
     @JoinColumn(name = "buyer_id")
     private Users buyer;
-
     @OneToMany(mappedBy = "order")
     private List<WalletTransaction> transactionList = new ArrayList<>();
     @OneToMany(mappedBy = "order")

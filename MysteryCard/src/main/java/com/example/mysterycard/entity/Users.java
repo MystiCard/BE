@@ -57,4 +57,6 @@ public class Users {
     private List<WishList> wishLists = new ArrayList<>();
     @OneToMany(mappedBy = "shipper")
     private List<Shipment> shipmentList = new ArrayList<>();
+    @OneToMany(mappedBy = "buyer")
+    private List<ReturnRequest> returnRequestList = new ArrayList<>();
 }

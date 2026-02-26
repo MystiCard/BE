@@ -29,5 +29,7 @@ public class BlindBoxResult {
     @ManyToOne
     @JoinColumn(name = "order_id")
     private Order order;
+    @ManyToMany(mappedBy = "blindBoxResults")
+    private Set<Shipment>  shipments = new HashSet<>();
 
 }

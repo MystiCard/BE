@@ -18,22 +18,35 @@ public class Shipment {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID shipmentId;
-    private String buyerAddress;
+    private String toAddress;
     @Builder.Default
     private LocalDateTime createAt = LocalDateTime.now();
-    @Builder.Default
     @Enumerated(EnumType.STRING)
-    private ShippingStatus shipmentStatus = ShippingStatus.PENDING;
+    private ShippingStatus shipmentStatus ;
     private Long shipmentFee;
     private Long fromDistrictId;
     private Long toDistrictId;
     private Long toWardId;
-    private String buyerPhone;
-    private String sellerPhone;
-    private String sellerAddress;
-    @ManyToOne
-    @JoinColumn(name = "order_id")
-    private Order order;
+    private String toPhone;
+    private String fromPhone;
+    private String fromAddress;
+    @ManyToMany
+    @JoinTable(
+            name = "orderDetail_Shipment",
+            joinColumns = @JoinColumn(name = "shipment_id"),
+            inverseJoinColumns = @JoinColumn(name = "order_detail_id")
+
+    )
+    @Builder.Default
+    private Set<OrderItem> orderItems = new HashSet<>();
+    @ManyToMany
+    @JoinTable(
+            name = "blind_box_result_shipment",
+            joinColumns = @JoinColumn(name = "shipment_id"),
+            inverseJoinColumns = @JoinColumn(name = "blind_box_id")
+
+    )
+    private Set<BlindBoxResult> blindBoxResults = new HashSet<>();
     @ManyToOne
     @JoinColumn(name = "shipper_id")
     private Users shipper;

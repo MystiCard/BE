@@ -1,22 +1,21 @@
 package com.example.mysterycard.service;
 
+import com.example.mysterycard.dto.request.CalculateFeeRequest;
 import com.example.mysterycard.dto.request.AsignShipperRequest;
+import com.example.mysterycard.dto.request.ChangeAddressShipmentRequest;
 import com.example.mysterycard.dto.request.ShipmentRequest;
 import com.example.mysterycard.dto.request.UpdateShipmentRequest;
 import com.example.mysterycard.dto.response.ShipmentResponse;
-import com.example.mysterycard.entity.Order;
-import com.example.mysterycard.enums.ShippingStatus;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
 
 public interface ShipmentService {
-    ShipmentResponse createsShipment(ShipmentRequest shipmentRequest);
+    ShipmentResponse createsShipment(ShipmentRequest request);
 
-    List<ShipmentResponse> getShipmentByOrder(UUID orderId);
+    List<ShipmentResponse> getShipmentByOrderItems(UUID orderItems);
 
     Page<ShipmentResponse> myShipment(boolean complete, int page, int size);
 
@@ -25,5 +24,7 @@ public interface ShipmentService {
     ShipmentResponse asignShipper(AsignShipperRequest request);
 
     ShipmentResponse update(UpdateShipmentRequest request, List<MultipartFile> list);
+    Long calculatFeeShip(CalculateFeeRequest request);
+    Long changeAddressShip(ChangeAddressShipmentRequest request);
 }
 

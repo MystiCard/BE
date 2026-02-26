@@ -77,5 +77,11 @@ public class TransactionController {
             ){
         return ResponseEntity.ok(ApiResponse.success(transactionService.report(request)));
     }
+    @PostMapping("/pay-for-return/{returnItemId}")
+    public ResponseEntity<ApiResponse<TransactionResponse>> payForReturnItem(
+            @PathVariable UUID returnItemId
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(transactionService.payforShipFeeReturnItem(returnItemId)));
+    }
 
 }

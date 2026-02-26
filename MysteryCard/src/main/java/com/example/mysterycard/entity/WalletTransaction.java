@@ -23,7 +23,7 @@ public class WalletTransaction {
     private UUID walletTransactionId;
     @Enumerated(EnumType.STRING)
     private TransactionType transactionType;
-    private Long amount;
+    private Double amount;
     private String message;
     @Enumerated(EnumType.STRING)
     private StatusPayment statusTransaction;

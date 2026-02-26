@@ -12,11 +12,11 @@ import java.util.UUID;
 @Data
 public class ShipmentResponse {
     private UUID shipmentId;
-    private String buyerAddress;
+    private String toAddress;
     private ShippingStatus shipmentStatus;
     private Long shipmentFee;
-    private String buyerPhone;
-    private String sellerPhone;
-    private String sellerAddress;
+    private String toPhone;
+    private String fromPhone;
+    private String fromAddress;
     private LocalDateTime createAt;
 }

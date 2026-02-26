@@ -1,17 +1,14 @@
 package com.example.mysterycard.service.impl;
 
+import com.example.mysterycard.dto.request.CalculateFeeRequest;
 import com.example.mysterycard.dto.request.*;
 import com.example.mysterycard.dto.response.ShipmentResponse;
-import com.example.mysterycard.entity.Order;
-import com.example.mysterycard.entity.Shipment;
-import com.example.mysterycard.entity.Users;
+import com.example.mysterycard.entity.*;
 import com.example.mysterycard.enums.ShippingStatus;
 import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.ShipmentMapper;
-import com.example.mysterycard.repository.OrderRepo;
-import com.example.mysterycard.repository.ShipmentRepo;
-import com.example.mysterycard.repository.UsersRepo;
+import com.example.mysterycard.repository.*;
 import com.example.mysterycard.service.ShipmentService;
 import com.example.mysterycard.service.TrackingService;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +25,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -53,37 +49,44 @@ public class ShipemenServiceImpl implements ShipmentService {
     private   int weight;
     @Value("${ghn.width}")
     private int width;
-    @Value("${ghn.width}")
+    @Value("${ghn.service_id}")
     private   Long serviceId;
     private final ShipmentMapper shipmentMapper;
     private final ShipmentRepo shipmentRepo;
     private final RestTemplate restTemplate = new RestTemplate();
     private final TrackingService trackingService;
+    private final OrderItemsRepo orderItemsRepo;
     private final OrderRepo orderRepo;
     private final UsersRepo usersRepo;
+    private final ListSellerRepo listSellerRepo;
     @Override
     public ShipmentResponse createsShipment(ShipmentRequest request) {
-        Order order = orderRepo.findById(request.getOrderId()).orElseThrow(
-                () -> new AppException(ErrorCode.ORDER_NOT_FOUND)
-        );
-      Shipment shipment = shipmentMapper.requestToEntity(request);
-      shipment.setOrder(order);
-      shipment.setShipmentFee(calculatFeeShip(order,request));
-        // create tracking
-        trackingService.createTracking(
-                TrackingRequest.builder()
-                        .shipmentId(shipment.getShipmentId())
-                .build());
+        List<ShipmentResponse> list = new ArrayList<>();
+
+            Shipment shipment = shipmentMapper.requestToEntity(request);
+            // create tracking
+
+             for (UUID orderItemId : request.getOrderItemId()) {
+                 OrderItem orderItem = orderItemsRepo.findById(orderItemId).orElseThrow(
+                         () -> new AppException(ErrorCode.ORDER_ITEMS_NOT_FOUND)
+                 );
+                 shipment.getOrderItems().add(orderItem);
+                 shipmentRepo.save(shipment);
+             }
+            trackingService.createTracking(
+                    TrackingRequest.builder()
+                            .shipmentId(shipment.getShipmentId())
+                            .build());
         return shipmentMapper.entityToResponse(shipment);
     }
 
     @Override
     @Transactional
-    public List<ShipmentResponse> getShipmentByOrder(UUID orderId) {
-        Order order = orderRepo.findById(orderId).orElseThrow(
-                () -> new AppException(ErrorCode.ORDER_NOT_FOUND)
+    public List<ShipmentResponse> getShipmentByOrderItems(UUID orderItemId) {
+        OrderItem orderItem = orderItemsRepo.findById(orderItemId).orElseThrow(
+                () -> new AppException(ErrorCode.ORDER_ITEMS_NOT_FOUND)
         );
-        return shipmentRepo.findByOrder(order).stream().map(shipmentMapper::entityToResponse).collect(Collectors.toList());
+        return shipmentRepo.findByOrderItems(Set.of(orderItem)).stream().map(shipmentMapper::entityToResponse).collect(Collectors.toList());
     }
 
     @Override
@@ -127,11 +130,13 @@ public class ShipemenServiceImpl implements ShipmentService {
     }
 
     @Override
+    @Transactional
     public ShipmentResponse update(UpdateShipmentRequest request, List<MultipartFile> fileList) {
         Shipment shipment = shipmentRepo.findById(request.getShipmentId()).orElseThrow(
                 ()-> new AppException(ErrorCode.SHIPMENT_NOT_FOUND)
         );
         shipment.setShipmentStatus(request.getShippingStatus());
+        shipmentRepo.save(shipment);
         trackingService.createTracking(
                 TrackingRequest.builder()
                         .shipmentId(shipment.getShipmentId())
@@ -141,19 +146,19 @@ public class ShipemenServiceImpl implements ShipmentService {
 
         return shipmentMapper.entityToResponse(shipmentRepo.save(shipment));
     }
-
-    public Long calculatFeeShip(Order order,ShipmentRequest request) {
+ @Override
+    public Long calculatFeeShip(CalculateFeeRequest request) {
         org.springframework.http.HttpHeaders headers = new HttpHeaders();
         headers.set("Token",ghnToken);
         headers.set("shop_id",shopId);
         headers.setContentType(MediaType.APPLICATION_JSON);
         CalculateShipmentFeeRequest calRequest = CalculateShipmentFeeRequest.builder()
-                .serviceId(serviceId)
-                .insuranceValue(order.getTotalAmount())
+                .service_id(serviceId)
+                .insurance_value(Math.round(request.getTotalAmount()))
                 .coupon(null)
-                .fromDistrictId(request.getToDistrictId())
-                .toDistrictId(request.getToWardId())
-                .toWardCode(request.getToWardId())
+                .from_district_id(request.getFromDistrictId())
+                .to_district_id(request.getToDistrictId())
+                .to_ward_code(request.getToWardId())
                 .height(height)
                 .length(length)
                 .weight(weight)
@@ -166,6 +171,34 @@ public class ShipemenServiceImpl implements ShipmentService {
                 Map.class
         );
         log.info("Response {}", response.getBody());
-        return Long.parseLong(response.getBody().get("total").toString());
+     Map<String, Object> body = response.getBody();
+
+     Map<String, Object> data = (Map<String, Object>) body.get("data");
+
+     Long total = Long.parseLong(data.get("total").toString());
+
+     return total;
+    }
+    @Transactional
+    @Override
+    public Long changeAddressShip(ChangeAddressShipmentRequest request) {
+
+        Order order = orderRepo.findById(request.getOrderId()).orElseThrow(
+                ()-> new AppException(ErrorCode.ORDER_NOT_FOUND)
+        );
+
+        ListSeller ls = listSellerRepo.findById(request.getListsellerId())
+                .orElseThrow(() -> new AppException(ErrorCode.LIST_SELLER_NOT_FOUND));
+        Long shipfee = calculatFeeShip(
+                CalculateFeeRequest.builder()
+                        .totalAmount(request.getTotalPrice())
+                        .fromDistrictId(Long.valueOf(ls.getSeller().getDistrictId()))
+                        .toWardId(String.valueOf(request.getToWardId()))
+                        .toDistrictId(request.getToDistrictId())
+                        .build()
+        );
+        order.setTotalAmount(order.getTotalAmount()-request.getOldShipmentFee()+shipfee);
+        orderRepo.save(order);
+        return shipfee;
     }
 }

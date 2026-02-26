@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +24,7 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 @Slf4j
 public class AuthencationController {
     private final AuthencationSevice authencationSevice;
+    private final PasswordEncoder passwordEncoder;
     @PostMapping("/login")
     public ApiResponse login(@RequestBody LoginRequest loginRequest)
     {
@@ -63,6 +65,10 @@ public class AuthencationController {
     {
         authencationSevice.sendVerifyCode(email);
         return ResponseEntity.ok(ApiResponse.success("Send code verify succesfully"));
+    }
+    @PostMapping("/password-endcode/{password}")
+    public ResponseEntity<ApiResponse<String>> passwordEncode(@PathVariable String password) {
+        return ResponseEntity.ok(ApiResponse.success(passwordEncoder.encode(password)));
     }
 
 }

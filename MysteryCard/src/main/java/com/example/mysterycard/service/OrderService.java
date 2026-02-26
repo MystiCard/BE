@@ -15,5 +15,6 @@ public interface OrderService {
     PageResponse<OrderItemResponse> getByStatusShipment(ShippingStatus shippingStatus, int page, int size);
     OrderItemResponse confirmReceiveCard(UUID orderItemId);
     OrderItemResponse.OrderDetailResponse cancleOrderItem(UUID orderItemId);
-
+    OrderCardResponse cancleOrder(UUID orderId);
+    PageResponse<OrderItemResponse> getMyReturnOrderItem(ShippingStatus shippingStatus, int page, int size);
 }

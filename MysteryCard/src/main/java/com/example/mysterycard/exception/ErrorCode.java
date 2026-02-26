@@ -73,10 +73,16 @@ public enum ErrorCode {
     WISHLIST_NOT_FOUND(14001,"WishList not found",HttpStatus.NOT_FOUND),
     // SHipment (14)
     SHIPMENT_NOT_FOUND(14001,"Shipment not found",HttpStatus.NOT_FOUND),
+    CAN_NOT_CONFIRM_RECEIVE(14002,"Can not confirm receive with this shipment status",HttpStatus.BAD_REQUEST),
     //Tracking(15)
     TRACKING_NOT_FOUND(15001,"Tracking not found ",HttpStatus.NOT_FOUND),
  // List seller(16)
  LIST_SELLER_NOT_FOUND(16001,"List seller  not found ",HttpStatus.NOT_FOUND),
+    // Return Request (17)
+    RETURN_REQUEST_NOT_FOUND(17001,"Return request not found ",HttpStatus.NOT_FOUND),
+    CAN_NOT_TRANSACTION_RETURN(17002,"Can not transaction with this return request status",HttpStatus.BAD_REQUEST),
+    CAN_NOT_SEND_RETURN_REQUEST(17003,"Can not send return request with this order item status",HttpStatus.BAD_REQUEST),
+    CAN_NOT_APPROVE_RETURN_REQUEST(17004,"Can not approve return request with this return request status",HttpStatus.BAD_REQUEST)
 ;
     int code;
     String message;

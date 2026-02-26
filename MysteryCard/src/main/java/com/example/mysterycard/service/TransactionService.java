@@ -5,11 +5,10 @@ import com.example.mysterycard.dto.request.transaction.*;
 import com.example.mysterycard.dto.response.TransactionReportResponse;
 import com.example.mysterycard.dto.response.transaction.TransactionResponse;
 import com.example.mysterycard.entity.OrderItem;
-import com.example.mysterycard.enums.Status;
+import com.example.mysterycard.entity.ReturnRequest;
 import com.example.mysterycard.enums.StatusPayment;
 import org.springframework.data.domain.Page;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface TransactionService {
@@ -24,4 +23,6 @@ public interface TransactionService {
     String payAgaint(UUID paymentId);
     Page<TransactionResponse> getMyTransaction(StatusPayment statusPayment, int page, int size);
     TransactionReportResponse report(TransactionReportRequest request);
+    TransactionResponse payforShipFeeReturnItem(UUID returnItemId);
+    TransactionResponse refundCancleReturn(ReturnRequest request);
 }

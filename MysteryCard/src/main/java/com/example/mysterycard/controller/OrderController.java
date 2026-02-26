@@ -26,25 +26,43 @@ public class OrderController {
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<OrderCardResponse>> createOrder(
             @RequestBody @Valid OrderCardRequest request
-            ){
+    ) {
         return ResponseEntity.ok(ApiResponse.success(orderService.createOrder(request)));
     }
+
     @PostMapping("/status")
     public ResponseEntity<ApiResponse<PageResponse<OrderItemResponse>>> getOrderStatus(
             @RequestBody ShippingStatus shippingStatus,
             @RequestParam(required = false, defaultValue = "1") int page,
             @RequestParam(required = false, defaultValue = "10") int size
-            ){
-        return ResponseEntity.ok(ApiResponse.success(orderService.getByStatusShipment(shippingStatus,page,size)));
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(orderService.getByStatusShipment(shippingStatus, page, size)));
     }
+
     @PostMapping("/confirm-receive/{shipmentId}")
     public ResponseEntity<ApiResponse<OrderItemResponse>> confirmReceiveCard(
-            @PathVariable UUID shipmentId){
+            @PathVariable UUID shipmentId) {
         return ResponseEntity.ok(ApiResponse.success(orderService.confirmReceiveCard(shipmentId)));
     }
+
     @PostMapping("/cancel/{orderItemId}")
     public ResponseEntity<ApiResponse<OrderItemResponse.OrderDetailResponse>> cancelOrderItem(
-            @PathVariable UUID orderItemId){
+            @PathVariable UUID orderItemId) {
         return ResponseEntity.ok(ApiResponse.success(orderService.cancleOrderItem(orderItemId)));
+    }
+
+    @PostMapping("/cancel-order/{orderId}")
+    public ResponseEntity<ApiResponse<OrderCardResponse>> cancelOrder(
+            @PathVariable UUID orderId) {
+        return ResponseEntity.ok(ApiResponse.success(orderService.cancleOrder(orderId)));
+
+    }
+    @PostMapping("/my-card-return")
+    public ResponseEntity<ApiResponse<PageResponse<OrderItemResponse>>> getMyReturnOrderItem(
+            @RequestBody ShippingStatus shippingStatus,
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(orderService.getMyReturnOrderItem(shippingStatus, page, size)));
     }
 }

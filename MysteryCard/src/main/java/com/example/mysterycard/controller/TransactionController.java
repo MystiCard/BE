@@ -15,7 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -77,6 +76,12 @@ public class TransactionController {
             @RequestBody TransactionReportRequest request
             ){
         return ResponseEntity.ok(ApiResponse.success(transactionService.report(request)));
+    }
+    @PostMapping("/pay-for-return/{returnItemId}")
+    public ResponseEntity<ApiResponse<TransactionResponse>> payForReturnItem(
+            @PathVariable UUID returnItemId
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(transactionService.payforShipFeeReturnItem(returnItemId)));
     }
 
 }

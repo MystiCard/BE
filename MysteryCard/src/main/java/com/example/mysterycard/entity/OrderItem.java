@@ -30,4 +30,7 @@ public class OrderItem {
     private ListSeller listSeller;
     @ManyToMany(mappedBy = "orderItems")
     private Set<Shipment> shipments = new HashSet<>();
+    @ManyToOne
+    @JoinColumn(name = "return_request_id")
+    private ReturnRequest returnRequest;
 }

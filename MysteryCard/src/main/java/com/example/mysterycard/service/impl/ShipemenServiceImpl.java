@@ -71,9 +71,6 @@ public class ShipemenServiceImpl implements ShipmentService {
                          () -> new AppException(ErrorCode.ORDER_ITEMS_NOT_FOUND)
                  );
                  shipment.getOrderItems().add(orderItem);
-                 shipment.setFromDistrictId(Long.valueOf(orderItem.getListSeller().getSeller().getDistrictId()));
-                 shipment.setSellerAddress(orderItem.getListSeller().getSeller().getAddress());
-                 shipment.setSellerPhone(orderItem.getListSeller().getSeller().getPhone());
                  shipmentRepo.save(shipment);
              }
             trackingService.createTracking(

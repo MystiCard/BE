@@ -18,7 +18,7 @@ public class Shipment {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID shipmentId;
-    private String buyerAddress;
+    private String toAddress;
     @Builder.Default
     private LocalDateTime createAt = LocalDateTime.now();
     @Enumerated(EnumType.STRING)
@@ -27,9 +27,9 @@ public class Shipment {
     private Long fromDistrictId;
     private Long toDistrictId;
     private Long toWardId;
-    private String buyerPhone;
-    private String sellerPhone;
-    private String sellerAddress;
+    private String toPhone;
+    private String fromPhone;
+    private String fromAddress;
     @ManyToMany
     @JoinTable(
             name = "orderDetail_Shipment",

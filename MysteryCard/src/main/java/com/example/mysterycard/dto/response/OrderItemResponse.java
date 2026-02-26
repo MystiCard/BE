@@ -20,5 +20,4 @@ public class OrderItemResponse {
         private int quantity;
         private double price;
         private OrderItemStatus orderItemStatus;
-
     }}

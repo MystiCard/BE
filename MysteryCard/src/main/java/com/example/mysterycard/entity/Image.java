@@ -22,4 +22,7 @@ public class Image {
     @ManyToOne
     @JoinColumn(name="tracking_id")
     private Tracking tracking;
+    @ManyToOne
+    @JoinColumn(name="return_request_id")
+    private ReturnRequest returnRequest;
 }

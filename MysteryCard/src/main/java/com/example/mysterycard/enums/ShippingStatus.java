@@ -6,8 +6,7 @@ public enum ShippingStatus {
     PICKED_UP,
     IN_TRANSIT,
     DELIVERED,
-    FAILED,
-    RETURNED
+    FAILED
     ,LOST
     ,RECEIVED,
     CANCELLED

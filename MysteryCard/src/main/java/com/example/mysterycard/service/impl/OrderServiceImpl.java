@@ -44,7 +44,6 @@ public class OrderServiceImpl implements OrderService {
     private final OrderItemMapper orderItemMapper;
     private final ShipmentMapper shipmentMapper;
     private final TransactionService transactionService;
-    private final ReturnRequestRepo returnRequestRepo;
     @Override
     @Transactional
     public OrderCardResponse createOrder(OrderCardRequest request) {

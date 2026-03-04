@@ -103,7 +103,7 @@ public class ShipemenServiceImpl implements ShipmentService {
             shippingStatuses.removeAll(List.of(ShippingStatus.PENDING,ShippingStatus.PICKED_UP,ShippingStatus.IN_TRANSIT,ShippingStatus.ASIGNED));
         }
         else {
-            shippingStatuses.removeAll(List.of(ShippingStatus.RETURNED,ShippingStatus.DELIVERED,ShippingStatus.LOST));
+            shippingStatuses.removeAll(List.of(ShippingStatus.DELIVERED,ShippingStatus.LOST));
         }
         return shipmentRepo.findAllByShipmentStatusNotInAndShipper(shippingStatuses,users,pageable).map(shipmentMapper::entityToResponse);
     }

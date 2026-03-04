@@ -48,7 +48,7 @@ public class WalletServiceImpl implements WalletService {
         if(user == null) {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
-        user.getWallet().setWalletStatus(WalletStatus.SUSPENDED);
+        user.getWallet().setWalletStatus(WalletStatus.INACTIVE);
         usersRepo.save(user);
         return walletMapper.entityToResponse(user.getWallet());
     }

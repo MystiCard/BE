@@ -399,6 +399,10 @@ public class TransactionServiceImpl implements TransactionService {
         if (!users.isActive()) {
             throw new AppException(ErrorCode.ACCOUNT_NOT_ACTIVE);
         }
+        Wallet wallet = users.getWallet();
+        if(wallet.getWalletStatus() != WalletStatus.ACTIVE) {
+            throw new AppException(ErrorCode.WALLET_NOT_ACTIVE);
+        }
         return users.getWallet();
     }
     @Override

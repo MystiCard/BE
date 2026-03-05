@@ -15,7 +15,7 @@ import java.util.UUID;
 public class WishList {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID wishList;
+    private UUID wishListId;
     @ManyToOne
     @JoinColumn(name = "user_id")
     private  Users user;

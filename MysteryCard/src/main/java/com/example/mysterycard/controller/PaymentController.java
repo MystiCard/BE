@@ -12,9 +12,11 @@ import com.example.mysterycard.service.TransactionService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 
 import java.util.UUID;
 
@@ -25,8 +27,10 @@ import java.util.UUID;
 public class PaymentController {
     private final TransactionService transactionService;
     private final PaymentService paymentService;
+    @Value("${FRONTEND_URL}")
+    private String FRONTEND_URL;
     @GetMapping("/call-back")
-    public ResponseEntity<ApiResponse<?>> handleIPN(HttpServletRequest request) {
+    public RedirectView handleIPN(HttpServletRequest request) {
 
 
 
@@ -53,8 +57,10 @@ public class PaymentController {
             updateTransactionStatusRequest.setMessage("Veryfy signature wrong");
             updateTransactionStatusRequest.setStatusPayment(StatusPayment.FAILED);
          }
+        transactionService.callBackDepositeAndWithdraw(updateTransactionStatusRequest);
         log.info("Call back {},{}",orderId,resultCode);
-        return ResponseEntity.ok(ApiResponse.success(transactionService.callBackDepositeAndWithdraw(updateTransactionStatusRequest)) );
+
+        return new RedirectView(FRONTEND_URL+"/wallet");
     }
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<PageResponse<PaymentResponse>>> me(

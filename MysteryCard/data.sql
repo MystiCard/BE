@@ -5,8 +5,7 @@
 -- BẢNG ROLES
 INSERT INTO roles (role_code, role_name, description, active)
 VALUES ('ADMIN', 'Quản trị viên', 'Toàn quyền hệ thống', true),
-       ('SELLER', 'Người bán', 'Đăng bán thẻ và box', true),
-       ('BUYER', 'Người mua', 'Mua box và thẻ', true),
+       ('USER', 'Người bán', 'Đăng bán thẻ và box', true),
        ('SHIPPER', 'Giao hàng', 'Nhận và giao đơn hàng', true),
        ('SUPPORT', 'Hỗ trợ', 'Chăm sóc khách hàng', true);
 
@@ -124,12 +123,12 @@ VALUES ('91111111-1111-1111-1111-111111111111', 100, 'SUCCESS', 'STRIPE'),
 
 -- BẢNG USER_ROLES
 INSERT INTO user_roles (user_id, role_id)
-VALUES ('a0000000-0000-0000-0000-000000000006', 'SELLER'),
+VALUES ('a0000000-0000-0000-0000-000000000006', 'USER'),
        ('a0000000-0000-0000-0000-000000000001', 'ADMIN'),
-       ('a0000000-0000-0000-0000-000000000002', 'BUYER'),
-       ('a0000000-0000-0000-0000-000000000003', 'SELLER'),
+       ('a0000000-0000-0000-0000-000000000002', 'USER'),
+       ('a0000000-0000-0000-0000-000000000003', 'USER'),
        ('a0000000-0000-0000-0000-000000000004', 'SHIPPER'),
-       ('a0000000-0000-0000-0000-000000000005', 'BUYER');
+       ('a0000000-0000-0000-0000-000000000005', 'USER');
 
 -- BẢNG LIST_SELLER (Status 0: OFF, 1: ON)
 INSERT INTO list_seller (list_seller_id, card_id, seller_id, price, quantity, status)
@@ -145,16 +144,3 @@ VALUES  ('81111111-1111-1111-1111-888888888888', 'c1111111-0000-0000-0000-000000
         'a0000000-0000-0000-0000-000000000003', 160, 5, 1),
        ('85555555-5555-5555-5555-555555555555', 'c5555555-0000-0000-0000-000000000005',
         'a0000000-0000-0000-0000-000000000003', 90, 0, 0);
--- BẢNG WALLET_TRANSACTION (Transaction_type: DEPOSTIE, PAYMENT, REFUND, WITHDRAW...)
-INSERT INTO wallet_transaction (wallet_transaction_id, wallet_receive_id, wallet_send_id, amount, transaction_type,
-                                status_transaction)
-VALUES ('aa111111-1111-1111-1111-111111111111', 'b2222222-2222-2222-2222-222222222222', NULL, 1000, 'DEPOSTIE',
-        'SUCCESS'),
-       ('aa222222-2222-2222-2222-222222222222', 'b1111111-1111-1111-1111-111111111111',
-        'b2222222-2222-2222-2222-222222222222', 100, 'PAYMENT', 'SUCCESS'),
-       ('aa333333-3333-3333-3333-333333333333', NULL, 'b2222222-2222-2222-2222-222222222222', 200, 'WITHDRAW',
-        'PENDING'),
-       ('aa444444-4444-4444-4444-444444444444', 'b2222222-2222-2222-2222-222222222222',
-        'b1111111-1111-1111-1111-111111111111', 100, 'REFUND', 'SUCCESS'),
-       ('aa555555-5555-5555-5555-555555555555', 'b3333333-3333-3333-3333-333333333333',
-        'b1111111-1111-1111-1111-111111111111', 500, 'TRANSFER', 'SUCCESS');

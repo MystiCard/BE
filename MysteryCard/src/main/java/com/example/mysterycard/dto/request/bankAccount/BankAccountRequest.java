@@ -1,6 +1,7 @@
 package com.example.mysterycard.dto.request.bankAccount;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -13,6 +14,7 @@ public class BankAccountRequest {
     private String bankCode;
     @NotNull(message = "Account Number is required")
     @Size(max =255,message = "Account Number must be from 1 to 255 character")
+    @Pattern(regexp = "^[0-9]+$", message = "Account Number must contain only digits")
     private String accountNumber;
     @NotNull(message = "Account Name  is required")
     @Size(max = 255,message = "Account Name must be from 1 to 255 character")

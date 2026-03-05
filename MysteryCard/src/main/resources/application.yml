@@ -28,5 +28,4 @@ ghn:
   weight: 300
   service_id: 53321
 
-
-
+FRONTEND_URL: http://localhost:5173

@@ -3,6 +3,7 @@ package com.example.mysterycard.dto.response;
 import com.example.mysterycard.enums.Rarity;
 import lombok.Data;
 
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -10,7 +11,7 @@ public class CardResponse {
     private UUID cardId;
     private String name;
     private Rarity rarity;
-    private String imageUrl;
+    private List<ImageResponse> imageUrl;
     private String categoryName;
     private double basePrice;
     private double minPrice;

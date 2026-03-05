@@ -6,6 +6,7 @@ import com.example.mysterycard.dto.request.bankAccount.ChangeDefaultRequest;
 import com.example.mysterycard.dto.response.bankAccount.BankAccountResponse;
 import com.example.mysterycard.repository.BankAccountRepo;
 import com.example.mysterycard.service.BankAccountService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ public class BankAccountController {
 
     @PostMapping("/create/{userId}")
     public ResponseEntity<ApiResponse<BankAccountResponse>> createAcount(
+            @Valid
             @RequestBody BankAccountRequest bankAccountRequest,
             @PathVariable UUID userId
     ) {

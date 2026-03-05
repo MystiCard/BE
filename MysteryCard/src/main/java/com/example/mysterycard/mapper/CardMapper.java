@@ -6,9 +6,10 @@ import com.example.mysterycard.entity.Card;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring",uses = {ImageMapper.class})
 public interface CardMapper {
     Card toCard(CardRequest cardRequest);
     @Mapping(source = "category.categoryName", target = "categoryName")
+    @Mapping(source = "images", target = "imageUrl")
     CardResponse toResponse(Card card);
 }

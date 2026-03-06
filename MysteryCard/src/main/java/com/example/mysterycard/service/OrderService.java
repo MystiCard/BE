@@ -1,5 +1,6 @@
 package com.example.mysterycard.service;
 
+import com.example.mysterycard.dto.request.MyOrderDetailRequest;
 import com.example.mysterycard.dto.request.OrderCardRequest;
 import com.example.mysterycard.dto.response.OrderCardResponse;
 import com.example.mysterycard.dto.response.OrderItemResponse;
@@ -15,7 +16,7 @@ import java.util.UUID;
 
 public interface OrderService {
     OrderCardResponse createOrder(OrderCardRequest orderCardRequest);
-    PageResponse<OrderItemResponse> getByStatusShipment(ShippingStatus orderItemStatus, int page, int size);
+    PageResponse<OrderItemResponse> getByStatusShipment(MyOrderDetailRequest request, int page, int size);
     OrderItemResponse confirmReceiveCard(UUID orderItemId);
     OrderItemResponse.OrderDetailResponse cancleOrderItem(UUID orderItemId);
     OrderCardResponse cancleOrder(UUID orderId);

@@ -1,9 +1,6 @@
 package com.example.mysterycard.service.impl;
 
-import com.example.mysterycard.dto.request.CalculateFeeRequest;
-import com.example.mysterycard.dto.request.OrderCardRequest;
-import com.example.mysterycard.dto.request.ShipmentRequest;
-import com.example.mysterycard.dto.request.UpdateShipmentRequest;
+import com.example.mysterycard.dto.request.*;
 import com.example.mysterycard.dto.response.OrderCardResponse;
 import com.example.mysterycard.dto.response.OrderItemResponse;
 import com.example.mysterycard.dto.response.OrderResponse;
@@ -144,29 +141,30 @@ OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public PageResponse<OrderItemResponse> getByStatusShipment(ShippingStatus shippingStatus, int page, int size) {
+    public PageResponse<OrderItemResponse> getByStatusShipment(MyOrderDetailRequest request, int page, int size) {
         page = page - 1;
-        String name = SecurityContextHolder.getContext().getAuthentication().getName();
-        Users users = usersRepo.findByEmail(name);
-        if (users == null) {
-            throw new AppException(ErrorCode.USER_NOT_FOUND);
-        }
+      Order order = orderRepo.findById(request.getOrderId()).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
         List<OrderItemResponse> result = new ArrayList<>();
-        List<Shipment> shipments = shipmentRepo.findByShipmentStatus(shippingStatus);
+        List<Shipment> shipments = shipmentRepo.findByShipmentStatus(request.getShippingStatus());
         shipments.forEach(shipment -> {
             List<OrderItem> orderItems = new ArrayList<>();
             shipment.getOrderItems().forEach(orderItem -> {
-                if (orderItem.getOrder().getBuyer().getUserId().equals(users.getUserId())) {
+                if (orderItem.getOrder().getOrderId().equals(order.getOrderId())) {
                     orderItems.add(orderItem);
                 }
             });
-            result.add(
-                    OrderItemResponse.builder()
-                            .shipmentResponse(shipmentMapper.entityToResponse(shipment))
-                            .shipfee(shipment.getShipmentFee())
-                            .orderDetailResponseList(orderItems.stream().map(orderItemMapper::entityToResponse).toList())
-                            .build()
-            );
+            // ko co cai nay thi order nao cung co shipement cua nhau
+            log.info("Size orderitems {}", orderItems.size());
+            if(!orderItems.isEmpty()) {
+                result.add(
+                        OrderItemResponse.builder()
+                                .shipmentResponse(shipmentMapper.entityToResponse(shipment))
+                                .shipfee(shipment.getShipmentFee())
+                                .orderDetailResponseList(orderItems.stream().map(orderItemMapper::entityToResponse).toList())
+                                .build()
+                );
+            }
+
         });
         int totalPages = result.size() / size;
         int from = page * size;

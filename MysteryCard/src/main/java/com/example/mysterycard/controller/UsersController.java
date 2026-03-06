@@ -2,6 +2,7 @@ package com.example.mysterycard.controller;
 
 import com.example.mysterycard.base.ApiResponse;
 import com.example.mysterycard.dto.request.user.AddRemoveRoleRequest;
+import com.example.mysterycard.dto.request.user.UpdatUserRequest;
 import com.example.mysterycard.dto.request.user.UserRegisterRequest;
 import com.example.mysterycard.dto.response.UserResponse;
 import com.example.mysterycard.service.UserService;
@@ -26,7 +27,7 @@ public class UsersController {
         return ResponseEntity.ok(ApiResponse.success(userService.createUser(request, avatar)));
     }
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<UserResponse>> updateUser(@RequestPart @Valid UserRegisterRequest request, @RequestPart(required = false) MultipartFile avatar, @PathVariable UUID id){
+    public ResponseEntity<ApiResponse<UserResponse>> updateUser(@RequestPart @Valid UpdatUserRequest request, @RequestPart(required = false) MultipartFile avatar, @PathVariable UUID id){
         return ResponseEntity.ok(ApiResponse.success(userService.updateUser(request, avatar, id)));
     }
     @PreAuthorize("hasRole('ADMIN')")

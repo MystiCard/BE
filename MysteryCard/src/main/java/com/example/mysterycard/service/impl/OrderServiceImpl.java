@@ -6,6 +6,7 @@ import com.example.mysterycard.dto.request.ShipmentRequest;
 import com.example.mysterycard.dto.request.UpdateShipmentRequest;
 import com.example.mysterycard.dto.response.OrderCardResponse;
 import com.example.mysterycard.dto.response.OrderItemResponse;
+import com.example.mysterycard.dto.response.OrderResponse;
 import com.example.mysterycard.dto.response.PageResponse;
 import com.example.mysterycard.entity.*;
 import com.example.mysterycard.enums.OrderItemStatus;
@@ -21,8 +22,13 @@ import com.example.mysterycard.repository.*;
 import com.example.mysterycard.service.OrderService;
 import com.example.mysterycard.service.ShipmentService;
 import com.example.mysterycard.service.TransactionService;
+import com.example.mysterycard.specification.OrderSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +39,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Service
 @Slf4j
-public class OrderServiceImpl implements OrderService {
+public class
+OrderServiceImpl implements OrderService {
     private final OrderMapper orderMapper;
     private final OrderRepo orderRepo;
     private final OrderItemsRepo orderItemsRepo;
@@ -331,5 +338,17 @@ public class OrderServiceImpl implements OrderService {
                 .last(to == result.size())
                 .build();
         return pageResponse;
+    }
+
+    @Override
+    public Page<OrderResponse> getMyOrders(OrderStatus orderStatus, int page, int size) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Users users = usersRepo.findByEmail(email);
+        if (users == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        Specification<Order> specification = Specification.allOf( OrderSpecification.findByStatus(orderStatus),OrderSpecification.findByBuyer(users));
+        PageRequest pageRequest = PageRequest.of(page - 1, size, Sort.by("orderDate").descending());
+        return orderRepo.findAll(specification,pageRequest).map(orderMapper::toOrderResponse);
     }
 }

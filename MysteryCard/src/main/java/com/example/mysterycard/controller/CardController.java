@@ -19,8 +19,14 @@ public class CardController {
     private final CardService cardService;
 
     @GetMapping
-    public ApiResponse getAllCards() {
-        return ApiResponse.success(cardService.getAllCards());
+    public ApiResponse getAllCards(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String  keyword,
+            @RequestParam(required = false,defaultValue = "asc") String  sort
+
+    ) {
+        return ApiResponse.success(cardService.getAllCards(page,size,keyword,sort));
     }
 
     @GetMapping("/{id}")

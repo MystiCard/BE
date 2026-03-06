@@ -1,12 +1,7 @@
 package com.example.mysterycard.service.impl;
 
-import com.example.mysterycard.dto.request.CalculateFeeRequest;
-import com.example.mysterycard.dto.request.OrderCardRequest;
-import com.example.mysterycard.dto.request.ShipmentRequest;
-import com.example.mysterycard.dto.request.UpdateShipmentRequest;
-import com.example.mysterycard.dto.response.OrderCardResponse;
-import com.example.mysterycard.dto.response.OrderItemResponse;
-import com.example.mysterycard.dto.response.PageResponse;
+import com.example.mysterycard.dto.request.*;
+import com.example.mysterycard.dto.response.*;
 import com.example.mysterycard.entity.*;
 import com.example.mysterycard.enums.OrderItemStatus;
 import com.example.mysterycard.enums.OrderStatus;
@@ -44,6 +39,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderItemMapper orderItemMapper;
     private final ShipmentMapper shipmentMapper;
     private final TransactionService transactionService;
+    private final BlindBoxResultRepo blindBoxResultRepo;
     @Override
     @Transactional
     public OrderCardResponse createOrder(OrderCardRequest request) {
@@ -135,7 +131,70 @@ public class OrderServiceImpl implements OrderService {
         orderCardResponse.setOrderItems(allOrderItemsResponse);
         return orderCardResponse;
     }
+    public OrderBlindBoxResultResponse createBlindBoxOrder(OrderBlinkBoxResultRequest request){
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Users users = usersRepo.findByEmail(email);
+        if (users == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        Order order = Order.builder()
+                .buyer(users)
+                .build();
+        order = orderRepo.save(order);
+        List<BlindBoxResultResponse> blindBoxResultResponses = new ArrayList<>();
+        double totalAmount = 0;
+        if(request.getBlindBoxResultIds()!=null&&!request.getBlindBoxResultIds().isEmpty()){
+            for(UUID blindBoxResultId: request.getBlindBoxResultIds()){
+                BlindBoxResult blindBoxResult = blindBoxResultRepo.findByBlindBoxResultId(blindBoxResultId).orElseThrow(
+                        () -> new AppException(ErrorCode.BLIND_BOX_RESULT_NOT_FOUND)
+                );
+                blindBoxResult.setOrder(order);
+                blindBoxResultRepo.save(blindBoxResult);
+                BlindBoxResultResponse blindBoxResultResponse = BlindBoxResultResponse.builder()
+                        .blindBoxResultId(blindBoxResult.getBlindBoxResultId())
+                        .openedAt(blindBoxResult.getOpenedAt())
+                        .cardName(blindBoxResult.getCard().getName())
+                        .cardImageUrl(blindBoxResult.getCard().getImages().isEmpty() ? null : blindBoxResult.getCard().getImages().get(0).getImageUrl())
+                        .rarity(blindBoxResult.getCard().getRarity().toString())
+                        .build();
+                blindBoxResultResponses.add(blindBoxResultResponse);
+                order.getBlindBoxResults().add(blindBoxResult);
+            }
+        }
+        Long shipfee = shipmentService.calculatFeeShip(
+                CalculateFeeRequest.builder()
+                        .totalAmount(0)
+                        .fromDistrictId(Long.valueOf(request.getToDistrictId()))
+                        .toWardId(String.valueOf(request.getToWardId()))
+                        .toDistrictId(request.getToDistrictId())
+                        .build()
+        );
+        totalAmount+=shipfee;
+        shipmentService.createsShipment(
+                ShipmentRequest.builder()
+                        .blindBoxResultId(request.getBlindBoxResultIds())
+                        .toAddress(request.getBuyerAddress())
+                        .toDistrictId(request.getToDistrictId())
+                        .toWardId(request.getToWardId())
+                        .toPhone(request.getBuyerPhone())
+                        .fromPhone(request.getBuyerPhone())
+                        .fromAddress(request.getBuyerAddress())
+                        .fromDistrictId(Long.valueOf(request.getToDistrictId()))
+                        .shipmentFee(shipfee)
+                        .build()
+        );
+        order.setTotalAmount(totalAmount);
+        orderRepo.save(order);
 
+        OrderBlindBoxResultResponse orderBlindBoxResultResponse = OrderBlindBoxResultResponse.builder()
+                .orderId(order.getOrderId())
+                .totalAmount(0L)
+                .orderDate(order.getOrderDate())
+                .status(order.getStatus())
+                .blindBoxResults(blindBoxResultResponses)
+                .build();
+        return orderBlindBoxResultResponse;
+    }
     @Override
     public PageResponse<OrderItemResponse> getByStatusShipment(ShippingStatus shippingStatus, int page, int size) {
         page = page - 1;

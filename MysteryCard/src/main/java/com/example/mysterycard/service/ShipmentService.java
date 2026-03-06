@@ -17,6 +17,8 @@ public interface ShipmentService {
 
     List<ShipmentResponse> getShipmentByOrderItems(UUID orderItems);
 
+    List<ShipmentResponse> getShipmentByBlindBoxResult(UUID blindBoxResultId);
+
     Page<ShipmentResponse> myShipment(boolean complete, int page, int size);
 
     Page<ShipmentResponse> shipmentNotAsigned(int page, int size);

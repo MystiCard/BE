@@ -2,10 +2,7 @@ package com.example.mysterycard.repository;
 
 import aj.org.objectweb.asm.commons.Remapper;
 import com.example.mysterycard.dto.response.ShipmentResponse;
-import com.example.mysterycard.entity.Order;
-import com.example.mysterycard.entity.OrderItem;
-import com.example.mysterycard.entity.Shipment;
-import com.example.mysterycard.entity.Users;
+import com.example.mysterycard.entity.*;
 import com.example.mysterycard.enums.ShippingStatus;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
@@ -29,6 +26,7 @@ select s from Shipment s where s.shipper is null or s.shipmentStatus = :status
     Page<Shipment> findAllByNotHaveShipper(ShippingStatus status, Pageable pageable);
     List<Shipment> findByShipmentStatusIn(Collection<ShippingStatus> shipmentStatuses);
     List<Shipment> findByOrderItems(Set<OrderItem> orderItems);
+    List<Shipment> findByBlindBoxResults(Set<BlindBoxResult> blindBoxResults);
 
 
     List<Shipment> findByShipmentStatus(ShippingStatus shipmentStatus);

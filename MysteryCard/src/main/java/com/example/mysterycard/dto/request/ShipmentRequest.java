@@ -14,6 +14,7 @@ import java.util.UUID;
 @Builder
 public class ShipmentRequest {
     private List<UUID> orderItemId;
+    private List<UUID> blindBoxResultId;
     private String toAddress;
     private Long toDistrictId;
     private Long toWardId;

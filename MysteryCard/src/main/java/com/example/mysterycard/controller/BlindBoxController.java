@@ -54,4 +54,11 @@ public class BlindBoxController {
         return blindBoxService.getProbabilities(id);
     }
 
+    @GetMapping("/results")
+    public ApiResponse getAllResultsForUser(
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "10") int size) {
+        return ApiResponse.success(blindBoxService.getAllResultsForUser(page, size));
+    }
+
 }

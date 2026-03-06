@@ -1,6 +1,7 @@
 package com.example.mysterycard.service.impl;
 
 import com.example.mysterycard.dto.request.user.AddRemoveRoleRequest;
+import com.example.mysterycard.dto.request.user.UpdatUserRequest;
 import com.example.mysterycard.dto.request.user.UserRegisterRequest;
 import com.example.mysterycard.dto.response.RoleResponse;
 import com.example.mysterycard.dto.response.UserResponse;
@@ -89,15 +90,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse updateUser(UserRegisterRequest request, MultipartFile avatar, UUID userId) {
+    public UserResponse updateUser(UpdatUserRequest request, MultipartFile avatar, UUID userId) {
         Users user = usersRepo.findByUserId(userId);
         if (user == null) {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        if (usersRepo.existsByEmail(request.getEmail()) && !user.getEmail().equals(request.getEmail())) {
-            throw new AppException(ErrorCode.USER_EXISTED);
-        }
+//      //  user.setPassword(passwordEncoder.encode(request.getPassword()));
+//        if (usersRepo.existsByEmail(request.getEmail()) && !user.getEmail().equals(request.getEmail())) {
+//            throw new AppException(ErrorCode.USER_EXISTED);
+//        }
+
         if (avatar != null) {
             user.setAvatarUrl(cloudiaryUtils.uploadImage(avatar));
         }
@@ -105,6 +107,7 @@ public class UserServiceImpl implements UserService {
             throw new AppException(ErrorCode.PHONE_EXISTED);
         }
         user.setDistrictId(request.getDistrictId());
+       // user.setEmail(request.getEmail());
         user.setWardId(request.getWardId());
         user.setAddress(request.getAddress());
         user.setGender(request.getGender());

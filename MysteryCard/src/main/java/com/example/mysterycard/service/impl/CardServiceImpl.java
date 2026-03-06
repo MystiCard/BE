@@ -16,6 +16,7 @@ import com.example.mysterycard.repository.RateConfigRepo;
 import com.example.mysterycard.repository.WishListRepo;
 import com.example.mysterycard.service.CardService;
 import com.example.mysterycard.service.UserService;
+import com.example.mysterycard.specification.CardSpecification;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -54,8 +56,15 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    public List<CardResponse> getAllCards() {
-        return cardRepo.findAll().stream().map(cardMapper::toResponse).toList();
+    public Page<CardResponse> getAllCards(int page, int size,String search , String sort) {
+        Pageable pageable = PageRequest.of(page-1, size);
+        Specification<Card> spec = CardSpecification.findByName(search);
+            if(sort.equalsIgnoreCase("asc")){
+                pageable = PageRequest.of(page-1, size, Sort.by("basePrice").ascending());
+            } else {
+                pageable = PageRequest.of(page-1, size, Sort.by("basePrice").descending());
+            }
+        return cardRepo.findAll(spec,pageable).map(cardMapper::toResponse);
     }
 
     @Override

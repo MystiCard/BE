@@ -2,10 +2,9 @@ package com.example.mysterycard.controller;
 
 import com.example.mysterycard.base.ApiResponse;
 import com.example.mysterycard.dto.request.OrderCardRequest;
-import com.example.mysterycard.dto.response.OrderCardResponse;
-import com.example.mysterycard.dto.response.OrderItemResponse;
-import com.example.mysterycard.dto.response.PageResponse;
-import com.example.mysterycard.dto.response.ShipmentResponse;
+import com.example.mysterycard.dto.response.*;
+import com.example.mysterycard.enums.OrderItemStatus;
+import com.example.mysterycard.enums.OrderStatus;
 import com.example.mysterycard.enums.ShippingStatus;
 import com.example.mysterycard.service.OrderService;
 import jakarta.validation.Valid;
@@ -30,7 +29,7 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success(orderService.createOrder(request)));
     }
 
-    @PostMapping("/status")
+    @PostMapping("/{orderId}/status")
     public ResponseEntity<ApiResponse<PageResponse<OrderItemResponse>>> getOrderStatus(
             @RequestBody ShippingStatus shippingStatus,
             @RequestParam(required = false, defaultValue = "1") int page,
@@ -64,5 +63,13 @@ public class OrderController {
             @RequestParam(required = false, defaultValue = "10") int size
     ) {
         return ResponseEntity.ok(ApiResponse.success(orderService.getMyReturnOrderItem(shippingStatus, page, size)));
+    }
+    @GetMapping("/my-orders")
+    public ResponseEntity<ApiResponse<Page<OrderResponse>>> getMyOrders(
+            @RequestParam(required = false) OrderStatus orderStatus,
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "10") int size ){
+
+        return ResponseEntity.ok(ApiResponse.success(orderService.getMyOrders(orderStatus,page,size)));
     }
 }

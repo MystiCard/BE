@@ -1,6 +1,7 @@
 package com.example.mysterycard.service.impl;
 
 import com.example.mysterycard.dto.response.wallet.WalletResponse;
+import com.example.mysterycard.entity.Notification;
 import com.example.mysterycard.entity.Users;
 import com.example.mysterycard.entity.Wallet;
 import com.example.mysterycard.enums.WalletStatus;
@@ -9,6 +10,7 @@ import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.WalletMapper;
 import com.example.mysterycard.repository.UsersRepo;
 import com.example.mysterycard.repository.WalletRepo;
+import com.example.mysterycard.service.NotificationService;
 import com.example.mysterycard.service.WalletService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,7 @@ public class WalletServiceImpl implements WalletService {
     private final WalletRepo walletRepo;
     private final WalletMapper walletMapper;
     private final UsersRepo usersRepo;
+    private final NotificationService notificationService;
     @Override
     public WalletResponse createWallet(Users users) {
         Wallet wallet = new Wallet();
@@ -39,6 +42,7 @@ public class WalletServiceImpl implements WalletService {
         }
         user.getWallet().setWalletStatus(WalletStatus.ACTIVE);
         usersRepo.save(user);
+        notificationService.createNotification("Your wallet has been activated.", user, Notification.NotiType.wallet);
         return walletMapper.entityToResponse(user.getWallet());
     }
 
@@ -50,6 +54,7 @@ public class WalletServiceImpl implements WalletService {
         }
         user.getWallet().setWalletStatus(WalletStatus.INACTIVE);
         usersRepo.save(user);
+        notificationService.createNotification("Your wallet has been deactivated.", user, Notification.NotiType.wallet);
         return walletMapper.entityToResponse(user.getWallet());
     }
 }

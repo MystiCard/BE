@@ -17,6 +17,8 @@ import com.example.mysterycard.service.CategoryService;
 import com.example.mysterycard.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -341,5 +343,19 @@ public class BlindBoxServiceImpl implements BlindBoxService {
         return Math.round(totalValue * 1.03); // Giữ nguyên insurance 3% của bạn
     }
 
+    public Page<BlindBoxResultResponse> getAllResultsForUser(int page, int size) {
+        Users user = userService.getUser();
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
+        Page<BlindBoxResult> resultsPage = blindBoxCardResultRepo.findByUserId(user.getUserId(), pageable);
+        return resultsPage.map(result -> {
+            BlindBoxResultResponse response = BlindBoxResultResponse.builder()
+                    .blindBoxResultId(result.getBlindBoxResultId())
+                    .cardName(result.getCard().getName())
+                    .cardImageUrl(result.getCard().getImages().isEmpty() ? null : result.getCard().getImages().get(0).getImageUrl())
+                    .rarity(result.getCard().getRarity().toString())
+                    .build();
+            return response;
+        });
+    }
 
 }

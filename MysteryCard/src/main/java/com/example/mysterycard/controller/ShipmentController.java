@@ -25,6 +25,14 @@ public class ShipmentController {
             @PathVariable("orderidItems") UUID orderidItems) {
         return ResponseEntity.ok(ApiResponse.success(shipmentService.getShipmentByOrderItems(orderidItems)));
     }
+
+    @GetMapping("/blindBoxResult/{blindBoxResultId}")
+    public ResponseEntity<ApiResponse<List<ShipmentResponse>>> findShipmentsByBlindBoxResultId(
+            @PathVariable("blindBoxResultId") UUID blindBoxResultId) {
+        return ResponseEntity.ok(ApiResponse.success(shipmentService.getShipmentByBlindBoxResult(blindBoxResultId)));
+    }
+
+
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<Page<ShipmentResponse>>> getMeShipments(
             @RequestParam(required = false,defaultValue = "false") boolean complete,

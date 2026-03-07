@@ -1,6 +1,7 @@
 package com.example.mysterycard.service;
 
 import com.example.mysterycard.dto.request.user.AddRemoveRoleRequest;
+import com.example.mysterycard.dto.request.user.UpdatUserRequest;
 import com.example.mysterycard.dto.request.user.UserRegisterRequest;
 import com.example.mysterycard.dto.response.UserResponse;
 import com.example.mysterycard.entity.Users;
@@ -11,7 +12,7 @@ import java.util.UUID;
 
 public interface UserService {
     UserResponse createUser(UserRegisterRequest request, MultipartFile avatar);
-    UserResponse updateUser(UserRegisterRequest request, MultipartFile avatar, UUID userId);
+    UserResponse updateUser(UpdatUserRequest request, MultipartFile avatar, UUID userId);
     Page<UserResponse> getAll(boolean active, int page, int size);
     void deleteUser(UUID userId);
     UserResponse activeUser(UUID userId);

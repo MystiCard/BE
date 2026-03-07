@@ -13,7 +13,7 @@ import java.util.UUID;
 
 public interface CardService {
     CardResponse getCardById(UUID id);
-    List<CardResponse> getAllCards();
+     Page<CardResponse> getAllCards(int page, int size,String search , String sort);
     void deleteCardById(UUID id);
     CardResponse createCard(CardRequest request);
     CardResponse updateCard(UUID id, CardRequest request);

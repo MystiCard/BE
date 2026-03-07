@@ -31,7 +31,7 @@ public class ApiResponse<T> {
      public static <T> ApiResponse<T> success(T data) {
          return ApiResponse.<T>builder()
                  .code(1000)
-                 .message("Sucessfully")
+                 .message("Successfully")
                  .data(data)
                  .success(true)
                  .build();
@@ -40,7 +40,7 @@ public class ApiResponse<T> {
          return ApiResponse.<T>builder()
                  .code(1000)
                  .success(true)
-                 .message("Sucessfully")
+                 .message("Successfully")
                  .build();
      }
      public static <T> ApiResponse<T> error() {

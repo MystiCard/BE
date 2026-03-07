@@ -17,7 +17,7 @@ public enum ErrorCode {
 
     // USERS ERRORS(3)
     USER_NOT_FOUND(3001, "User not found ", HttpStatus.NOT_FOUND),
-    USER_INACTIVE(3002, "User is inactive", HttpStatus.FORBIDDEN),
+    USER_INACTIVE(3002, "Account not active. Please veryfi account", HttpStatus.FORBIDDEN),
     USER_EXISTED(3003, "Email existed.Please input another email", HttpStatus.BAD_REQUEST),
     PHONE_EXISTED(3004, "Phone existed. Please input another phone", HttpStatus.BAD_REQUEST),
     ACCOUNT_NOT_ACTIVE(3005,"Account invalid can do this function",HttpStatus.BAD_REQUEST),

@@ -35,5 +35,6 @@ public class Notification {
         wishList,
         shipment,
         wallet,
+        addCard
     }
 }

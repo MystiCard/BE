@@ -1,17 +1,16 @@
 package com.example.mysterycard.dto.request;
 
 import com.example.mysterycard.enums.Rarity;
-import lombok.Builder;
 import lombok.Data;
 
 import java.util.UUID;
 
 @Data
-@Builder
-public class CardRequest {
-    private String name;
-    private Rarity rarity;
-    private String imageUrl;
+public class NewCardRequest {
+    private String cardName;
+    private Rarity rate;
     private double basePrice;
+    private String imageUrl;
+    private String category;
     private UUID categoryId;
 }

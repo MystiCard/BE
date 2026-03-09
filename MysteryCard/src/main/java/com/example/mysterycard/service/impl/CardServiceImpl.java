@@ -1,7 +1,10 @@
 package com.example.mysterycard.service.impl;
 
+import com.example.mysterycard.dto.request.AddCardRequest;
 import com.example.mysterycard.dto.request.CardRequest;
+import com.example.mysterycard.dto.request.NewCardRequest;
 import com.example.mysterycard.dto.request.WishListRequest;
+import com.example.mysterycard.dto.response.CardRequiredResponse;
 import com.example.mysterycard.dto.response.CardResponse;
 import com.example.mysterycard.dto.response.WishListResponse;
 import com.example.mysterycard.entity.*;
@@ -9,12 +12,11 @@ import com.example.mysterycard.enums.Rarity;
 import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.CardMapper;
+import com.example.mysterycard.mapper.CardRequiredMapper;
 import com.example.mysterycard.mapper.WishListMapper;
-import com.example.mysterycard.repository.CardRepo;
-import com.example.mysterycard.repository.CategoryRepo;
-import com.example.mysterycard.repository.RateConfigRepo;
-import com.example.mysterycard.repository.WishListRepo;
+import com.example.mysterycard.repository.*;
 import com.example.mysterycard.service.CardService;
+import com.example.mysterycard.service.CategoryService;
 import com.example.mysterycard.service.UserService;
 import com.example.mysterycard.specification.CardSpecification;
 import org.apache.poi.ss.usermodel.*;
@@ -31,6 +33,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -49,6 +52,13 @@ public class CardServiceImpl implements CardService {
     private CardMapper cardMapper;
     @Autowired
     private UserService userService;
+    @Autowired
+    private CardRequiredRepo cardRequiredRepo;
+    @Autowired
+    private CardRequiredMapper cardRequiredMapper;
+    @Autowired
+    private CategoryService categoryService;
+
     @Override
     public CardResponse getCardById(UUID id) {
         Card card = cardRepo.findById(id).orElseThrow(()-> new AppException(ErrorCode.CARD_NOT_FOUND));
@@ -75,7 +85,7 @@ public class CardServiceImpl implements CardService {
 
     @Override
     public CardResponse createCard(CardRequest request) {
-        Category category = categoryRepo.findById(UUID.fromString(request.getCategoryId()))
+        Category category = categoryRepo.findById(request.getCategoryId())
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
         if(cardRepo.existsCardByNameAndRarityAndCategory(request.getName(), request.getRarity(), category)){
             throw new AppException(ErrorCode.CARD_DUPLICATE);
@@ -218,6 +228,71 @@ public class CardServiceImpl implements CardService {
         WishList savedWishList = wishListRepo.save(wishList);
         return wishListMapper.toResponse(savedWishList);
     }
+
+    @Override
+    public CardRequiredResponse requireNewCard(NewCardRequest request) {
+        CardRequired cardRequired = new CardRequired();
+        cardRequired.setCardName(request.getCardName());
+        cardRequired.setRate(request.getRate());
+        cardRequired.setBasePrice(request.getBasePrice());
+        cardRequired.setImageUrl(request.getImageUrl());
+        cardRequired.setUsers(userService.getUser());
+        Category category = categoryRepo.findByCategoryId(request.getCategoryId());
+        if(category==null){
+            categoryService.createCate(request.getCategory());
+            category = categoryRepo.findByCategoryName(request.getCategory());
+        }
+        cardRequired.setCategory(category);
+        return cardRequiredMapper.toResponse(cardRequiredRepo.save(cardRequired));
+    }
+
+    @Override
+    @Transactional
+    public CardRequiredResponse approveRequest(AddCardRequest request, UUID cardRequestId) {
+        CardRequired cardRequired = cardRequiredRepo.findByCardRequiredId(cardRequestId)
+                .orElseThrow(()-> new AppException(ErrorCode.CARD_REQUIRED_NOT_FOUND));
+        if(cardRequired.getStatus()!= CardRequired.RequiredStatus.PENDING){
+            throw new AppException(ErrorCode.ALREADY_CREATE);
+        }
+        cardRequired.setNote(request.getNote());
+        cardRequired.setStatus(CardRequired.RequiredStatus.APPROVED);
+        cardRequired.setDecidedAt(LocalDateTime.now());
+        createCard(CardRequest.builder()
+                        .name(cardRequired.getCardName())
+                        .rarity(cardRequired.getRate())
+                        .imageUrl(cardRequired.getImageUrl())
+                        .basePrice(cardRequired.getBasePrice())
+                        .categoryId(cardRequired.getCategory().getCategoryId())
+                        .build()
+        );
+        return cardRequiredMapper.toResponse(cardRequiredRepo.save(cardRequired));
+    }
+
+    @Override
+    public CardRequiredResponse rejectRequest(AddCardRequest request, UUID cardRequestId) {
+        CardRequired cardRequired = cardRequiredRepo.findByCardRequiredId(cardRequestId)
+                .orElseThrow(()-> new AppException(ErrorCode.CARD_REQUIRED_NOT_FOUND));
+        cardRequired.setNote(request.getNote());
+        cardRequired.setStatus(CardRequired.RequiredStatus.REJECTED);
+        cardRequired.setDecidedAt(LocalDateTime.now());
+        return cardRequiredMapper.toResponse(cardRequiredRepo.save(cardRequired));
+    }
+
+    @Override
+    public Page<CardRequiredResponse> getAllRequiredByUsers(int page, int size) {
+        Pageable pageable = PageRequest.of(page,size);
+        Users users = userService.getUser();
+        Page<CardRequired> cardRequireds = cardRequiredRepo.findByUsers_userId(users.getUserId(),pageable);
+        return cardRequireds.map(cardRequiredMapper::toResponse);
+    }
+
+    @Override
+    public Page<CardRequiredResponse> gettAllRequireds(int page, int size) {
+        Pageable pageable = PageRequest.of(page,size);
+        Page<CardRequired> cardRequireds = cardRequiredRepo.findAll(pageable);
+        return cardRequireds.map(cardRequiredMapper::toResponse);
+    }
+
 
     public void removeFromWishList(UUID wishListId) {
         WishList wishList = wishListRepo.findById(wishListId).orElseThrow(() -> new AppException(ErrorCode.WISHLIST_NOT_FOUND));

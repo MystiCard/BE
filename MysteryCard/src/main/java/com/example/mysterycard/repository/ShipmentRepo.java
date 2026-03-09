@@ -30,4 +30,6 @@ select s from Shipment s where s.shipper is null or s.shipmentStatus = :status
 
 
     List<Shipment> findByShipmentStatus(ShippingStatus shipmentStatus);
+
+    boolean existsByShipmentStatusIsInAndShipper(Collection<ShippingStatus> shipmentStatuses, Users shipper);
 }

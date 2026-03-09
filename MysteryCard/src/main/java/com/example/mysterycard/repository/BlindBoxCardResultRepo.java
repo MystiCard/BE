@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.UUID;
 
 public interface BlindBoxCardResultRepo extends JpaRepository<BlindBoxResult, UUID> {
-    Page<BlindBoxResult> findByUserId(UUID userId, Pageable pageable);
+    Page<BlindBoxResult> findByOwner_UserId(UUID ownerUserId, Pageable pageable);
 }

@@ -12,6 +12,7 @@ import com.example.mysterycard.repository.*;
 import com.example.mysterycard.service.NotificationService;
 import com.example.mysterycard.service.ShipmentService;
 import com.example.mysterycard.service.TrackingService;
+import com.example.mysterycard.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -62,6 +63,7 @@ public class ShipemenServiceImpl implements ShipmentService {
     private final ListSellerRepo listSellerRepo;
     private final BlindBoxResultRepo blindBoxResultRepo;
     private final NotificationService notificationService;
+    private final UserService userService;
     @Override
     public ShipmentResponse createsShipment(ShipmentRequest request) {
             Shipment shipment = shipmentMapper.requestToEntity(request);
@@ -137,13 +139,10 @@ public class ShipemenServiceImpl implements ShipmentService {
     }
 
     @Override
-    public ShipmentResponse asignShipper(AsignShipperRequest request) {
-        Users users = usersRepo.findByUserId(request.getShipperId());
+    public ShipmentResponse recieveShipment(UUID shipemnt) {
+        Users users = userService.getUser();
         Users owner = null;
-        if(users == null) {
-            throw new AppException(ErrorCode.USER_NOT_FOUND);
-        }
-        Shipment shipment = shipmentRepo.findById(request.getShipmentId()).orElseThrow(
+        Shipment shipment = shipmentRepo.findById(shipemnt).orElseThrow(
                 ()-> new AppException(ErrorCode.SHIPMENT_NOT_FOUND)
         );
         if(shipment.getOrderItems()!=null&&!shipment.getOrderItems().isEmpty())
@@ -170,6 +169,29 @@ public class ShipemenServiceImpl implements ShipmentService {
                 Notification.NotiType.shipment
         );
         return shipmentMapper.entityToResponse(shipmentRepo.save(shipment));
+    }
+
+    @Override
+    public boolean checkAllowedRecieveShipment() {
+        Users users = userService.getUser();
+        boolean shipper = false;
+       for(Role r : users.getRolelist())
+       {
+               if(r.getRoleCode().equals("SHIPPER"))
+               {
+                   shipper = true;
+               }
+       }
+       if(!shipper)
+       {
+           throw new AppException(ErrorCode.CANNOT_IS_SHIPPER);
+       }
+        List<ShippingStatus> list = List.of(ShippingStatus.ASIGNED,ShippingStatus.PICKED_UP,ShippingStatus.IN_TRANSIT);
+        if(shipmentRepo.existsByShipmentStatusIsInAndShipper(list,users))
+        {
+            return false;
+        }
+        return true;
     }
 
     @Override

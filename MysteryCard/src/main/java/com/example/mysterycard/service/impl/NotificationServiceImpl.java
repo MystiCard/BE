@@ -9,11 +9,13 @@ import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.NotificationMapper;
 import com.example.mysterycard.repository.NotificationRepo;
+import com.example.mysterycard.repository.UsersRepo;
 import com.example.mysterycard.service.NotificationService;
 import com.example.mysterycard.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -23,7 +25,7 @@ import java.util.UUID;
 public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepo notificationRepo;
     private final NotificationMapper notificationMapper;
-    private final UserService userService;
+    private final UsersRepo usersRepo;
 
     @Override
     public NotificationResponse getNotificationById(UUID notificationId) {
@@ -70,7 +72,15 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public Page<NotificationResponse> getNotificationsForUser( int page, int size) {
-        Users users = userService.getUser();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (email == null) {
+            throw new AppException(ErrorCode.INVALID_AUTHENCATION);
+        }
+        Users users = usersRepo.findByEmail(email);
+        if(users == null)
+        {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
         Pageable pageable = Pageable.ofSize(size).withPage(page);
         return notificationRepo.findByUsersUserId(users.getUserId(), pageable)
                 .map(notificationMapper::toResponse);

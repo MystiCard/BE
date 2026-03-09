@@ -346,7 +346,7 @@ public class BlindBoxServiceImpl implements BlindBoxService {
     public Page<BlindBoxResultResponse> getAllResultsForUser(int page, int size) {
         Users user = userService.getUser();
         Pageable pageable = Pageable.ofSize(size).withPage(page);
-        Page<BlindBoxResult> resultsPage = blindBoxCardResultRepo.findByUserId(user.getUserId(), pageable);
+        Page<BlindBoxResult> resultsPage = blindBoxCardResultRepo.findByOwner_UserId(user.getUserId(), pageable);
         return resultsPage.map(result -> {
             BlindBoxResultResponse response = BlindBoxResultResponse.builder()
                     .blindBoxResultId(result.getBlindBoxResultId())

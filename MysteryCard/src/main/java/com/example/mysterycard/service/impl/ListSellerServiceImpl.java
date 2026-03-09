@@ -2,10 +2,7 @@ package com.example.mysterycard.service.impl;
 
 import com.example.mysterycard.dto.request.SellRequest;
 import com.example.mysterycard.dto.response.SellResponse;
-import com.example.mysterycard.entity.Card;
-import com.example.mysterycard.entity.ListSeller;
-import com.example.mysterycard.entity.Notification;
-import com.example.mysterycard.entity.WishList;
+import com.example.mysterycard.entity.*;
 import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.ListSellerMapper;
@@ -21,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -61,6 +59,14 @@ public class ListSellerServiceImpl implements ListSellerService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("price").descending());
         Page<ListSeller> listSellers = listSellerRepo.findByCard_CardId(cardId, pageable);
         return listSellers.map(listSellerMapper::toResponse);
+    }
+
+    @Override
+    public Page<SellResponse> myListing(int page, int size) {
+        Users user = userService.getUser();
+        Pageable pageable = PageRequest.of(page-1,size,Sort.by("createdAt").descending());
+        Page<ListSeller> listSellers = listSellerRepo.findAllBySeller(user, pageable);
+        return listSellers.map(listSellerMapper::toResponse)   ;
     }
 
 }

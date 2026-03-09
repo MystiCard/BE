@@ -24,6 +24,7 @@ public class Tracking {
     private LocalDateTime createAt = LocalDateTime.now();
     @Enumerated(EnumType.STRING)
     private ShippingStatus shippingStatus;
+    @Builder.Default
     @OneToMany(mappedBy = "tracking")
     private List<Image> images = new ArrayList<>();
     private String note;

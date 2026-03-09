@@ -61,4 +61,16 @@ public class RequestReturnController {
     ) {
         return ResponseEntity.ok(ApiResponse.success(returnRequestService.cancleReturnRequest(returnRequestId)));
     }
+    @GetMapping("/{shipmentId}/can-return")
+    public ResponseEntity<ApiResponse<?>> canreturn(@PathVariable UUID shipmentId){
+        return ResponseEntity.ok(ApiResponse.success(returnRequestService.canSendReturn(shipmentId)));
+    }
+    @GetMapping("/reject/{returnId}")
+    public ResponseEntity<ApiResponse<?>> reject(@PathVariable UUID returnId){
+        return ResponseEntity.ok(ApiResponse.success(returnRequestService.rejectReturnReqeust(returnId)));
+    }
+    @GetMapping("/can-do/{returnId}")
+    public ResponseEntity<ApiResponse<?>> canPayment(@PathVariable UUID returnId){
+        return ResponseEntity.ok(ApiResponse.success(returnRequestService.canDo(returnId)));
+    }
 }

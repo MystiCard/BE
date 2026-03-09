@@ -5,10 +5,12 @@ import com.example.mysterycard.dto.request.user.UpdatUserRequest;
 import com.example.mysterycard.dto.request.user.UserRegisterRequest;
 import com.example.mysterycard.dto.response.RoleResponse;
 import com.example.mysterycard.dto.response.UserResponse;
+import com.example.mysterycard.entity.OrderItem;
 import com.example.mysterycard.entity.Role;
 import com.example.mysterycard.entity.Shipment;
 import com.example.mysterycard.entity.Users;
 import com.example.mysterycard.enums.Gender;
+import com.example.mysterycard.enums.OrderItemStatus;
 import com.example.mysterycard.enums.RoleCode;
 import com.example.mysterycard.enums.ShippingStatus;
 import com.example.mysterycard.exception.AppException;
@@ -16,6 +18,7 @@ import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.PermisionMapper;
 import com.example.mysterycard.mapper.RoleMapper;
 import com.example.mysterycard.mapper.UserMapper;
+import com.example.mysterycard.repository.OrderItemsRepo;
 import com.example.mysterycard.repository.RoleRepo;
 import com.example.mysterycard.repository.ShipmentRepo;
 import com.example.mysterycard.repository.UsersRepo;
@@ -59,6 +62,7 @@ public class UserServiceImpl implements UserService {
     private String femaleAvartar;
     private final WalletService walletService;
     private final ShipmentRepo shipmentRepo;
+    private final OrderItemsRepo orderItemsRepo;
 
     @Override
     @Transactional
@@ -233,5 +237,13 @@ public class UserServiceImpl implements UserService {
               userIds = role.getUsers().stream().map(user -> user.getUserId()).collect(Collectors.toList());
           }
         return usersRepo.findAllByUserIdIsNotInAndShipmentListNull(listIds,pageable,userIds).map(userMapper::requestToResponse);
+    }
+
+    @Override
+    public UserResponse getSellerInforByOrderItemIds(UUID orderItemsId) {
+        OrderItem orderItem = orderItemsRepo.findById(orderItemsId).orElseThrow(
+                () ->  new AppException(ErrorCode.ORDER_ITEMS_NOT_FOUND)
+        );
+        return userMapper.requestToResponse(orderItem.getListSeller().getSeller());
     }
 }

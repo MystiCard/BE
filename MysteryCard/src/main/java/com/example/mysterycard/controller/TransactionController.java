@@ -83,5 +83,14 @@ public class TransactionController {
     ) {
         return ResponseEntity.ok(ApiResponse.success(transactionService.payforShipFeeReturnItem(returnItemId)));
     }
+    @GetMapping("/request-withdraw")
+    public ResponseEntity<ApiResponse<?>> getListRequestWithdraw(
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "10") int size
+    )
+    {
+      return ResponseEntity.ok(ApiResponse.success(transactionService.listWithDraw(page,size)));
+    }
+
 
 }

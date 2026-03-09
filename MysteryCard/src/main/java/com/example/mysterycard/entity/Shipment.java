@@ -51,6 +51,10 @@ public class Shipment {
     @JoinColumn(name = "shipper_id")
     private Users shipper;
     @OneToMany(mappedBy = "shipment")
+    @OrderBy("createAt ASC")
     private List<Tracking> trackingList = new ArrayList<>();
+    @ManyToOne
+    @JoinColumn(name = "order_id")
+    private Order order;
 
 }

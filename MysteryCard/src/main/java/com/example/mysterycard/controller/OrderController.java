@@ -73,4 +73,12 @@ public class OrderController {
 
         return ResponseEntity.ok(ApiResponse.success(orderService.getMyOrders(orderStatus,page,size)));
     }
+    @GetMapping("/can-do/{orderItemId}")
+    public ResponseEntity<ApiResponse<OrderCanDoResponse>> canConfirmOrCancle(@PathVariable UUID orderItemId) {
+        return ResponseEntity.ok(ApiResponse.success(orderService.canCancleOrComfirm(orderItemId)));
+    }
+    @GetMapping("/can-cancle-order/{orderId}")
+    public ResponseEntity<ApiResponse<?>> canCancleOrder(@PathVariable UUID orderId) {
+        return ResponseEntity.ok(ApiResponse.success(orderService.canCanleOrder(orderId)));
+    }
 }

@@ -30,5 +30,5 @@ public interface TransactionRepo extends JpaRepository<WalletTransaction, UUID>,
       SELECT SUM(w.amount) from WalletTransaction  w  where w.createAt between :after and :before and w.statusTransaction = 'SUCCESS'
 """)
     long sumAmount(LocalDateTime after, LocalDateTime before);
-
+    Page<WalletTransaction> findByTransactionType(TransactionType transactionType,Pageable pageable);
 }

@@ -162,3 +162,31 @@ VALUES  ('81111111-1111-1111-1111-888888888888', 'c1111111-0000-0000-0000-000000
         'a0000000-0000-0000-0000-000000000003', 160, 5, 1),
        ('85555555-5555-5555-5555-555555555555', 'c5555555-0000-0000-0000-000000000005',
         'a0000000-0000-0000-0000-000000000003', 90, 0, 0);
+-- ==========================================================
+-- 6. THÔNG BÁO CHO NGƯỜI DÙNG (buyer@test.com)
+-- ==========================================================
+-- 6. THÔNG BÁO CHO NGƯỜI DÙNG (buyer@test.com)
+-- ==========================================================
+-- noti_type: 0 (wishList), 1 (shipment), 2 (wallet)
+
+INSERT INTO notification (notification_id, created_at, is_deleted, is_read, message, noti_type, card_id, user_id)
+VALUES
+-- Nhóm thông báo chưa đọc
+('f1111111-1111-1111-1111-111111111111', NOW(), false, false, 'Đơn hàng e111... của bạn vừa được giao thành công!', 1, NULL, 'a0000000-0000-0000-0000-000000000002'),
+('f2222222-2222-2222-2222-222222222222', NOW() - INTERVAL '1 HOUR', false, false, 'Thẻ Pikachu VMAX trong Wishlist của bạn đang giảm giá.', 0, 'c1111111-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000002'),
+('f3333333-3333-3333-3333-333333333333', NOW() - INTERVAL '3 HOUR', false, false, 'Tiền bán thẻ đã được cộng vào ví của bạn: +50,000 VND.', 2, NULL, 'a0000000-0000-0000-0000-000000000002'),
+('f4444444-4444-4444-4444-444444444444', NOW() - INTERVAL '5 HOUR', false, false, 'Thẻ Blue-Eyes White Dragon vừa có người bán mới!', 0, 'c3333333-0000-0000-0000-000000000003', 'a0000000-0000-0000-0000-000000000002'),
+('f5555555-5555-5555-5555-555555555555', NOW() - INTERVAL '12 HOUR', false, false, 'Nạp tiền vào ví thành công: +500,000 VND.', 2, NULL, 'a0000000-0000-0000-0000-000000000002'),
+
+-- Nhóm thông báo đã đọc
+('f6666666-6666-6666-6666-666666666666', NOW() - INTERVAL '1 DAY', false, true, 'Đơn hàng e222... đang trên đường giao đến bạn.', 1, NULL, 'a0000000-0000-0000-0000-000000000002'),
+('f7777777-7777-7777-7777-777777777777', NOW() - INTERVAL '2 DAY', false, true, 'Người bán đã đóng gói đơn hàng của bạn.', 1, NULL, 'a0000000-0000-0000-0000-000000000002'),
+('f8888888-8888-8888-8888-888888888888', NOW() - INTERVAL '2 DAY', false, true, 'Đã trừ 100,000 VND từ ví để thanh toán đơn hàng.', 2, NULL, 'a0000000-0000-0000-0000-000000000002'),
+('f9999999-9999-9999-9999-999999999999', NOW() - INTERVAL '3 DAY', false, true, 'Rất tiếc, đơn hàng e444... của bạn đã bị hủy do seller hết hàng.', 1, NULL, 'a0000000-0000-0000-0000-000000000002'),
+('faaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', NOW() - INTERVAL '4 DAY', false, true, 'Thẻ Goku Ultra Instinct trong Wishlist đã có người mua.', 0, 'c4444444-0000-0000-0000-000000000004', 'a0000000-0000-0000-0000-000000000002'),
+
+('fbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', NOW() - INTERVAL '5 DAY', false, true, 'Bạn có khoản hoàn tiền 50,000 VND cho đơn hủy.', 2, NULL, 'a0000000-0000-0000-0000-000000000002'),
+('fccccccc-cccc-cccc-cccc-cccccccccccc', NOW() - INTERVAL '6 DAY', false, true, 'Thẻ Luffy Gear 5 đã hết hàng từ các seller.', 0, 'c5555555-0000-0000-0000-000000000005', 'a0000000-0000-0000-0000-000000000002'),
+('fddddddd-dddd-dddd-dddd-dddddddddddd', NOW() - INTERVAL '7 DAY', false, true, 'Đơn hàng đầu tiên của bạn đã được khởi tạo.', 1, NULL, 'a0000000-0000-0000-0000-000000000002'),
+('feeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', NOW() - INTERVAL '8 DAY', false, true, 'Ví của bạn đã được kích hoạt thành công.', 2, NULL, 'a0000000-0000-0000-0000-000000000002'),
+('ffffffff-ffff-ffff-ffff-ffffffffffff', NOW() - INTERVAL '9 DAY', false, true, 'Bạn vừa thêm Bulbasaur vào Wishlist.', 0, 'c2222222-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000002');

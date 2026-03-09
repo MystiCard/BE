@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.Collection;
@@ -16,11 +17,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-public interface ShipmentRepo extends JpaRepository<Shipment, UUID> {
+public interface ShipmentRepo extends JpaRepository<Shipment, UUID>, JpaSpecificationExecutor<Shipment> {
 
     Page<Shipment>  findAllByShipmentStatusNotInAndShipper(Collection<ShippingStatus> shipmentStatuses, Users shipper, Pageable pageable);
 @Query("""
-select s from Shipment s where s.shipper is null or s.shipmentStatus = :status
+select s from Shipment s where s.shipper is null and s.shipmentStatus = :status
 
 """)
     Page<Shipment> findAllByNotHaveShipper(ShippingStatus status, Pageable pageable);

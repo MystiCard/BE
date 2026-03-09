@@ -81,7 +81,12 @@ public class TransactionServiceImpl implements TransactionService {
     @Transactional
     @Override
     public TransactionResponse createRequestWithdraw(WithdrawRequest request) {
-        Wallet wallet = getWallet(request.getUserId());
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Users users = usersRepo.findByEmail(email);
+        if (users == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        Wallet wallet =  users.getWallet();
         BankAccount bankAccount = bankAccountRepo.findById(request.getBankId()).orElseThrow(
                 () -> new AppException(ErrorCode.BANK_ACCOUNT_NOT_FOUND)
         );
@@ -428,6 +433,13 @@ public class TransactionServiceImpl implements TransactionService {
         send.setBalance(send.getBalance() - (price));
         walletRepo.saveAll(List.of(recive, send));
         return transactionMapper.entityToResponse(transactionRepo.save(transaction));
+    }
+
+    @Override
+    public Page<TransactionResponse> listWithDraw(int page, int size) {
+        Pageable pageable = PageRequest.of(page-1, size,Sort.by("createAt").ascending());
+        Page<WalletTransaction> walletTransactions = transactionRepo.findByTransactionType(TransactionType.REQUEST_WITHDRAW,pageable);
+        return walletTransactions.map(transactionMapper::entityToResponse);
     }
 
 }

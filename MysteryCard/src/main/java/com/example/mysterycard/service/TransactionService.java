@@ -25,4 +25,5 @@ public interface TransactionService {
     TransactionReportResponse report(TransactionReportRequest request);
     TransactionResponse payforShipFeeReturnItem(UUID returnItemId);
     TransactionResponse refundCancleReturn(ReturnRequest request);
+    Page<TransactionResponse> listWithDraw(int page, int size);
 }

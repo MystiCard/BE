@@ -1,10 +1,7 @@
 package com.example.mysterycard.service.impl;
 
 import com.example.mysterycard.dto.request.*;
-import com.example.mysterycard.dto.response.OrderItemResponse;
-import com.example.mysterycard.dto.response.PageResponse;
-import com.example.mysterycard.dto.response.ReturnResponse;
-import com.example.mysterycard.dto.response.ShipmentResponse;
+import com.example.mysterycard.dto.response.*;
 import com.example.mysterycard.entity.*;
 import com.example.mysterycard.enums.OrderItemStatus;
 import com.example.mysterycard.enums.ReturnRequestStatus;
@@ -12,15 +9,13 @@ import com.example.mysterycard.enums.ShippingStatus;
 import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.ReturnRequestMapper;
-import com.example.mysterycard.repository.ImageRepo;
-import com.example.mysterycard.repository.OrderItemsRepo;
-import com.example.mysterycard.repository.ReturnRequestRepo;
-import com.example.mysterycard.repository.UsersRepo;
+import com.example.mysterycard.repository.*;
 import com.example.mysterycard.service.ReturnRequestService;
 import com.example.mysterycard.service.ShipmentService;
 import com.example.mysterycard.service.TransactionService;
 import com.example.mysterycard.utils.CloudiaryUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -46,6 +42,9 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
     private final CloudiaryUtils cloudiaryUtils;
     private final ShipmentService shipmentService;
     private final TransactionService transactionService;
+    private final ShipmentRepo shipmentRepo;
+    @Value("${DAY_CAN_RETURN}")
+    private Long dayCanReturn;
 
     @Override
     public ReturnResponse cancleReturnRequest(UUID returnRequestId) {
@@ -53,8 +52,7 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
                 () -> new AppException(ErrorCode.RETURN_REQUEST_NOT_FOUND)
         );
         Shipment shipment = returnRequest.getOrderItemList().getLast().getShipments().stream().toList().getLast();
-        if(returnRequest.getStatus().equals(ReturnRequestStatus.PAID) && shipment.getShipmentStatus().equals(ShippingStatus.PENDING))
-        {
+        if (returnRequest.getStatus().equals(ReturnRequestStatus.PAID) && shipment.getShipmentStatus().equals(ShippingStatus.PENDING)) {
             transactionService.refundCancleReturn(returnRequest);
             shipmentService.update(UpdateShipmentRequest.builder()
                     .shippingStatus(ShippingStatus.CANCELLED)
@@ -65,8 +63,8 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
         returnRequest.setStatus(ReturnRequestStatus.CANCELED);
         return returnRequestMapper.enityToReturnResponse(returnRequestRepo.save(returnRequest));
     }
-    public void updateStatusOrderItem(ReturnRequest request)
-    {
+
+    public void updateStatusOrderItem(ReturnRequest request) {
         for (OrderItem orderItem : request.getOrderItemList()) {
             orderItem.setOrderItemStatus(OrderItemStatus.RECIEVED);
             orderItemsRepo.save(orderItem);
@@ -89,8 +87,7 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
         for (UUID orderItemId : request.getOrderItemIds()) {
             OrderItem orderItem = orderItemsRepo.findById(orderItemId).orElseThrow(
                     () -> new AppException(ErrorCode.ORDER_ITEMS_NOT_FOUND));
-            if(!orderItem.getOrderItemStatus().equals(OrderItemStatus.RECIEVED))
-            {
+            if (!orderItem.getOrderItemStatus().equals(OrderItemStatus.RECIEVED)) {
                 throw new AppException(ErrorCode.CAN_NOT_SEND_RETURN_REQUEST);
             }
             orderItem.setOrderItemStatus(OrderItemStatus.RETURNING);
@@ -108,7 +105,7 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
                 .toDistrictId(Long.valueOf(seller.getDistrictId()))
                 .toWardId(seller.getWardId())
                 .build());
-      ShipmentResponse  shipmentResponse = shipmentService.createsShipment(ShipmentRequest.builder()
+        ShipmentResponse shipmentResponse = shipmentService.createsShipment(ShipmentRequest.builder()
                 .orderItemId(orderItemIds)
                 .fromDistrictId(request.getSendDistrictId())
                 .fromPhone(request.getSendPhone())
@@ -129,7 +126,7 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
             returnRequest.getImages().add(image);
         }
         ReturnResponse response = returnRequestMapper.enityToReturnResponse(returnRequest);
-         response.setShipmentResponse(shipmentResponse);
+        response.setShipmentResponse(shipmentResponse);
         return response;
     }
 
@@ -193,12 +190,85 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
         ReturnRequest returnRequest = returnRequestRepo.findById(returnRequestId).orElseThrow(
                 () -> new AppException(ErrorCode.RETURN_REQUEST_NOT_FOUND)
         );
-        if(!returnRequest.getStatus().equals(ReturnRequestStatus.REQUESTED))
-        {
+        if (!returnRequest.getStatus().equals(ReturnRequestStatus.REQUESTED)) {
             throw new AppException(ErrorCode.CAN_NOT_APPROVE_RETURN_REQUEST);
         }
         returnRequest.setStatus(ReturnRequestStatus.APPROVED);
         returnRequestRepo.save(returnRequest);
         return returnRequestMapper.enityToReturnResponse(returnRequest);
+    }
+
+  @Override
+    public boolean canSendReturn(UUID shipmentId  ) {
+        Shipment shipment = shipmentRepo.findById(shipmentId).orElseThrow(
+                () -> new AppException(ErrorCode.SHIPMENT_NOT_FOUND)
+        );
+
+        Tracking tracking = shipment.getTrackingList().getLast();
+        return tracking.getShippingStatus() != null && tracking.getShippingStatus().equals(ShippingStatus.RECEIVED)
+                && tracking.getCreateAt().plusDays(dayCanReturn).isAfter(LocalDateTime.now());
+
+    }
+
+    @Override
+    public ReturnResponse rejectReturnReqeust(UUID retrurnRequestId) {
+        ReturnRequest returnRequest = returnRequestRepo.findById(retrurnRequestId).orElseThrow(
+                () -> new AppException(ErrorCode.RETURN_REQUEST_NOT_FOUND)
+        );
+        if (!returnRequest.getStatus().equals(ReturnRequestStatus.REQUESTED)) {
+            throw new AppException(ErrorCode.CAN_NOT_APPROVE_RETURN_REQUEST);
+        }
+        returnRequest.setStatus(ReturnRequestStatus.REJECTED);
+        returnRequestRepo.save(returnRequest);
+        return returnRequestMapper.enityToReturnResponse(returnRequest);
+    }
+
+
+    public boolean canCancle(UUID returnReqeustId, Users users) {
+
+        ReturnRequest returnRequest = returnRequestRepo.findById(returnReqeustId).orElseThrow(
+                () -> new AppException(ErrorCode.RETURN_REQUEST_NOT_FOUND)
+        );
+        Shipment shipment = returnRequest.getOrderItemList().getFirst().getShipments().stream().toList().getLast();
+        {
+
+        }
+        return returnRequest.getBuyer().equals(users) &&
+                (
+                        shipment.getShipmentStatus() == null || (shipment.getShipmentStatus() != null
+                                && shipment.getShipmentStatus().equals(ShippingStatus.PENDING))
+                );
+    }
+
+    public boolean canPayforReturnRequest(UUID returnRequestId ,  Users users ) {
+        ReturnRequest returnRequest = returnRequestRepo.findById(returnRequestId).orElseThrow(
+                () -> new AppException(ErrorCode.RETURN_REQUEST_NOT_FOUND)
+        );
+        return returnRequest.getCreatedAt().plusDays(7).isAfter(LocalDateTime.now()) &&
+                returnRequest.getBuyer().equals(users) &&
+                returnRequest.getStatus().equals(ReturnRequestStatus.APPROVED)
+                ;
+    }
+    public boolean canRejectOrApproved(UUID returnRequestId,Users users) {
+
+        ReturnRequest returnRequest = returnRequestRepo.findById(returnRequestId).orElseThrow(
+                () -> new AppException(ErrorCode.RETURN_REQUEST_NOT_FOUND)
+        );
+        Users seller = returnRequest.getOrderItemList().getFirst().getListSeller().getSeller();
+        return seller.equals(users) && returnRequest.getStatus().equals(ReturnRequestStatus.REQUESTED);
+    }
+
+    @Override
+    public RetrunRequestCanDoResponse canDo(UUID returnRequestId) {
+        Users users = usersRepo.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName());
+        if(users == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        RetrunRequestCanDoResponse response = RetrunRequestCanDoResponse.builder()
+                .canCancle(canCancle(returnRequestId,users))
+                .canjectOrApproved(canRejectOrApproved(returnRequestId,users))
+                .canPayment(canPayforReturnRequest(returnRequestId,users))
+                .build();
+        return response;
     }
 }

@@ -1,6 +1,7 @@
 package com.example.mysterycard.controller;
 
 import com.example.mysterycard.base.ApiResponse;
+import com.example.mysterycard.dto.request.MyOrderDetailRequest;
 import com.example.mysterycard.dto.request.OrderCardRequest;
 import com.example.mysterycard.dto.response.*;
 import com.example.mysterycard.enums.OrderItemStatus;
@@ -29,13 +30,13 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success(orderService.createOrder(request)));
     }
 
-    @PostMapping("/{orderId}/status")
+    @PostMapping("/orderItems/status")
     public ResponseEntity<ApiResponse<PageResponse<OrderItemResponse>>> getOrderStatus(
-            @RequestBody ShippingStatus shippingStatus,
+            @RequestBody MyOrderDetailRequest request,
             @RequestParam(required = false, defaultValue = "1") int page,
             @RequestParam(required = false, defaultValue = "10") int size
     ) {
-        return ResponseEntity.ok(ApiResponse.success(orderService.getByStatusShipment(shippingStatus, page, size)));
+        return ResponseEntity.ok(ApiResponse.success(orderService.getByStatusShipment(request, page, size)));
     }
 
     @PostMapping("/confirm-receive/{shipmentId}")

@@ -1,7 +1,9 @@
 package com.example.mysterycard.controller;
 
 import com.example.mysterycard.base.ApiResponse;
+import com.example.mysterycard.dto.request.AddCardRequest;
 import com.example.mysterycard.dto.request.CardRequest;
+import com.example.mysterycard.dto.request.NewCardRequest;
 import com.example.mysterycard.dto.request.WishListRequest;
 import com.example.mysterycard.service.CardService;
 import lombok.RequiredArgsConstructor;
@@ -71,4 +73,30 @@ public class CardController {
                                        @RequestParam(defaultValue = "10") int size ) {
         return ApiResponse.success(cardService.getUserWishList(page,size));
     }
+
+    @PostMapping("/required")
+    public ApiResponse requiredNewCard(@RequestBody NewCardRequest request){
+        return ApiResponse.success(cardService.requireNewCard(request));
+    }
+
+    @PutMapping("{requirdId}/reject")
+    public ApiResponse rejectRequiredNewCard(@RequestBody AddCardRequest request, @PathVariable UUID requirdId){
+        return ApiResponse.success(cardService.rejectRequest(request,requirdId));
+    }
+    @PutMapping("{requirdId}/approve")
+    public ApiResponse approveRequiredNewCard(@RequestBody AddCardRequest request, @PathVariable UUID requirdId){
+        return ApiResponse.success(cardService.approveRequest(request,requirdId));
+    }
+
+    @GetMapping("/required-user")
+    public ApiResponse getAllRequiredCardByUser(@RequestParam(defaultValue = "0") int page,
+                                       @RequestParam(defaultValue = "10") int size ) {
+        return ApiResponse.success(cardService.getAllRequiredByUsers(page,size));
+    }
+    @GetMapping("/required-admin")
+    public ApiResponse getAllRequiredCards(@RequestParam(defaultValue = "0") int page,
+                                             @RequestParam(defaultValue = "10") int size ) {
+        return ApiResponse.success(cardService.gettAllRequireds(page,size));
+    }
+
 }

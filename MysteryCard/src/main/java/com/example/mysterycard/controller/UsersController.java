@@ -78,4 +78,10 @@ public class UsersController {
     ) {
         return ResponseEntity.ok(ApiResponse.success(userService.getShipper(page,size)));
     }
+    @GetMapping("/{orderItemsId}/seller-infor")
+    public ResponseEntity<ApiResponse<UserResponse>> getSellerInfor(@PathVariable UUID orderItemsId) {
+return  ResponseEntity.ok(ApiResponse.success(userService.getSellerInforByOrderItemIds(orderItemsId)));
+    }
+
+
 }

@@ -29,6 +29,7 @@ public class OrderItem {
     @JoinColumn(name = "listSeller_id")
     private ListSeller listSeller;
     @ManyToMany(mappedBy = "orderItems")
+    @OrderBy("createAt ASC")
     private Set<Shipment> shipments = new HashSet<>();
     @ManyToOne
     @JoinColumn(name = "return_request_id")

@@ -39,4 +39,7 @@ public class Order {
     private BlindBox blindBox;
     @OneToMany(mappedBy = "order")
     private List<BlindBoxResult> blindBoxResults = new ArrayList<>();
+    @Builder.Default
+    @OneToMany(mappedBy = "order")
+    private List<Shipment> shipmentList = new ArrayList<>();
 }

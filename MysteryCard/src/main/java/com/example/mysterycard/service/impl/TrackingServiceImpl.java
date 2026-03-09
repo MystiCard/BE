@@ -51,9 +51,10 @@ public class TrackingServiceImpl  implements TrackingService {
                         .imageUrl(cloudiaryUtils.uploadImage(file))
                         .build();
                 imageRepo.save(image);
+                tracking.getImages().add(image);
             });
         }
-        return trackingMapper.entityToResponse(tracking);
+        return trackingMapper.entityToResponse(trackingRepo.save(tracking));
     }
     @Override
     public List<TrackingResponse> getByShipmentId(UUID shipmentId) {

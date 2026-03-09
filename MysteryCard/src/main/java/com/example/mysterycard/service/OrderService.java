@@ -2,10 +2,8 @@ package com.example.mysterycard.service;
 
 import com.example.mysterycard.dto.request.MyOrderDetailRequest;
 import com.example.mysterycard.dto.request.OrderCardRequest;
-import com.example.mysterycard.dto.response.OrderCardResponse;
-import com.example.mysterycard.dto.response.OrderItemResponse;
-import com.example.mysterycard.dto.response.OrderResponse;
-import com.example.mysterycard.dto.response.PageResponse;
+import com.example.mysterycard.dto.response.*;
+import com.example.mysterycard.entity.Shipment;
 import com.example.mysterycard.enums.OrderItemStatus;
 import com.example.mysterycard.enums.OrderStatus;
 import com.example.mysterycard.enums.ShippingStatus;
@@ -22,4 +20,6 @@ public interface OrderService {
     OrderCardResponse cancleOrder(UUID orderId);
     PageResponse<OrderItemResponse> getMyReturnOrderItem(ShippingStatus shippingStatus, int page, int size);
     Page<OrderResponse> getMyOrders(OrderStatus orderStatus, int page, int size);
+    boolean canCanleOrder(UUID orderId);
+    OrderCanDoResponse canCancleOrComfirm(UUID orderItemId);
 }

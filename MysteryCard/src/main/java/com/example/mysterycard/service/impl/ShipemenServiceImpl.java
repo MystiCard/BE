@@ -74,6 +74,7 @@ public class ShipemenServiceImpl implements ShipmentService {
                          () -> new AppException(ErrorCode.ORDER_ITEMS_NOT_FOUND)
                  );
                     shipment.getOrderItems().add(orderItem);
+                    shipment.setOrder(orderItem.getOrder());
 
              }
             }
@@ -232,14 +233,14 @@ public class ShipemenServiceImpl implements ShipmentService {
 
         shipment.setShipmentStatus(request.getShippingStatus());
         shipmentRepo.save(shipment);
-        trackingService.createTracking(
-                TrackingRequest.builder()
-                        .shipmentId(shipment.getShipmentId())
-                        .note(request.getNote())
-                        .fileList(fileList)
-                        .build());
-
-        return shipmentMapper.entityToResponse(shipmentRepo.save(shipment));
+      ShipmentResponse shipmentResponse = shipmentMapper.entityToResponse(shipmentRepo.save(shipment));
+       shipmentResponse.getTrackingResponses().add( trackingService.createTracking(
+               TrackingRequest.builder()
+                       .shipmentId(shipment.getShipmentId())
+                       .note(request.getNote())
+                       .fileList(fileList)
+                       .build()));
+        return shipmentResponse;
     }
  @Override
     public Long calculatFeeShip(CalculateFeeRequest request) {

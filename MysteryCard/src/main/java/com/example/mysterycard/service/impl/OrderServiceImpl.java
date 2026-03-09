@@ -26,10 +26,12 @@ import com.example.mysterycard.service.OrderService;
 import com.example.mysterycard.service.ShipmentService;
 import com.example.mysterycard.service.TransactionService;
 import com.example.mysterycard.specification.OrderSpecification;
+import com.example.mysterycard.specification.ShipmentSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -42,8 +44,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Service
 @Slf4j
-public class
-OrderServiceImpl implements OrderService {
+public class OrderServiceImpl implements OrderService {
     private final OrderMapper orderMapper;
     private final OrderRepo orderRepo;
     private final OrderItemsRepo orderItemsRepo;
@@ -214,28 +215,28 @@ OrderServiceImpl implements OrderService {
     public PageResponse<OrderItemResponse> getByStatusShipment(MyOrderDetailRequest request, int page, int size) {
         page = page - 1;
       Order order = orderRepo.findById(request.getOrderId()).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+      Specification<Shipment> specification = Specification.allOf(
+              ShipmentSpecification.findByOrder(order),
+              ShipmentSpecification.findByStatus(request.getShippingStatus())
+      );
+      Pageable pageable = PageRequest.of(page, size, Sort.by("createAt").descending());
+      Page<Shipment> shipments = shipmentRepo.findAll(specification,pageable);
+
         List<OrderItemResponse> result = new ArrayList<>();
-        List<Shipment> shipments = shipmentRepo.findByShipmentStatus(request.getShippingStatus());
-        shipments.forEach(shipment -> {
-            List<OrderItem> orderItems = new ArrayList<>();
-            shipment.getOrderItems().forEach(orderItem -> {
-                if (orderItem.getOrder().getOrderId().equals(order.getOrderId())) {
-                    orderItems.add(orderItem);
-                }
-            });
-            // ko co cai nay thi order nao cung co shipement cua nhau
-            log.info("Size orderitems {}", orderItems.size());
-            if(!orderItems.isEmpty()) {
+        shipments.forEach((s)->{
+            if(s.getOrderItems() != null && s.getOrderItems().size() > 0){
                 result.add(
                         OrderItemResponse.builder()
-                                .shipmentResponse(shipmentMapper.entityToResponse(shipment))
-                                .shipfee(shipment.getShipmentFee())
-                                .orderDetailResponseList(orderItems.stream().map(orderItemMapper::entityToResponse).toList())
+                                .shipmentResponse(shipmentMapper.entityToResponse(s))
+                                .shipfee(s.getShipmentFee())
+                                .orderDetailResponseList(s.getOrderItems().stream().map(orderItemMapper::entityToResponse).toList())
                                 .build()
                 );
+
             }
 
         });
+
         int totalPages = result.size() / size;
         int from = page * size;
         int to = Math.min(((page + 1) * size), result.size());
@@ -419,4 +420,76 @@ OrderServiceImpl implements OrderService {
         PageRequest pageRequest = PageRequest.of(page - 1, size, Sort.by("orderDate").descending());
         return orderRepo.findAll(specification,pageRequest).map(orderMapper::toOrderResponse);
     }
+
+    @Override
+    public boolean canCanleOrder(UUID orderId) {
+        Users users = getCurrentUser();
+        Order order = orderRepo.findById(orderId).orElseThrow(
+                ()-> new AppException(ErrorCode.ORDER_NOT_FOUND)
+        );
+        List<Shipment> shipments = order.getShipmentList();
+        int count = 0;
+        for(Shipment shipment : shipments){
+            if(shipment.getShipmentStatus().equals(ShippingStatus.PENDING))
+            {
+                count++;
+            }
+        }
+        return order.getBuyer().equals(users) && count == shipments.size();
+    }
+
+    @Override
+    public OrderCanDoResponse canCancleOrComfirm(UUID orderItemId) {
+        OrderCanDoResponse response = OrderCanDoResponse.builder()
+                .canCancle(canCancle(orderItemId))
+                .canConfirmRecieve(canConfirm(orderItemId))
+                .build();
+        return response;
+    }
+
+
+    public boolean canConfirm(UUID orderItemId) {
+        Users users = getCurrentUser();
+        OrderItem orderItem = orderItemsRepo.findById(orderItemId).orElseThrow(
+                ()  -> new AppException(ErrorCode.ORDER_ITEMS_NOT_FOUND)
+        );
+        Users buyer = orderItem.getOrder().getBuyer();
+        Shipment shipment =  orderItem.getShipments().stream().toList().getLast();
+        // TH shipment co 2 orrder 1 cai cancle 1 cai da giao toi neu lam nhu nay thi confirm duoc ca 2 a
+        if(shipment.getShipmentStatus() == null ||
+                (shipment.getShipmentStatus() != null &&
+                        !shipment.getShipmentStatus().equals(ShippingStatus.DELIVERED))
+        )
+        {
+            return false;
+        }
+         if(orderItem.getOrderItemStatus().equals(OrderItemStatus.RETURNING))
+         {
+             return users.equals(orderItem.getListSeller().getSeller()) ;
+         }
+        return  users.equals(buyer) ;
+    }
+
+    public boolean canCancle(UUID orderItemId) {
+
+        Users users = getCurrentUser();
+        OrderItem orderItem = orderItemsRepo.findById(orderItemId).orElseThrow(
+                ()  -> new AppException(ErrorCode.ORDER_ITEMS_NOT_FOUND)
+        );
+        Users buyer = orderItem.getOrder().getBuyer();
+
+        Shipment shipment =  orderItem.getShipments().stream().toList().getLast();
+        return users.equals(buyer) && shipment.getShipmentStatus() != null && shipment.getShipmentStatus().equals(ShippingStatus.PENDING);
+    }
+    public Users getCurrentUser()
+    {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Users users = usersRepo.findByEmail(email);
+        if (users == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        return users;
+    }
+
+
 }

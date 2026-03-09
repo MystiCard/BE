@@ -11,5 +11,6 @@ public interface ListSellerMapper {
     ListSeller toEntity(SellRequest listSeller);
     @Mapping(source = "card.cardId", target = "cardId")
     @Mapping(source = "seller.userId", target = "sellerId")
+    @Mapping(target = "sellerName", source = "seller.name")
     SellResponse toResponse(ListSeller listSeller);
 }

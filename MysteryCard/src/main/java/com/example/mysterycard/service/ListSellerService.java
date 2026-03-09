@@ -10,4 +10,5 @@ import java.util.UUID;
 public interface ListSellerService {
     SellResponse createListSeller(SellRequest request, UUID cardId);
     Page<SellResponse> getListSellersByCardId(UUID cardId, int page, int size);
+    Page<SellResponse> myListing(int page, int size);
 }

@@ -47,11 +47,11 @@ public class ShipmentController {
     ){
         return ResponseEntity.ok(ApiResponse.success(shipmentService.shipmentNotAsigned(page,size)));
     }
-    @PostMapping("/asign-shipper")
-    public ResponseEntity<ApiResponse<ShipmentResponse>> assignShipper(
-            @RequestBody AsignShipperRequest request
+    @PostMapping("/recieve/{shipmentId}")
+    public ResponseEntity<ApiResponse<ShipmentResponse>> recieveShipment(
+            @PathVariable UUID shipmentId
             ){
-        return ResponseEntity.ok(ApiResponse.success(shipmentService.asignShipper(request)));
+        return ResponseEntity.ok(ApiResponse.success(shipmentService.recieveShipment(shipmentId)));
     }
     @PatchMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<ShipmentResponse>> updateShipment(
@@ -66,5 +66,9 @@ public class ShipmentController {
             ){
         return ResponseEntity.ok(ApiResponse.success(shipmentService.changeAddressShip(request)));
     }
-
+    @GetMapping("/check-allow-recieve")
+    public ResponseEntity<ApiResponse<?>> checkALlowRecieve(
+    ){
+        return ResponseEntity.ok(ApiResponse.success(shipmentService.checkAllowedRecieveShipment()));
+    }
 }

@@ -74,6 +74,8 @@ public enum ErrorCode {
     // SHipment (14)
     SHIPMENT_NOT_FOUND(14001,"Shipment not found",HttpStatus.NOT_FOUND),
     CAN_NOT_CONFIRM_RECEIVE(14002,"Can not confirm receive with this shipment status",HttpStatus.BAD_REQUEST),
+    SHIPPER_CANNOT_RECIEVE(14003,"Can not recieve shipment due to has shipment not  fishnish",HttpStatus.BAD_REQUEST),
+    CANNOT_IS_SHIPPER(14004,"Can not have permision to do this function ",HttpStatus.BAD_REQUEST),
     //Tracking(15)
     TRACKING_NOT_FOUND(15001,"Tracking not found ",HttpStatus.NOT_FOUND),
  // List seller(16)

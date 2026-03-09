@@ -23,8 +23,8 @@ public interface ShipmentService {
 
     Page<ShipmentResponse> shipmentNotAsigned(int page, int size);
 
-    ShipmentResponse asignShipper(AsignShipperRequest request);
-
+    ShipmentResponse recieveShipment(UUID shipmentID);
+    boolean checkAllowedRecieveShipment();
     ShipmentResponse update(UpdateShipmentRequest request, List<MultipartFile> list);
     Long calculatFeeShip(CalculateFeeRequest request);
     Long changeAddressShip(ChangeAddressShipmentRequest request);

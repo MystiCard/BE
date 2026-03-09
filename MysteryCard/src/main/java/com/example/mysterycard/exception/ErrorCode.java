@@ -74,6 +74,8 @@ public enum ErrorCode {
     // SHipment (14)
     SHIPMENT_NOT_FOUND(14001,"Shipment not found",HttpStatus.NOT_FOUND),
     CAN_NOT_CONFIRM_RECEIVE(14002,"Can not confirm receive with this shipment status",HttpStatus.BAD_REQUEST),
+    SHIPPER_CANNOT_RECIEVE(14003,"Can not recieve shipment due to has shipment not  fishnish",HttpStatus.BAD_REQUEST),
+    CANNOT_IS_SHIPPER(14004,"Can not have permision to do this function ",HttpStatus.BAD_REQUEST),
     //Tracking(15)
     TRACKING_NOT_FOUND(15001,"Tracking not found ",HttpStatus.NOT_FOUND),
  // List seller(16)
@@ -84,8 +86,14 @@ public enum ErrorCode {
     CAN_NOT_SEND_RETURN_REQUEST(17003,"Can not send return request with this order item status",HttpStatus.BAD_REQUEST),
     CAN_NOT_APPROVE_RETURN_REQUEST(17004,"Can not approve return request with this return request status",HttpStatus.BAD_REQUEST),
     // Wallet (18)
-    WALLET_NOT_ACTIVE(18001,"Wallet not active. Please contact admin to active your wallet",HttpStatus.BAD_REQUEST)
-;
+    WALLET_NOT_ACTIVE(18001,"Wallet not active. Please contact admin to active your wallet",HttpStatus.BAD_REQUEST),
+    //Notification (19)
+    NOTIFICATION_NOT_FOUND(19001,"Notification not found ",HttpStatus.NOT_FOUND),
+    //Blind Box Result (20)
+    BLIND_BOX_RESULT_NOT_FOUND(20001,"Blind Box Result not found ",HttpStatus.NOT_FOUND),
+    //Others
+    INVALID_REQUEST(90001,"Invalid request. Please check your input",HttpStatus.BAD_REQUEST);
+    ;
     int code;
     String message;
     HttpStatus status;

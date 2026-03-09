@@ -2,21 +2,23 @@ package com.example.mysterycard.service.impl;
 
 import com.example.mysterycard.dto.request.SellRequest;
 import com.example.mysterycard.dto.response.SellResponse;
-import com.example.mysterycard.entity.Card;
-import com.example.mysterycard.entity.ListSeller;
+import com.example.mysterycard.entity.*;
 import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.ListSellerMapper;
 import com.example.mysterycard.repository.CardRepo;
 import com.example.mysterycard.repository.ListSellerRepo;
+import com.example.mysterycard.repository.WishListRepo;
 import com.example.mysterycard.service.CardService;
 import com.example.mysterycard.service.ListSellerService;
+import com.example.mysterycard.service.NotificationService;
 import com.example.mysterycard.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -32,6 +34,10 @@ public class ListSellerServiceImpl implements ListSellerService {
     private CardRepo cardRepo;
     @Autowired
     private UserService userService;
+    @Autowired
+    private WishListRepo wishListRepo;
+    @Autowired
+    private NotificationService notificationService;
 
     public SellResponse createListSeller(SellRequest request, UUID cardId) {
         Card card = cardRepo.findById(cardId).orElseThrow(() -> new AppException(ErrorCode.CARD_NOT_FOUND));
@@ -40,12 +46,27 @@ public class ListSellerServiceImpl implements ListSellerService {
         card.getListSellers().add(listSeller);
         listSeller.setSeller(userService.getUser());
         ListSeller savedListSeller = listSellerRepo.save(listSeller);
+
+        List<WishList> wishLists = wishListRepo.getAllByCard_CardId(cardId);
+        for (WishList wishList : wishLists) {
+            if(wishList.getExpectPrice()<=request.getPrice()) {
+                notificationService.createNotification(card, "The card " + card.getName() + " you wishlisted is now available for sale at a price of " + request.getPrice(),wishList.getUser(), Notification.NotiType.wishList);
+            }
+        }
         return listSellerMapper.toResponse(savedListSeller);
     }
     public Page<SellResponse> getListSellersByCardId(UUID cardId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("price").descending());
         Page<ListSeller> listSellers = listSellerRepo.findByCard_CardId(cardId, pageable);
         return listSellers.map(listSellerMapper::toResponse);
+    }
+
+    @Override
+    public Page<SellResponse> myListing(int page, int size) {
+        Users user = userService.getUser();
+        Pageable pageable = PageRequest.of(page-1,size,Sort.by("createdAt").descending());
+        Page<ListSeller> listSellers = listSellerRepo.findAllBySeller(user, pageable);
+        return listSellers.map(listSellerMapper::toResponse)   ;
     }
 
 }

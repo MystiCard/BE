@@ -2,6 +2,7 @@ package com.example.mysterycard.service;
 
 import com.example.mysterycard.dto.request.BlindBoxRequest;
 import com.example.mysterycard.dto.response.*;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 import java.util.UUID;
@@ -15,4 +16,5 @@ public interface BlindBoxService {
     OrderResponse buyBlindBox(UUID blindBoxId);
     void deleteBlindBox(UUID id);
     BlindBoxProbabilitiesResponse getProbabilities(UUID blindBoxId);
+    Page<BlindBoxResultResponse> getAllResultsForUser(int page, int size);
 }

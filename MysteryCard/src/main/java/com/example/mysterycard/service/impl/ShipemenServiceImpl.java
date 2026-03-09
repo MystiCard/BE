@@ -9,8 +9,10 @@ import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.ShipmentMapper;
 import com.example.mysterycard.repository.*;
+import com.example.mysterycard.service.NotificationService;
 import com.example.mysterycard.service.ShipmentService;
 import com.example.mysterycard.service.TrackingService;
+import com.example.mysterycard.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -59,20 +61,36 @@ public class ShipemenServiceImpl implements ShipmentService {
     private final OrderRepo orderRepo;
     private final UsersRepo usersRepo;
     private final ListSellerRepo listSellerRepo;
+    private final BlindBoxResultRepo blindBoxResultRepo;
+    private final NotificationService notificationService;
+    private final UserService userService;
     @Override
     public ShipmentResponse createsShipment(ShipmentRequest request) {
-        List<ShipmentResponse> list = new ArrayList<>();
-
             Shipment shipment = shipmentMapper.requestToEntity(request);
             // create tracking
-
-             for (UUID orderItemId : request.getOrderItemId()) {
-                 OrderItem orderItem = orderItemsRepo.findById(orderItemId).orElseThrow(
+            if(request.getOrderItemId() != null && !request.getOrderItemId().isEmpty()){
+                for (UUID orderItemId : request.getOrderItemId()) {
+                    OrderItem orderItem = orderItemsRepo.findById(orderItemId).orElseThrow(
                          () -> new AppException(ErrorCode.ORDER_ITEMS_NOT_FOUND)
                  );
-                 shipment.getOrderItems().add(orderItem);
-                 shipmentRepo.save(shipment);
+                    shipment.getOrderItems().add(orderItem);
+
              }
+            }
+            else if(request.getBlindBoxResultId() != null && !request.getBlindBoxResultId().isEmpty()) {
+                for(UUID blindBoxResultId : request.getBlindBoxResultId())
+                {
+                    BlindBoxResult blindBoxResult = blindBoxResultRepo.findById(blindBoxResultId).orElseThrow(
+                            () -> new AppException(ErrorCode.BLIND_BOX_RESULT_NOT_FOUND)
+                    );
+                    shipment.getBlindBoxResults().add(blindBoxResult);
+
+                }
+            }
+            else {
+                throw new AppException(ErrorCode.INVALID_REQUEST);
+            }
+            shipmentRepo.save(shipment);
             trackingService.createTracking(
                     TrackingRequest.builder()
                             .shipmentId(shipment.getShipmentId())
@@ -88,7 +106,13 @@ public class ShipemenServiceImpl implements ShipmentService {
         );
         return shipmentRepo.findByOrderItems(Set.of(orderItem)).stream().map(shipmentMapper::entityToResponse).collect(Collectors.toList());
     }
-
+    @Override
+    public List<ShipmentResponse> getShipmentByBlindBoxResult(UUID blindBoxResultId) {
+        BlindBoxResult blindBoxResult = blindBoxResultRepo.findById(blindBoxResultId).orElseThrow(
+                () -> new AppException(ErrorCode.BLIND_BOX_RESULT_NOT_FOUND)
+        );
+        return shipmentRepo.findByBlindBoxResults(Set.of(blindBoxResult)).stream().map(shipmentMapper::entityToResponse).collect(Collectors.toList());
+    }
     @Override
     public Page<ShipmentResponse> myShipment(boolean complete, int page, int size) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -115,18 +139,59 @@ public class ShipemenServiceImpl implements ShipmentService {
     }
 
     @Override
-    public ShipmentResponse asignShipper(AsignShipperRequest request) {
-        Users users = usersRepo.findByUserId(request.getShipperId());
-        if(users == null) {
-            throw new AppException(ErrorCode.USER_NOT_FOUND);
-        }
-        Shipment shipment = shipmentRepo.findById(request.getShipmentId()).orElseThrow(
+    public ShipmentResponse recieveShipment(UUID shipemnt) {
+        Users users = userService.getUser();
+        Users owner = null;
+        Shipment shipment = shipmentRepo.findById(shipemnt).orElseThrow(
                 ()-> new AppException(ErrorCode.SHIPMENT_NOT_FOUND)
         );
+        if(shipment.getOrderItems()!=null&&!shipment.getOrderItems().isEmpty())
+        {
+            Order order = shipment.getOrderItems().iterator().next().getOrder();
+            owner = order.getBuyer();
+
+        }
+        else if(shipment.getBlindBoxResults()!=null&&!shipment.getBlindBoxResults().isEmpty())
+        {
+            Order order = shipment.getBlindBoxResults().iterator().next().getOrder();
+            owner = order.getBuyer();
+
+        }
         shipment.setShipper(users);
         shipment.setShipmentStatus(ShippingStatus.ASIGNED);
+        notificationService.createNotification(
+                "Bạn đã được giao một đơn hàng mới, vui lòng kiểm tra thông tin đơn hàng và chuẩn bị giao hàng đúng thời gian",
+                users,
+                Notification.NotiType.shipment
+        );
 
+        notificationService.createNotification("Đơn hàng của bạn đã được giao cho shipper "+users.getUserId().toString()+", vui lòng theo dõi để biết thông tin chi tiết về đơn hàng",owner,
+                Notification.NotiType.shipment
+        );
         return shipmentMapper.entityToResponse(shipmentRepo.save(shipment));
+    }
+
+    @Override
+    public boolean checkAllowedRecieveShipment() {
+        Users users = userService.getUser();
+        boolean shipper = false;
+       for(Role r : users.getRolelist())
+       {
+               if(r.getRoleCode().equals("SHIPPER"))
+               {
+                   shipper = true;
+               }
+       }
+       if(!shipper)
+       {
+           throw new AppException(ErrorCode.CANNOT_IS_SHIPPER);
+       }
+        List<ShippingStatus> list = List.of(ShippingStatus.ASIGNED,ShippingStatus.PICKED_UP,ShippingStatus.IN_TRANSIT);
+        if(shipmentRepo.existsByShipmentStatusIsInAndShipper(list,users))
+        {
+            return false;
+        }
+        return true;
     }
 
     @Override
@@ -135,6 +200,36 @@ public class ShipemenServiceImpl implements ShipmentService {
         Shipment shipment = shipmentRepo.findById(request.getShipmentId()).orElseThrow(
                 ()-> new AppException(ErrorCode.SHIPMENT_NOT_FOUND)
         );
+        Users owner = null;
+        if(shipment.getOrderItems()!=null&&!shipment.getOrderItems().isEmpty())
+        {
+            Order order = shipment.getOrderItems().iterator().next().getOrder();
+            owner = order.getBuyer();
+
+        }
+        else if(shipment.getBlindBoxResults()!=null&&!shipment.getBlindBoxResults().isEmpty())
+        {
+            Order order = shipment.getBlindBoxResults().iterator().next().getOrder();
+            owner = order.getBuyer();
+
+        }
+        String message = switch (request.getShippingStatus()) {
+            case PENDING -> "đang chờ xử lý.";
+            case ASIGNED -> "đã được gán shipper.";
+            case PICKED_UP -> "đã được lấy.";
+            case IN_TRANSIT -> "đang trên đường giao.";
+            case DELIVERED -> "đã giao thành công.";
+            case FAILED -> "giao thất bại.";
+            case LOST -> "bị thất lạc.";
+            case RECEIVED -> "đã được nhận.";
+            case CANCELLED -> "đã bị hủy.";
+        };
+        notificationService.createNotification("Đơn hàng của bạn "+message,owner,
+                Notification.NotiType.shipment
+        );
+
+
+
         shipment.setShipmentStatus(request.getShippingStatus());
         shipmentRepo.save(shipment);
         trackingService.createTracking(

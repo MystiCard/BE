@@ -3,17 +3,15 @@ package com.example.mysterycard.service.impl;
 import com.example.mysterycard.dto.request.TransactionReportRequest;
 import com.example.mysterycard.dto.request.UpdateShipmentRequest;
 import com.example.mysterycard.dto.request.transaction.*;
-import com.example.mysterycard.dto.response.ShipmentResponse;
 import com.example.mysterycard.dto.response.TransactionReportResponse;
 import com.example.mysterycard.dto.response.transaction.TransactionResponse;
 import com.example.mysterycard.entity.*;
 import com.example.mysterycard.enums.*;
 import com.example.mysterycard.exception.AppException;
-import com.example.mysterycard.exception.ErrorCode;
-import com.example.mysterycard.mapper.PaymentMapper;
-import com.example.mysterycard.mapper.SumariesMapper;
+import com.example.mysterycard.exception.ErrorCode;import com.example.mysterycard.mapper.SumariesMapper;
 import com.example.mysterycard.mapper.TransactionMapper;
 import com.example.mysterycard.repository.*;
+import com.example.mysterycard.service.NotificationService;
 import com.example.mysterycard.service.PaymentService;
 import com.example.mysterycard.service.ShipmentService;
 import com.example.mysterycard.service.TransactionService;
@@ -54,6 +52,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final ListSellerRepo listSellerRepo;
     private final WalletRepo walletRepo;
     private final ReturnRequestRepo returnRequestRepo;
+    private final NotificationService notificationService;
     @Value("${admin.email}")
     private String adminEmail;
 

@@ -17,12 +17,14 @@ public interface ShipmentService {
 
     List<ShipmentResponse> getShipmentByOrderItems(UUID orderItems);
 
+    List<ShipmentResponse> getShipmentByBlindBoxResult(UUID blindBoxResultId);
+
     Page<ShipmentResponse> myShipment(boolean complete, int page, int size);
 
     Page<ShipmentResponse> shipmentNotAsigned(int page, int size);
 
-    ShipmentResponse asignShipper(AsignShipperRequest request);
-
+    ShipmentResponse recieveShipment(UUID shipmentID);
+    boolean checkAllowedRecieveShipment();
     ShipmentResponse update(UpdateShipmentRequest request, List<MultipartFile> list);
     Long calculatFeeShip(CalculateFeeRequest request);
     Long changeAddressShip(ChangeAddressShipmentRequest request);

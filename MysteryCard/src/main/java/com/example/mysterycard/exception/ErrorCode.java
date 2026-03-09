@@ -92,7 +92,10 @@ public enum ErrorCode {
     //Blind Box Result (20)
     BLIND_BOX_RESULT_NOT_FOUND(20001,"Blind Box Result not found ",HttpStatus.NOT_FOUND),
     //Others
-    INVALID_REQUEST(90001,"Invalid request. Please check your input",HttpStatus.BAD_REQUEST);
+    INVALID_REQUEST(90001,"Invalid request. Please check your input",HttpStatus.BAD_REQUEST),
+    //Card requird(21)
+    CARD_REQUIRED_NOT_FOUND(21001,"Card requird not found",HttpStatus.NOT_FOUND),
+    ALREADY_CREATE(21002,"Request already update",HttpStatus.BAD_REQUEST),
     ;
     int code;
     String message;

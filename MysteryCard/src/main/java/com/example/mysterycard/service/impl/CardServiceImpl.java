@@ -17,6 +17,7 @@ import com.example.mysterycard.mapper.WishListMapper;
 import com.example.mysterycard.repository.*;
 import com.example.mysterycard.service.CardService;
 import com.example.mysterycard.service.CategoryService;
+import com.example.mysterycard.service.NotificationService;
 import com.example.mysterycard.service.UserService;
 import com.example.mysterycard.specification.CardSpecification;
 import org.apache.poi.ss.usermodel.*;
@@ -58,6 +59,8 @@ public class CardServiceImpl implements CardService {
     private CardRequiredMapper cardRequiredMapper;
     @Autowired
     private CategoryService categoryService;
+    @Autowired
+    private NotificationService notificationService;
 
     @Override
     public CardResponse getCardById(UUID id) {
@@ -265,6 +268,7 @@ public class CardServiceImpl implements CardService {
                         .categoryId(cardRequired.getCategory().getCategoryId())
                         .build()
         );
+        notificationService.createNotification("Your card ("+cardRequired.getCardName()+" has been approved ",cardRequired.getUsers(), Notification.NotiType.addCard);
         return cardRequiredMapper.toResponse(cardRequiredRepo.save(cardRequired));
     }
 
@@ -275,6 +279,7 @@ public class CardServiceImpl implements CardService {
         cardRequired.setNote(request.getNote());
         cardRequired.setStatus(CardRequired.RequiredStatus.REJECTED);
         cardRequired.setDecidedAt(LocalDateTime.now());
+        notificationService.createNotification("Your card ("+cardRequired.getCardName()+" has been reject  ",cardRequired.getUsers(), Notification.NotiType.addCard);
         return cardRequiredMapper.toResponse(cardRequiredRepo.save(cardRequired));
     }
 

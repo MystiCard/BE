@@ -13,6 +13,6 @@ public class SellResponse {
     private Status status;
     private UUID cardId;
     private UUID sellerId;
-    private UUID sellerName;
+    private String sellerName;
 
 }

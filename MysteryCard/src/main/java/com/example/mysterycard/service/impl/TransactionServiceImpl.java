@@ -86,7 +86,7 @@ public class TransactionServiceImpl implements TransactionService {
         if (users == null) {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
-        Wallet wallet =  users.getWallet();
+        Wallet wallet =  getWallet(users.getUserId());
         BankAccount bankAccount = bankAccountRepo.findById(request.getBankId()).orElseThrow(
                 () -> new AppException(ErrorCode.BANK_ACCOUNT_NOT_FOUND)
         );

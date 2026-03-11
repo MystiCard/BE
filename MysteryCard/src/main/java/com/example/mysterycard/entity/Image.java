@@ -1,7 +1,10 @@
 package com.example.mysterycard.entity;
 
+import com.pgvector.PGvector;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.UUID;
 @Entity
@@ -25,4 +28,8 @@ public class Image {
     @ManyToOne
     @JoinColumn(name="return_request_id")
     private ReturnRequest returnRequest;
+    @Column(columnDefinition = "vector(512)")
+    @JdbcTypeCode(SqlTypes.OTHER)
+    @Transient
+    private PGvector embedding;
 }

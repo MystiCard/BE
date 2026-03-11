@@ -61,7 +61,7 @@ public class RoleController {
         return ResponseEntity.ok(ApiResponse.success(roleService.removePermisionByRoleCodeAndPermisionCode(request)));
     }
     @PostMapping("/add-permision")
-    public ResponseEntity<ApiResponse<RoleResponse>> removePermision(@RequestBody AddPermisionToRoleRequest request) {
+    public ResponseEntity<ApiResponse<RoleResponse>> adddPermision(@RequestBody AddPermisionToRoleRequest request) {
         return ResponseEntity.ok(ApiResponse.success(roleService.addPermision(request)));
     }
     @PostMapping("/active/{code}")

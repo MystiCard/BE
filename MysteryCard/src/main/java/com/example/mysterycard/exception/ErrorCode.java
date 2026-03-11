@@ -56,7 +56,7 @@ public enum ErrorCode {
     BLIND_BOX_PURCHASE_NOT_FOUND(10001,"Blind Box Purchase Not Found",HttpStatus.NOT_FOUND),
 
     // Transaction (11)
-    TRANSACTION_NOT_FOUND(11001, "Transaction not found", HttpStatus.BAD_REQUEST),
+    TRANSACTION_NOT_FOUND(11001, "Transaction not found", HttpStatus.NOT_FOUND),
     PAYMENT_HASH_DATA_FAIL(11002,"Hash data to payment MOMO fail",HttpStatus.BAD_REQUEST),
     CAN_NOT_WITHDRAW(11003,"Amount withdraw larger than balance in wallet",HttpStatus.BAD_REQUEST),
     CAN_NOT_TRANSACTION(11004,"Balance not enough to process transaction. PLease deposite money into wallet",HttpStatus.BAD_REQUEST),
@@ -96,6 +96,8 @@ public enum ErrorCode {
     //Card requird(21)
     CARD_REQUIRED_NOT_FOUND(21001,"Card requird not found",HttpStatus.NOT_FOUND),
     ALREADY_CREATE(21002,"Request already update",HttpStatus.BAD_REQUEST),
+    // Image requird(22)
+    IMAGE_CONVERT(22001, "Get Vector form image fail",HttpStatus.BAD_REQUEST),
     ;
     int code;
     String message;

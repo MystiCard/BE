@@ -30,3 +30,5 @@ ghn:
 
 FRONTEND_URL: http://localhost:5173
 DAY_CAN_RETURN: 5
+AI:
+  URL:${AI_URL}

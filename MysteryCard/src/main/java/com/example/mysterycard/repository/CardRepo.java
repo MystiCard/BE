@@ -13,4 +13,6 @@ public interface CardRepo extends JpaRepository<Card, UUID> , JpaSpecificationEx
     boolean existsCardByNameAndRarityAndCategory(String name, Rarity rarity, Category category);
 
     List<Card> findByCategory_CategoryId(UUID categoryCategoryId);
+
+    Card findByCardId(UUID cardId);
 }

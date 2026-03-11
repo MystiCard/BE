@@ -11,7 +11,6 @@ import java.util.UUID;
 public class CardRequest {
     private String name;
     private Rarity rarity;
-    private String imageUrl;
     private double basePrice;
     private UUID categoryId;
 }

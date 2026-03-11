@@ -3,6 +3,7 @@ package com.example.mysterycard.mapper;
 import com.example.mysterycard.dto.response.ImageResponse;
 import com.example.mysterycard.entity.Image;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface ImageMapper {

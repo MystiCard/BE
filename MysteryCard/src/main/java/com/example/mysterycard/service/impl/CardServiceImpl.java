@@ -6,6 +6,7 @@ import com.example.mysterycard.dto.request.NewCardRequest;
 import com.example.mysterycard.dto.request.WishListRequest;
 import com.example.mysterycard.dto.response.CardRequiredResponse;
 import com.example.mysterycard.dto.response.CardResponse;
+import com.example.mysterycard.dto.response.ImageSearchResult;
 import com.example.mysterycard.dto.response.WishListResponse;
 import com.example.mysterycard.entity.*;
 import com.example.mysterycard.enums.Rarity;
@@ -20,6 +21,10 @@ import com.example.mysterycard.service.CategoryService;
 import com.example.mysterycard.service.NotificationService;
 import com.example.mysterycard.service.UserService;
 import com.example.mysterycard.specification.CardSpecification;
+import com.example.mysterycard.utils.AIImageUltils;
+import com.example.mysterycard.utils.CloudiaryUtils;
+import com.pgvector.PGvector;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,8 +41,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class CardServiceImpl implements CardService {
     @Autowired
     private CardRepo cardRepo;
@@ -61,6 +68,12 @@ public class CardServiceImpl implements CardService {
     private CategoryService categoryService;
     @Autowired
     private NotificationService notificationService;
+    @Autowired
+    private  AIImageUltils aiImageUltils;
+  @Autowired
+  private CloudiaryUtils cloudiaryUtils;
+    @Autowired
+    private ImageRepo imageRepo;
 
     @Override
     public CardResponse getCardById(UUID id) {
@@ -87,7 +100,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    public CardResponse createCard(CardRequest request) {
+    public CardResponse createCard(CardRequest request, MultipartFile file)  {
         Category category = categoryRepo.findById(request.getCategoryId())
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
         if(cardRepo.existsCardByNameAndRarityAndCategory(request.getName(), request.getRarity(), category)){
@@ -95,14 +108,21 @@ public class CardServiceImpl implements CardService {
         }
         Card card = cardMapper.toCard(request);
             category.addCard(card);
-        if (request.getImageUrl() != null) {
-            Image img = new Image();
-            img.setImageUrl(request.getImageUrl());
-            img.setCard(card);
-            card.getImages().add(img);
-        }
-        card = cardRepo.save(card);
         setMinMaxPrice(card);
+        card = cardRepo.save(card);
+        if (file != null) {
+            String imageUrl = cloudiaryUtils.uploadImage(file);
+            Image img = new Image();
+            img.setImageUrl(imageUrl);
+            img.setCard(card);
+           String pGvector = null;
+            try {
+                pGvector = aiImageUltils.getVector(file.getBytes());
+            }catch (Exception e){
+                throw new AppException(ErrorCode.IMAGE_CONVERT);
+            }
+            imageRepo.insertImage(UUID.randomUUID(),card.getCardId(),img.getImageUrl(),pGvector );
+        }
         return cardMapper.toResponse(card);
     }
 
@@ -233,12 +253,17 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    public CardRequiredResponse requireNewCard(NewCardRequest request) {
+    public CardRequiredResponse requireNewCard(NewCardRequest request,MultipartFile file) {
         CardRequired cardRequired = new CardRequired();
         cardRequired.setCardName(request.getCardName());
         cardRequired.setRate(request.getRate());
         cardRequired.setBasePrice(request.getBasePrice());
-        cardRequired.setImageUrl(request.getImageUrl());
+        if(file != null)
+        {
+
+            cardRequired.setImageUrl(cloudiaryUtils.uploadImage(file));
+        }
+
         cardRequired.setUsers(userService.getUser());
         Category category = categoryRepo.findByCategoryId(request.getCategoryId());
         if(category==null){
@@ -251,7 +276,7 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Transactional
-    public CardRequiredResponse approveRequest(AddCardRequest request, UUID cardRequestId) {
+    public CardRequiredResponse approveRequest(AddCardRequest request, UUID cardRequestId,MultipartFile file) {
         CardRequired cardRequired = cardRequiredRepo.findByCardRequiredId(cardRequestId)
                 .orElseThrow(()-> new AppException(ErrorCode.CARD_REQUIRED_NOT_FOUND));
         if(cardRequired.getStatus()!= CardRequired.RequiredStatus.PENDING){
@@ -260,14 +285,14 @@ public class CardServiceImpl implements CardService {
         cardRequired.setNote(request.getNote());
         cardRequired.setStatus(CardRequired.RequiredStatus.APPROVED);
         cardRequired.setDecidedAt(LocalDateTime.now());
-        createCard(CardRequest.builder()
-                        .name(cardRequired.getCardName())
-                        .rarity(cardRequired.getRate())
-                        .imageUrl(cardRequired.getImageUrl())
-                        .basePrice(cardRequired.getBasePrice())
-                        .categoryId(cardRequired.getCategory().getCategoryId())
-                        .build()
-        );
+            createCard(CardRequest.builder()
+                            .name(cardRequired.getCardName())
+                            .rarity(cardRequired.getRate())
+                            .basePrice(cardRequired.getBasePrice())
+                            .categoryId(cardRequired.getCategory().getCategoryId())
+                            .build()
+                    ,file);
+
         notificationService.createNotification("Your card ("+cardRequired.getCardName()+" has been approved ",cardRequired.getUsers(), Notification.NotiType.addCard);
         return cardRequiredMapper.toResponse(cardRequiredRepo.save(cardRequired));
     }
@@ -296,6 +321,23 @@ public class CardServiceImpl implements CardService {
         Pageable pageable = PageRequest.of(page,size);
         Page<CardRequired> cardRequireds = cardRequiredRepo.findAll(pageable);
         return cardRequireds.map(cardRequiredMapper::toResponse);
+    }
+
+    @Override
+    public List<CardResponse> searchByImage(MultipartFile file) {
+         Set<Card> cards = new HashSet<>();
+        try {
+           String pGvector = aiImageUltils.getVector(file.getBytes());
+            List<ImageSearchResult> images = imageRepo.searchByImage(pGvector);
+            images = images.subList(0,Math.min(images.size(),5));
+            images.forEach(image -> {
+                cards.add(cardRepo.findByCardId(image.getCardId()));
+            });
+        }catch (Exception e){
+            e.printStackTrace();
+            throw new AppException(ErrorCode.IMAGE_CONVERT);
+        }
+        return cards.stream().map(cardMapper::toResponse).collect(Collectors.toList());
     }
 
 

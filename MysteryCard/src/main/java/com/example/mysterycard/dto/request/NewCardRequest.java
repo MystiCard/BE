@@ -10,7 +10,6 @@ public class NewCardRequest {
     private String cardName;
     private Rarity rate;
     private double basePrice;
-    private String imageUrl;
     private String category;
     private UUID categoryId;
 }

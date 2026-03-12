@@ -107,14 +107,20 @@ public class OrderServiceImpl implements OrderService {
                     totalOrderItems += price;
                     totalAmount += price;
                 }
-                Long shipfee = shipmentService.calculatFeeShip(
-                        CalculateFeeRequest.builder()
-                                .totalAmount(totalOrderItems)
-                                .fromDistrictId(Long.valueOf(listSeller.getSeller().getDistrictId()))
-                                .toWardId(String.valueOf(request.getToWardId()))
-                                .toDistrictId(request.getToDistrictId())
-                                .build()
-                );
+                Long shipfee = null ;
+                try{
+                     shipfee = shipmentService.calculatFeeShip(
+                            CalculateFeeRequest.builder()
+                                    .totalAmount(totalOrderItems)
+                                    .fromDistrictId(Long.valueOf(listSeller.getSeller().getDistrictId()))
+                                    .toWardId(String.valueOf(request.getToWardId()))
+                                    .toDistrictId(request.getToDistrictId())
+                                    .build()
+                    );
+                }catch (Exception e){
+                    throw  new AppException(ErrorCode.CANNOT_CALCULATE_SHIP_FEE);
+                }
+
                 log.info("Calculator ship  {}", CalculateFeeRequest.builder()
                         .totalAmount(totalOrderItems)
                         .fromDistrictId(Long.valueOf(listSeller.getSeller().getDistrictId()))
@@ -311,7 +317,7 @@ public class OrderServiceImpl implements OrderService {
                 () -> new AppException(ErrorCode.ORDER_ITEMS_NOT_FOUND)
         );
         ShippingStatus shippingStatus = orderItem.getShipments().stream().toList().getLast().getShipmentStatus();
-        if (!shippingStatus.equals(ShippingStatus.PENDING) || orderItem.getOrderItemStatus().equals(OrderItemStatus.CANCELLED)) {
+        if ((!shippingStatus.equals(ShippingStatus.PENDING_APPROVED) || !shippingStatus.equals(ShippingStatus.PENDING)) &&  orderItem.getOrderItemStatus().equals(OrderItemStatus.CANCELLED)) {
             throw new AppException(ErrorCode.CAN_NOT_CANCEL_ORDER_ITEM);
         }
         orderItem.setOrderItemStatus(OrderItemStatus.CANCELLED);
@@ -447,6 +453,40 @@ public class OrderServiceImpl implements OrderService {
         return response;
     }
 
+    @Override
+    public Page<OrderItemResponse.OrderDetailResponse> listPending(int page, int size) {
+        Users users = getCurrentUser();
+        Pageable pageable = PageRequest.of(page, size, Sort.by("order.orderDate").ascending());
+        Page<OrderItem> orderItems = orderItemsRepo.findByListSeller_SellerAndOrderItemStatusAndOrder_StatusNot(users,OrderItemStatus.PENDING_CONFIRM,OrderStatus.CREATED,pageable);
+        return orderItems.map(orderItemMapper::entityToResponse);
+    }
+
+    @Override
+    public OrderItemResponse.OrderDetailResponse approvedOrderItems(UUID orderItemId) {
+        OrderItem orderItem = orderItemsRepo.findById(orderItemId).orElseThrow(
+                ()  -> new AppException(ErrorCode.ORDER_ITEMS_NOT_FOUND)
+        );
+        orderItem.setOrderItemStatus(OrderItemStatus.CONFIRMED);
+        Shipment shipment = orderItem.getShipments().stream().toList().getLast();
+        int cout = 0;
+        for (OrderItem o : shipment.getOrderItems())
+        {
+            if(o.getOrderItemStatus().equals(OrderItemStatus.PENDING_CONFIRM))
+            {
+                cout++;
+            }
+
+        }
+        if(cout == 0)
+        {
+            shipmentService.update(UpdateShipmentRequest.builder()
+                            .shipmentId(shipment.getShipmentId())
+                            .shippingStatus(ShippingStatus.PENDING)
+                    .build(),null);
+        }
+        return orderItemMapper.entityToResponse(orderItemsRepo.save(orderItem));
+    }
+
 
     public boolean canConfirm(UUID orderItemId) {
         Users users = getCurrentUser();
@@ -460,6 +500,10 @@ public class OrderServiceImpl implements OrderService {
                 (shipment.getShipmentStatus() != null &&
                         !shipment.getShipmentStatus().equals(ShippingStatus.DELIVERED))
         )
+        {
+            return false;
+        }
+        if(orderItem.getOrderItemStatus().equals(OrderItemStatus.CANCELLED))
         {
             return false;
         }
@@ -479,7 +523,7 @@ public class OrderServiceImpl implements OrderService {
         Users buyer = orderItem.getOrder().getBuyer();
 
         Shipment shipment =  orderItem.getShipments().stream().toList().getLast();
-        return users.equals(buyer) && shipment.getShipmentStatus() != null && shipment.getShipmentStatus().equals(ShippingStatus.PENDING);
+        return users.equals(buyer) && !orderItem.getOrderItemStatus().equals(OrderItemStatus.CANCELLED)  && shipment.getShipmentStatus() != null && (shipment.getShipmentStatus().equals(ShippingStatus.PENDING) || shipment.getShipmentStatus().equals(ShippingStatus.PENDING_APPROVED));
     }
     public Users getCurrentUser()
     {

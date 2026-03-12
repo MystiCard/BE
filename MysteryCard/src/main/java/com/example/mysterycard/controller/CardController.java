@@ -1,11 +1,11 @@
 package com.example.mysterycard.controller;
 
 import com.example.mysterycard.base.ApiResponse;
-import com.example.mysterycard.dto.request.AddCardRequest;
-import com.example.mysterycard.dto.request.CardRequest;
-import com.example.mysterycard.dto.request.NewCardRequest;
-import com.example.mysterycard.dto.request.WishListRequest;
+import com.example.mysterycard.dto.request.*;
 import com.example.mysterycard.dto.response.CardResponse;
+import com.example.mysterycard.dto.response.CardSellResponse;
+import com.example.mysterycard.dto.response.PageResponse;
+import com.example.mysterycard.enums.Rarity;
 import com.example.mysterycard.service.CardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -116,6 +116,15 @@ public class CardController {
     @PostMapping("/search-image")
     public ResponseEntity<ApiResponse<List<CardResponse>>> searchByImage(@RequestParam MultipartFile file) {
 return ResponseEntity.ok(ApiResponse.success(cardService.searchByImage(file)));
+    }
+    @PostMapping ("/card-selling")
+    public ResponseEntity<ApiResponse<PageResponse<CardSellResponse>>> getCardSelling(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestBody CardSellRequest request
+            ) {
+        return ResponseEntity.ok(ApiResponse.success(cardService.getALlCarSelling(page,size,request)));
+
     }
 
 }

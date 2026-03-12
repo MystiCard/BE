@@ -3,6 +3,7 @@ package com.example.mysterycard.service;
 import com.example.mysterycard.dto.request.MyOrderDetailRequest;
 import com.example.mysterycard.dto.request.OrderCardRequest;
 import com.example.mysterycard.dto.response.*;
+import com.example.mysterycard.entity.OrderItem;
 import com.example.mysterycard.entity.Shipment;
 import com.example.mysterycard.enums.OrderItemStatus;
 import com.example.mysterycard.enums.OrderStatus;
@@ -22,4 +23,6 @@ public interface OrderService {
     Page<OrderResponse> getMyOrders(OrderStatus orderStatus, int page, int size);
     boolean canCanleOrder(UUID orderId);
     OrderCanDoResponse canCancleOrComfirm(UUID orderItemId);
+    Page<OrderItemResponse.OrderDetailResponse> listPending(int page, int size);
+    OrderItemResponse.OrderDetailResponse approvedOrderItems(UUID orderItemId);
 }

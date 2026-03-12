@@ -14,6 +14,9 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
@@ -22,10 +25,8 @@ import java.util.stream.Collectors;
 public class AIImageUltils {
     @Value("${AI.URL}")
     public   String url;
+    private final RestTemplate restTemplate = new RestTemplate();
     public String getVector(byte[] imageBytes) {
-    log.info("Get Vector {}", url);
-        RestTemplate restTemplate = new RestTemplate();
-
 
         org.springframework.http.HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -45,7 +46,20 @@ public class AIImageUltils {
 
         ResponseEntity<float[]> response =
                 restTemplate.postForEntity(url, request, float[].class);
-        log.info("Response {}", response.getBody());
+        return toVectorString(response.getBody());
+    }
+    public String getVectorByURl(String imageUrl) {
+        org.springframework.http.HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, String> body = new HashMap<>();
+        body.put("url", imageUrl);
+
+        HttpEntity<Map<String, String>> request =
+                new HttpEntity<>(body, headers);
+        ResponseEntity<float[]> response =
+                restTemplate.postForEntity(url+"-url", request, float[].class);
+
         return toVectorString(response.getBody());
     }
     private String toVectorString(float[] vector) {

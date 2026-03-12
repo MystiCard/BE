@@ -73,6 +73,21 @@ public class OrderController {
 
         return ResponseEntity.ok(ApiResponse.success(orderService.getMyOrders(orderStatus,page,size)));
     }
+    @GetMapping("/pendings")
+    public ResponseEntity<ApiResponse<Page<OrderItemResponse.OrderDetailResponse>>> listPending(
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "10") int size
+    )
+    {
+        return ResponseEntity.ok(ApiResponse.success(orderService.listPending(page-1,size)));
+    }
+    @PostMapping ("/aproved/{orderItemdid}")
+    public ResponseEntity<ApiResponse<OrderItemResponse.OrderDetailResponse>> listPending(
+            @PathVariable UUID orderItemdid
+    )
+    {
+        return ResponseEntity.ok(ApiResponse.success(orderService.approvedOrderItems(orderItemdid)));
+    }
     @GetMapping("/can-do/{orderItemId}")
     public ResponseEntity<ApiResponse<OrderCanDoResponse>> canConfirmOrCancle(@PathVariable UUID orderItemId) {
         return ResponseEntity.ok(ApiResponse.success(orderService.canCancleOrComfirm(orderItemId)));

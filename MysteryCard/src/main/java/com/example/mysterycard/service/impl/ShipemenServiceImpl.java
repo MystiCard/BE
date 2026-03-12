@@ -215,6 +215,7 @@ public class ShipemenServiceImpl implements ShipmentService {
 
         }
         String message = switch (request.getShippingStatus()) {
+            case PENDING_APPROVED -> "dang cho duyet don hang tu chu shop";
             case PENDING -> "đang chờ xử lý.";
             case ASIGNED -> "đã được gán shipper.";
             case PICKED_UP -> "đã được lấy.";
@@ -244,7 +245,7 @@ public class ShipemenServiceImpl implements ShipmentService {
     }
  @Override
     public Long calculatFeeShip(CalculateFeeRequest request) {
-        org.springframework.http.HttpHeaders headers = new HttpHeaders();
+        HttpHeaders headers = new HttpHeaders();
         headers.set("Token",ghnToken);
         headers.set("shop_id",shopId);
         headers.setContentType(MediaType.APPLICATION_JSON);

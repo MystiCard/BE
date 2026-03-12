@@ -1,12 +1,8 @@
 package com.example.mysterycard.service;
 
-import com.example.mysterycard.dto.request.AddCardRequest;
-import com.example.mysterycard.dto.request.CardRequest;
-import com.example.mysterycard.dto.request.NewCardRequest;
-import com.example.mysterycard.dto.request.WishListRequest;
-import com.example.mysterycard.dto.response.CardRequiredResponse;
-import com.example.mysterycard.dto.response.CardResponse;
-import com.example.mysterycard.dto.response.WishListResponse;
+import com.example.mysterycard.dto.request.*;
+import com.example.mysterycard.dto.response.*;
+import com.example.mysterycard.enums.Rarity;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,7 +29,7 @@ public interface CardService {
     Page<CardRequiredResponse> getAllRequiredByUsers(int page , int size);
     Page<CardRequiredResponse> gettAllRequireds ( int page , int size);
     List<CardResponse> searchByImage(MultipartFile file);
-
+    PageResponse<CardSellResponse> getALlCarSelling(int page, int size, CardSellRequest request);
 
 
 }

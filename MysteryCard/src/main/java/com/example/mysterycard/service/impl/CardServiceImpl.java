@@ -1,15 +1,10 @@
 package com.example.mysterycard.service.impl;
 
-import com.example.mysterycard.dto.request.AddCardRequest;
-import com.example.mysterycard.dto.request.CardRequest;
-import com.example.mysterycard.dto.request.NewCardRequest;
-import com.example.mysterycard.dto.request.WishListRequest;
-import com.example.mysterycard.dto.response.CardRequiredResponse;
-import com.example.mysterycard.dto.response.CardResponse;
-import com.example.mysterycard.dto.response.ImageSearchResult;
-import com.example.mysterycard.dto.response.WishListResponse;
+import com.example.mysterycard.dto.request.*;
+import com.example.mysterycard.dto.response.*;
 import com.example.mysterycard.entity.*;
 import com.example.mysterycard.enums.Rarity;
+import com.example.mysterycard.enums.Status;
 import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.CardMapper;
@@ -21,9 +16,9 @@ import com.example.mysterycard.service.CategoryService;
 import com.example.mysterycard.service.NotificationService;
 import com.example.mysterycard.service.UserService;
 import com.example.mysterycard.specification.CardSpecification;
+import com.example.mysterycard.specification.ListSellerSpecification;
 import com.example.mysterycard.utils.AIImageUltils;
 import com.example.mysterycard.utils.CloudiaryUtils;
-import com.pgvector.PGvector;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -74,6 +69,8 @@ public class CardServiceImpl implements CardService {
   private CloudiaryUtils cloudiaryUtils;
     @Autowired
     private ImageRepo imageRepo;
+    @Autowired
+    private ListSellerRepo listSellerRepo;
 
     @Override
     public CardResponse getCardById(UUID id) {
@@ -219,13 +216,11 @@ public class CardServiceImpl implements CardService {
 
                     // 7. Xử lý Image
                     if (!imgUrl.isEmpty()) {
-                        Image img = new Image();
-                        img.setImageUrl(imgUrl);
-                        img.setCard(card);
-                        card.setImages(new ArrayList<>(List.of(img)));
+                        cardRepo.save(card);
+                        imageRepo.insertImage(UUID.randomUUID(),card.getCardId(),imgUrl,aiImageUltils.getVectorByURl(imgUrl));
                     }
 
-                    cardRepo.save(card);
+              //      cardRepo.save(card);
                     addCount++;
 
                 } catch (Exception e) {
@@ -338,6 +333,54 @@ public class CardServiceImpl implements CardService {
             throw new AppException(ErrorCode.IMAGE_CONVERT);
         }
         return cards.stream().map(cardMapper::toResponse).collect(Collectors.toList());
+    }
+@Transactional
+    @Override
+    public PageResponse<CardSellResponse> getALlCarSelling(int page, int size, CardSellRequest request) {
+       page = page -1;
+
+        Sort sort1 = Sort.by(Sort.Direction.ASC, "price");
+        if(request.getSort() != null && request.getSort().equalsIgnoreCase("desc")){
+            sort1 = Sort.by(Sort.Direction.DESC, "price");
+        }
+        Specification<ListSeller> specification = Specification.allOf(
+
+                ListSellerSpecification.findByStatus(Status.AVAILABLE),
+                ListSellerSpecification.findByQuanity(),
+                ListSellerSpecification.findByCardName(request.getKeyword()),
+                ListSellerSpecification.findByCardPrice(request.getMin(),request.getMax()),
+                ListSellerSpecification.findByRarityCard(request.getRarity())
+
+        );
+        List<ListSeller> listSellers = listSellerRepo.findAll(specification,sort1);
+        log.info("LIst seller {}",listSellers.size());
+       listSellers.forEach((l)->  log.info("listSellers {}",l.getListSellerId()));
+        Set<CardSellResponse> list = new HashSet<>();
+        if(listSellers.size()>0){
+            listSellers.forEach(ls->{
+                CardSellResponse cardSellResponse = CardSellResponse.builder()
+                        .cardResponse(cardMapper.toResponse(ls.getCard()))
+                        .numberOfCard(listSellerRepo.totalNumberCard(ls.getCard().getCardId(),Status.AVAILABLE))
+                        .numberOfSeller(listSellerRepo.countByStatusAndCard(Status.AVAILABLE,ls.getCard()))
+                        .build();
+                list.add(cardSellResponse);
+            });
+        }
+     int to = Math.min(list.size(), (page+1)*size);
+        List<CardSellResponse> responses = new ArrayList<>();
+        if(list.size()> 0){
+            responses = list.stream().toList().subList(page*size,to);
+        }
+
+
+        return PageResponse.<CardSellResponse>builder()
+                .content(responses)
+                .totalElements(list.size())
+                .page(page)
+                .size(size)
+                .totalPages(list.size()/size)
+                .last(to == list.size())
+                .build();
     }
 
 

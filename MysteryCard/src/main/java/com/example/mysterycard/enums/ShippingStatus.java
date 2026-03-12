@@ -1,6 +1,7 @@
 package com.example.mysterycard.enums;
 
 public enum ShippingStatus {
+    PENDING_APPROVED,
     PENDING,
     ASIGNED,
     PICKED_UP,

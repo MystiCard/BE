@@ -199,7 +199,7 @@ public class TransactionServiceImpl implements TransactionService {
                     shipmentService.update(
                             UpdateShipmentRequest.builder()
                                     .shipmentId(shipment.getShipmentId())
-                                    .shippingStatus(ShippingStatus.PENDING)
+                                    .shippingStatus(ShippingStatus.PENDING_APPROVED)
                                     .build(), null
                     );
                 }
@@ -253,12 +253,28 @@ public class TransactionServiceImpl implements TransactionService {
             if (shipment.getShipmentStatus().equals(ShippingStatus.CANCELLED)) {
                 price += shipment.getShipmentFee();
             }
+        } else {
+            // tra tien ship
+            Shipment shipment = orderItem.getShipments().stream().toList().getLast();
+            Wallet shipper = shipment.getShipper().getWallet();
+            WalletTransaction transactionForShipper = WalletTransaction.builder()
+                    .amount(orderItem.getPrice() * orderItem.getQuantity())
+                    .walletReceive(shipper)
+                    .walletSend(send)
+                    .transactionType(TransactionType.TRANSFER)
+                    .statusTransaction(StatusPayment.SUCCESS)
+                    .message(message)
+                    .build();
+            shipper.setBalance(recive.getBalance() + shipment.getShipmentFee());
+            send.setBalance(send.getBalance() - shipment.getShipmentFee());
+            transactionRepo.save(transactionForShipper);
         }
         if(orderItem.getReturnRequest() != null && orderItem.getReturnRequest().getStatus().equals(ReturnRequestStatus.PAID)) {
             recive = orderItem.getOrder().getBuyer().getWallet();
             send = orderItem.getListSeller().getSeller().getWallet();
             message = "Refund for orderItem after recieve card return: " + orderItem.getOrderItemId();
         }
+
         WalletTransaction transaction = WalletTransaction.builder()
                 .amount(orderItem.getPrice() * orderItem.getQuantity())
                 .walletReceive(recive)

@@ -3,6 +3,7 @@ package com.example.mysterycard.service.impl;
 import com.example.mysterycard.dto.request.SellRequest;
 import com.example.mysterycard.dto.response.SellResponse;
 import com.example.mysterycard.entity.*;
+import com.example.mysterycard.enums.Status;
 import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.ListSellerMapper;
@@ -57,7 +58,7 @@ public class ListSellerServiceImpl implements ListSellerService {
     }
     public Page<SellResponse> getListSellersByCardId(UUID cardId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("price").descending());
-        Page<ListSeller> listSellers = listSellerRepo.findByCard_CardId(cardId, pageable);
+        Page<ListSeller> listSellers = listSellerRepo.findByCard_CardIdAndStatusAndQuantityGreaterThanEqual(cardId, Status.AVAILABLE,1, pageable);
         return listSellers.map(listSellerMapper::toResponse);
     }
 

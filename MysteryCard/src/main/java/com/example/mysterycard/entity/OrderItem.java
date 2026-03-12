@@ -21,7 +21,7 @@ public class OrderItem {
     private double price;
     @Builder.Default
     @Enumerated(EnumType.STRING)
-    private OrderItemStatus orderItemStatus = OrderItemStatus.CONFIRMED;
+    private OrderItemStatus orderItemStatus = OrderItemStatus.PENDING_CONFIRM;
     @ManyToOne
     @JoinColumn(name = "order_id")
     private Order order;

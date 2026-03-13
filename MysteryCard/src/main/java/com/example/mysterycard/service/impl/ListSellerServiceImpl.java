@@ -57,8 +57,9 @@ public class ListSellerServiceImpl implements ListSellerService {
         return listSellerMapper.toResponse(savedListSeller);
     }
     public Page<SellResponse> getListSellersByCardId(UUID cardId, int page, int size) {
+        Users users  = userService.getUser();
         Pageable pageable = PageRequest.of(page, size, Sort.by("price").descending());
-        Page<ListSeller> listSellers = listSellerRepo.findByCard_CardIdAndStatusAndQuantityGreaterThanEqual(cardId, Status.AVAILABLE,1, pageable);
+        Page<ListSeller> listSellers = listSellerRepo.findByCard_CardIdAndStatusAndQuantityGreaterThanEqualAndSellerIsNot(cardId, Status.AVAILABLE,1,users, pageable);
         return listSellers.map(listSellerMapper::toResponse);
     }
 

@@ -14,7 +14,12 @@ import java.util.UUID;
 public class OrderItemResponse {
     private double shipfee;
     private ShipmentResponse shipmentResponse;
-    List<OrderDetailResponse> orderDetailResponseList;
+    private List<OrderDetailResponse> orderDetailResponseList;
+    /**
+     * Danh sách thẻ nếu shipment là từ Hộp bí ẩn (không có OrderItem).
+     */
+    private List<BlindBoxShipmentItemResponse> blindBoxDetails;
+
     @Builder
     @Data
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -24,4 +29,6 @@ public class OrderItemResponse {
         private double price;
         private CardResponse cardResponse;
         private OrderItemStatus orderItemStatus;
-    }}
+    }
+}
+

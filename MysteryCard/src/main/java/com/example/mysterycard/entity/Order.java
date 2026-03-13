@@ -37,6 +37,7 @@ public class Order {
     @ManyToOne
     @JoinColumn(name = "blind_box_id")
     private BlindBox blindBox;
+    @Builder.Default
     @OneToMany(mappedBy = "order")
     private List<BlindBoxResult> blindBoxResults = new ArrayList<>();
     @Builder.Default

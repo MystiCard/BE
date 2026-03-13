@@ -17,6 +17,7 @@ import com.example.mysterycard.service.NotificationService;
 import com.example.mysterycard.service.ShipmentService;
 import com.example.mysterycard.service.TrackingService;
 import com.example.mysterycard.service.UserService;
+import com.example.mysterycard.specification.ShipmentSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -122,16 +124,22 @@ public class ShipemenServiceImpl implements ShipmentService {
         if (users == null) {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
+        log.info("Current User {}",users.getName());
         Pageable pageable = PageRequest.of(page-1, size, Sort.by("createAt").descending());
-        List<ShippingStatus> shippingStatuses = new ArrayList<>(Arrays.stream(ShippingStatus.values()).toList());
+        List<ShippingStatus> shippingStatuses = new ArrayList<>();
         if(!complete)
         {
-            shippingStatuses.removeAll(List.of(ShippingStatus.PENDING,ShippingStatus.PICKED_UP,ShippingStatus.IN_TRANSIT,ShippingStatus.ASIGNED));
-        }
+            shippingStatuses.addAll(List.of(ShippingStatus.ASIGNED,ShippingStatus.PICKED_UP,ShippingStatus.IN_TRANSIT,ShippingStatus.PENDING));
+         }
         else {
-            shippingStatuses.removeAll(List.of(ShippingStatus.DELIVERED,ShippingStatus.LOST));
+            shippingStatuses.addAll(List.of(ShippingStatus.RECEIVED,ShippingStatus.LOST,ShippingStatus.FAILED,ShippingStatus.CANCELLED,ShippingStatus.DELIVERED));
         }
-        return shipmentRepo.findAllByShipmentStatusNotInAndShipper(shippingStatuses,users,pageable).map(shipmentMapper::entityToResponse);
+
+        Specification<Shipment> spec = Specification.allOf(
+                ShipmentSpecification.findByUser(users),
+                ShipmentSpecification.findByStatus(shippingStatuses)
+        );
+        return shipmentRepo.findAll(spec,pageable).map(shipmentMapper::entityToResponse);
     }
 
     @Override

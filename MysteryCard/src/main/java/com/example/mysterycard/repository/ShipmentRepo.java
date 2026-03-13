@@ -4,10 +4,7 @@ import aj.org.objectweb.asm.commons.Remapper;
 import com.example.mysterycard.dto.response.ShipmentResponse;
 import com.example.mysterycard.entity.*;
 import com.example.mysterycard.enums.ShippingStatus;
-import org.springframework.data.domain.Limit;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -33,4 +30,6 @@ select s from Shipment s where s.shipper is null and s.shipmentStatus = :status
     List<Shipment> findByShipmentStatus(ShippingStatus shipmentStatus);
 
     boolean existsByShipmentStatusIsInAndShipper(Collection<ShippingStatus> shipmentStatuses, Users shipper);
+
+    Page<Shipment> findAllByShipmentStatusInAndShipper(Collection<ShippingStatus> shipmentStatuses, Users shipper,Pageable pageable);
 }

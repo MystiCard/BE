@@ -190,3 +190,17 @@ VALUES
 ('fddddddd-dddd-dddd-dddd-dddddddddddd', NOW() - INTERVAL '7 DAY', false, true, 'Đơn hàng đầu tiên của bạn đã được khởi tạo.', 1, NULL, 'a0000000-0000-0000-0000-000000000002'),
 ('feeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', NOW() - INTERVAL '8 DAY', false, true, 'Ví của bạn đã được kích hoạt thành công.', 2, NULL, 'a0000000-0000-0000-0000-000000000002'),
 ('ffffffff-ffff-ffff-ffff-ffffffffffff', NOW() - INTERVAL '9 DAY', false, true, 'Bạn vừa thêm Bulbasaur vào Wishlist.', 0, 'c2222222-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000002');
+--
+-- ALTER TABLE notification
+--     DROP CONSTRAINT notification_noti_type_check;
+
+--
+-- ALTER TABLE notification
+--     ADD CONSTRAINT notification_noti_type_check
+--         CHECK (noti_type >= 0 AND noti_type <= 3);
+
+
+--  CREATE EXTENSION IF NOT EXISTS vector; => chay  lenh nay de tao vector
+--  Tao index CREATE INDEX idx_embedding
+--         ON image
+--             USING hnsw (embedding vector_cosine_ops);

@@ -5,6 +5,7 @@ import com.example.mysterycard.dto.response.*;
 import com.example.mysterycard.entity.*;
 import com.example.mysterycard.enums.BlindBoxStatus;
 import com.example.mysterycard.enums.Rarity;
+import com.example.mysterycard.enums.ShippingStatus;
 import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.BlindBoxCardMapper;
@@ -15,6 +16,9 @@ import com.example.mysterycard.repository.*;
 import com.example.mysterycard.service.BlindBoxService;
 import com.example.mysterycard.service.CategoryService;
 import com.example.mysterycard.service.UserService;
+import com.example.mysterycard.service.TransactionService;
+import com.example.mysterycard.dto.request.transaction.TransactionRequest;
+import com.example.mysterycard.enums.TransactionType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -42,6 +46,7 @@ public class BlindBoxServiceImpl implements BlindBoxService {
     private final OrderRepo orderRepo;
     private final OrderMapper orderMapper;
     private final CategoryService categoryService;
+    private final TransactionService transactionService;
 
     @Override
     @Transactional
@@ -194,8 +199,14 @@ public class BlindBoxServiceImpl implements BlindBoxService {
         order.setBuyer(users);
         order.setTotalAmount(box.getDrawPrice());
 
-
         order = orderRepo.save(order);
+
+        // Tạo giao dịch thanh toán cho lần mua hộp bí ẩn này (trừ ví buyer, cộng ví admin)
+        TransactionRequest txRequest = new TransactionRequest();
+        txRequest.setTransactionType(TransactionType.PAYMENT);
+        txRequest.setOrderId(order.getOrderId());
+        transactionService.createTransaction(txRequest);
+
         return orderMapper.toOrderResponse(order);
     }
 
@@ -348,11 +359,22 @@ public class BlindBoxServiceImpl implements BlindBoxService {
         Pageable pageable = Pageable.ofSize(size).withPage(page);
         Page<BlindBoxResult> resultsPage = blindBoxCardResultRepo.findByOwner_UserId(user.getUserId(), pageable);
         return resultsPage.map(result -> {
+            boolean shipped = result.getShipments() != null && !result.getShipments().isEmpty();
+            boolean shippedDelivered = shipped && result.getShipments().stream().anyMatch(
+                    s -> s.getShipmentStatus() == ShippingStatus.RECEIVED
+                            || s.getShipmentStatus() == ShippingStatus.DELIVERED
+            );
             BlindBoxResultResponse response = BlindBoxResultResponse.builder()
                     .blindBoxResultId(result.getBlindBoxResultId())
+                    .openedAt(result.getOpenedAt())
                     .cardName(result.getCard().getName())
                     .cardImageUrl(result.getCard().getImages().isEmpty() ? null : result.getCard().getImages().get(0).getImageUrl())
                     .rarity(result.getCard().getRarity().toString())
+                    .shipped(shipped)
+                    .shippedToHomeDelivered(shippedDelivered)
+                    // Hiện tại chưa gắn với marketplace nên để false; có thể mở rộng sau
+                    .listedForSale(false)
+                    .soldAndDeliveredToBuyer(false)
                     .build();
             return response;
         });

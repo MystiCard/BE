@@ -4,7 +4,6 @@ import com.example.mysterycard.base.ApiResponse;
 import com.example.mysterycard.dto.request.CartRequest;
 import com.example.mysterycard.dto.response.CartResponse;
 import com.example.mysterycard.service.CartService;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
@@ -16,8 +15,6 @@ import java.util.UUID;
 @RequestMapping("/api/carts")
 public class CartController {
     private final CartService cartService;
-
-
     @PostMapping
     public ApiResponse<CartResponse> create (@RequestBody CartRequest request)
     {

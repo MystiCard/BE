@@ -6,10 +6,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "ListSeller")
@@ -34,7 +31,7 @@ public class ListSeller {
     private Users seller;
     @OneToMany(mappedBy = "listSeller")
     private List<OrderItem> orderItem;
-    @OneToOne(mappedBy = "listSeller")
-    private Cart cart;
+    @OneToMany(mappedBy = "listSeller")
+    private List<Cart> cartList = new ArrayList<>();
 
 }

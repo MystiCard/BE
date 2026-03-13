@@ -25,7 +25,7 @@ public class Cart {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private Users user;
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "listseller_id")
     private ListSeller listSeller ;
     @Builder.Default

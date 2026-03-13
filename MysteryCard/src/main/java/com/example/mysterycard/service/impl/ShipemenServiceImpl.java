@@ -284,18 +284,37 @@ public class ShipemenServiceImpl implements ShipmentService {
                 ()-> new AppException(ErrorCode.ORDER_NOT_FOUND)
         );
 
-        ListSeller ls = listSellerRepo.findById(request.getListsellerId())
-                .orElseThrow(() -> new AppException(ErrorCode.LIST_SELLER_NOT_FOUND));
-        Long shipfee = calculatFeeShip(
-                CalculateFeeRequest.builder()
-                        .totalAmount(request.getTotalPrice())
-                        .fromDistrictId(Long.valueOf(ls.getSeller().getDistrictId()))
-                        .toWardId(String.valueOf(request.getToWardId()))
-                        .toDistrictId(request.getToDistrictId())
-                        .build()
-        );
-        order.setTotalAmount(order.getTotalAmount()-request.getOldShipmentFee()+shipfee);
+      List<Shipment> shipments = order.getShipmentList();
+    Long shipfeeOld = 0L ;
+    Long shipfeenew = 0L ;
+
+
+        for(Shipment shipment : shipments) {
+          shipfeeOld += shipment.getShipmentFee();
+           ListSeller ls = shipment.getOrderItems().stream().toList().getFirst().getListSeller();
+           int totalPrice = 0 ;
+           for (OrderItem orderItem : shipment.getOrderItems())
+           {
+                       totalPrice += orderItem.getQuantity() * orderItem.getPrice();
+
+           }
+          Long shipfee = calculatFeeShip(
+                  CalculateFeeRequest.builder()
+                          .totalAmount(totalPrice)
+                          .fromDistrictId(Long.valueOf(ls.getSeller().getDistrictId()))
+                          .toWardId(String.valueOf(request.getToWardId()))
+                          .toDistrictId(request.getToDistrictId())
+                          .build()
+          );
+            shipfeenew+= shipfee;
+        shipment.setToAddress(request.getNewAddress());
+        shipment.setShipmentFee(shipfee);
+        shipment.setToWardId(request.getToWardId());
+        shipment.setToDistrictId(request.getToDistrictId());
+      }
+
+        order.setTotalAmount(order.getTotalAmount()-(shipfeeOld-shipfeenew));
         orderRepo.save(order);
-        return shipfee;
+        return  shipfeenew ;
     }
 }

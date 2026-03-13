@@ -6,10 +6,11 @@ import java.util.UUID;
 
 @Data
 public class ChangeAddressShipmentRequest {
-    private  UUID ListsellerId;
+   // private  UUID ListsellerId;
     private UUID orderId;
     private Long toDistrictId;
     private Long toWardId;
-    private Long oldShipmentFee;
-    private Long totalPrice;
+    private String newAddress;
+//    private Long oldShipmentFee;
+//    private Long totalPrice;
 }

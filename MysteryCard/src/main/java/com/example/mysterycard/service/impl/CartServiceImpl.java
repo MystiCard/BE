@@ -5,6 +5,7 @@ import com.example.mysterycard.dto.response.CartResponse;
 import com.example.mysterycard.entity.Cart;
 import com.example.mysterycard.entity.ListSeller;
 import com.example.mysterycard.entity.Users;
+import com.example.mysterycard.enums.Status;
 import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.CardMapper;
@@ -84,9 +85,10 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public Page<CartResponse> getALl(int page, int size) {
+        Users users = userService.getUser();
         Pageable pageable = PageRequest.of(page-1, size, Sort.by("createdAt").descending());
 
-        return cartRepo.findAll(pageable).map(cartMapper::toCartResponse);
+        return cartRepo.findMyCart(users, Status.AVAILABLE,pageable).map(cartMapper::toCartResponse);
     }
 
 

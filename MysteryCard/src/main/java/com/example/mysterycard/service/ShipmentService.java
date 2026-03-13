@@ -5,6 +5,7 @@ import com.example.mysterycard.dto.request.AsignShipperRequest;
 import com.example.mysterycard.dto.request.ChangeAddressShipmentRequest;
 import com.example.mysterycard.dto.request.ShipmentRequest;
 import com.example.mysterycard.dto.request.UpdateShipmentRequest;
+import com.example.mysterycard.dto.response.OrderCardResponse;
 import com.example.mysterycard.dto.response.ShipmentResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,6 +28,6 @@ public interface ShipmentService {
     boolean checkAllowedRecieveShipment();
     ShipmentResponse update(UpdateShipmentRequest request, List<MultipartFile> list);
     Long calculatFeeShip(CalculateFeeRequest request);
-    Long changeAddressShip(ChangeAddressShipmentRequest request);
+    OrderCardResponse changeAddressShip(ChangeAddressShipmentRequest request);
 }
 

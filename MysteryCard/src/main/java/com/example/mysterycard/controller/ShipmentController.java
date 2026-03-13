@@ -2,6 +2,7 @@ package com.example.mysterycard.controller;
 
 import com.example.mysterycard.base.ApiResponse;
 import com.example.mysterycard.dto.request.*;
+import com.example.mysterycard.dto.response.OrderCardResponse;
 import com.example.mysterycard.dto.response.ShipmentResponse;
 import com.example.mysterycard.service.ShipmentService;
 import jakarta.validation.Valid;
@@ -61,7 +62,7 @@ public class ShipmentController {
         return ResponseEntity.ok(ApiResponse.success(shipmentService.update(request,fileList)));
     }
     @PostMapping("/calculate-fee")
-    public ResponseEntity<ApiResponse<Long>> calculate(
+    public ResponseEntity<ApiResponse<OrderCardResponse>> calculate(
             @RequestBody ChangeAddressShipmentRequest request
             ){
         return ResponseEntity.ok(ApiResponse.success(shipmentService.changeAddressShip(request)));

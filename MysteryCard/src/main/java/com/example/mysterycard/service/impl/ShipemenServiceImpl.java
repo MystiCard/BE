@@ -2,11 +2,15 @@ package com.example.mysterycard.service.impl;
 
 import com.example.mysterycard.dto.request.CalculateFeeRequest;
 import com.example.mysterycard.dto.request.*;
+import com.example.mysterycard.dto.response.OrderCardResponse;
+import com.example.mysterycard.dto.response.OrderItemResponse;
 import com.example.mysterycard.dto.response.ShipmentResponse;
 import com.example.mysterycard.entity.*;
 import com.example.mysterycard.enums.ShippingStatus;
 import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
+import com.example.mysterycard.mapper.OrderItemMapper;
+import com.example.mysterycard.mapper.OrderMapper;
 import com.example.mysterycard.mapper.ShipmentMapper;
 import com.example.mysterycard.repository.*;
 import com.example.mysterycard.service.NotificationService;
@@ -59,6 +63,8 @@ public class ShipemenServiceImpl implements ShipmentService {
     private final BlindBoxResultRepo blindBoxResultRepo;
     private final NotificationService notificationService;
     private final UserService userService;
+    private final OrderItemMapper orderItemMapper;
+    private final OrderMapper orderMapper;
     @Override
     public ShipmentResponse createsShipment(ShipmentRequest request) {
             Shipment shipment = shipmentMapper.requestToEntity(request);
@@ -269,42 +275,52 @@ public class ShipemenServiceImpl implements ShipmentService {
     }
  @Override
     public Long calculatFeeShip(CalculateFeeRequest request) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Token",ghnToken);
-        headers.set("shop_id",shopId);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        Long serviceId = getFirstServiceId(request.getFromDistrictId(),request.getToDistrictId());
-        log.info("service id :  {}",serviceId);
-        CalculateShipmentFeeRequest calRequest = CalculateShipmentFeeRequest.builder()
-                .service_id(serviceId)
-                .insurance_value(Math.round(request.getTotalAmount()))
-                .coupon(null)
-                .from_district_id(request.getFromDistrictId())
-                .to_district_id(request.getToDistrictId())
-                .to_ward_code(request.getToWardId())
-                .height(height)
-                .length(length)
-                .weight(weight)
-                .width(width)
-                .build();
-        HttpEntity<CalculateShipmentFeeRequest> entity = new HttpEntity<>(calRequest, headers);
-        ResponseEntity<Map> response = restTemplate.postForEntity(
-                url_fee,
-                entity,
-                Map.class
-        );
-        log.info("Response {}", response.getBody());
-     Map<String, Object> body = response.getBody();
 
-     Map<String, Object> data = (Map<String, Object>) body.get("data");
+     boolean ok = false;
+     long serviceId = 53320;
+     do{
 
-     Long total = Long.parseLong(data.get("total").toString());
+         try{
+             HttpHeaders headers = new HttpHeaders();
+             headers.set("Token",ghnToken);
+             headers.set("shop_id",shopId);
+             headers.setContentType(MediaType.APPLICATION_JSON);
+             log.info("service id :  {}",serviceId);
+             CalculateShipmentFeeRequest calRequest = CalculateShipmentFeeRequest.builder()
+                     .service_id(serviceId)
+                     .insurance_value(Math.round(request.getTotalAmount()))
+                     .coupon(null)
+                     .from_district_id(request.getFromDistrictId())
+                     .to_district_id(request.getToDistrictId())
+                     .to_ward_code(request.getToWardId())
+                     .height(height)
+                     .length(length)
+                     .weight(weight)
+                     .width(width)
+                     .build();
+             HttpEntity<CalculateShipmentFeeRequest> entity = new HttpEntity<>(calRequest, headers);
+             ResponseEntity<Map> response = restTemplate.postForEntity(
+                     url_fee,
+                     entity,
+                     Map.class
+             );
+             log.info("Response {}", response.getBody());
+             Map<String, Object> body = response.getBody();
 
-     return total;
+             Map<String, Object> data = (Map<String, Object>) body.get("data");
+
+             return Long.parseLong(data.get("total").toString());
+         }catch(Exception e)
+         {
+            serviceId++;
+         }
+
+     }while (!ok && serviceId < 53324);
+     return null;
     }
     @Transactional
     @Override
-    public Long changeAddressShip(ChangeAddressShipmentRequest request) {
+    public OrderCardResponse changeAddressShip(ChangeAddressShipmentRequest request) {
 
         Order order = orderRepo.findById(request.getOrderId()).orElseThrow(
                 ()-> new AppException(ErrorCode.ORDER_NOT_FOUND)
@@ -314,6 +330,7 @@ public class ShipemenServiceImpl implements ShipmentService {
     Long shipfeeOld = 0L ;
     Long shipfeenew = 0L ;
 
+        List<OrderItemResponse> orderItemResponses = new ArrayList<>();
 
         for(Shipment shipment : shipments) {
           shipfeeOld += shipment.getShipmentFee();
@@ -324,23 +341,34 @@ public class ShipemenServiceImpl implements ShipmentService {
                        totalPrice += orderItem.getQuantity() * orderItem.getPrice();
 
            }
-          Long shipfee = calculatFeeShip(
-                  CalculateFeeRequest.builder()
-                          .totalAmount(totalPrice)
-                          .fromDistrictId(Long.valueOf(ls.getSeller().getDistrictId()))
-                          .toWardId(String.valueOf(request.getToWardId()))
-                          .toDistrictId(request.getToDistrictId())
-                          .build()
-          );
+            Long shipfee = calculatFeeShip(
+                    CalculateFeeRequest.builder()
+                            .totalAmount(totalPrice)
+                            .fromDistrictId(Long.valueOf(ls.getSeller().getDistrictId()))
+                            .toWardId(String.valueOf(request.getToWardId()))
+                            .toDistrictId(request.getToDistrictId())
+                            .build()
+            );
             shipfeenew+= shipfee;
-        shipment.setToAddress(request.getNewAddress());
-        shipment.setShipmentFee(shipfee);
-        shipment.setToWardId(request.getToWardId());
-        shipment.setToDistrictId(request.getToDistrictId());
+            shipment.setToAddress(request.getNewAddress());
+            shipment.setShipmentFee(shipfee);
+            shipment.setToWardId(request.getToWardId());
+            shipment.setToDistrictId(request.getToDistrictId());
+            OrderItemResponse orderItemResponse = OrderItemResponse.builder()
+                    .orderDetailResponseList(shipment.getOrderItems().stream().map(orderItemMapper::entityToResponse).toList())
+                    .shipfee(shipfee)
+                    .shipmentResponse(shipmentMapper.entityToResponse(shipment))
+                    .build();
+            orderItemResponses.add(orderItemResponse);
       }
 
         order.setTotalAmount(order.getTotalAmount()-(shipfeeOld-shipfeenew));
         orderRepo.save(order);
-        return  shipfeenew ;
+
+
+        OrderCardResponse orderCardResponse = orderMapper.entityToResponse(order);
+        orderCardResponse.setOrderItems(orderItemResponses);
+
+        return   orderCardResponse;
     }
 }

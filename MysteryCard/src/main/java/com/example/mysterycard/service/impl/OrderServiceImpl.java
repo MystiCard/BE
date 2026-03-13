@@ -108,6 +108,7 @@ public class OrderServiceImpl implements OrderService {
                     totalAmount += price;
                 }
                 Long shipfee = null ;
+
                 try{
                      shipfee = shipmentService.calculatFeeShip(
                             CalculateFeeRequest.builder()

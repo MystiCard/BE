@@ -21,4 +21,9 @@ public class ReturnResponse {
     private List<ImageResponse> listImages;
     private LocalDateTime createdAt;
     private ShipmentResponse shipmentResponse;
+    // Thêm để FE hiển thị thông tin người bán/người mua
+    private UUID sellerId;
+    private String sellerName;
+    private UUID buyerId;
+    private String buyerName;
 }

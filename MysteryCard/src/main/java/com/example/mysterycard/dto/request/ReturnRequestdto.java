@@ -17,6 +17,8 @@ public class ReturnRequestdto {
     private String sendAddress;
     @NotNull(message = "Send District Id is required")
     private Long sendDistrictId;
+    @NotNull(message = "Send Ward Id is required")
+    private Long sendWardId;
     @NotNull(message = "SendPhone is required")
     @Pattern(regexp = "^(0|\\+84)(3|5|7|8|9)[0-9]{8}$",message = "Phone must be start 0 or +84 followed by 9 digit  ")
     private String sendPhone;

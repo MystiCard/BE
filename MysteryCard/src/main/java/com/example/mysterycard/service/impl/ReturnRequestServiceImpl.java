@@ -103,7 +103,7 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
                 .totalAmount(totalAmount)
                 .fromDistrictId(request.getSendDistrictId())
                 .toDistrictId(Long.valueOf(seller.getDistrictId()))
-                .toWardId(seller.getWardId())
+                .toWardId(String.valueOf(request.getSendWardId()))   // DÙNG ward từ FE
                 .build());
         ShipmentResponse shipmentResponse = shipmentService.createsShipment(ShipmentRequest.builder()
                 .orderItemId(orderItemIds)

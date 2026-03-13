@@ -10,6 +10,16 @@ import org.mapstruct.Mapping;
 public interface ReturnRequestMapper {
     @Mapping(source = "orderItemList", target = "orderItems")
     @Mapping(target = "listImages",source = "images")
+    // người mua
+    @Mapping(source = "buyer.userId", target = "buyerId")
+    @Mapping(source = "buyer.name", target = "buyerName")
+    // người bán: lấy từ orderItem đầu tiên trong danh sách bằng biểu thức Java
+    @Mapping(target = "sellerId",
+             expression = "java(returnRequest.getOrderItemList() != null && !returnRequest.getOrderItemList().isEmpty() ? " +
+                     "returnRequest.getOrderItemList().get(0).getListSeller().getSeller().getUserId() : null)")
+    @Mapping(target = "sellerName",
+             expression = "java(returnRequest.getOrderItemList() != null && !returnRequest.getOrderItemList().isEmpty() ? " +
+                     "returnRequest.getOrderItemList().get(0).getListSeller().getSeller().getName() : null)")
     ReturnResponse enityToReturnResponse(ReturnRequest returnRequest);
     ReturnRequest requestToEntity(ReturnRequestdto request);
 }

@@ -46,6 +46,7 @@ public class Shipment {
             inverseJoinColumns = @JoinColumn(name = "blind_box_id")
 
     )
+    @Builder.Default
     private Set<BlindBoxResult> blindBoxResults = new HashSet<>();
     @ManyToOne
     @JoinColumn(name = "shipper_id")

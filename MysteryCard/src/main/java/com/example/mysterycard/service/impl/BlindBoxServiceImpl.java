@@ -353,6 +353,7 @@ public class BlindBoxServiceImpl implements BlindBoxService {
                     .cardName(result.getCard().getName())
                     .cardImageUrl(result.getCard().getImages().isEmpty() ? null : result.getCard().getImages().get(0).getImageUrl())
                     .rarity(result.getCard().getRarity().toString())
+                    .openedAt(result.getOpenedAt())
                     .build();
             return response;
         });

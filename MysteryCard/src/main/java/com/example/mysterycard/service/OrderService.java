@@ -1,6 +1,7 @@
 package com.example.mysterycard.service;
 
 import com.example.mysterycard.dto.request.MyOrderDetailRequest;
+import com.example.mysterycard.dto.request.OrderBlinkBoxResultRequest;
 import com.example.mysterycard.dto.request.OrderCardRequest;
 import com.example.mysterycard.dto.response.*;
 import com.example.mysterycard.entity.OrderItem;
@@ -25,4 +26,5 @@ public interface OrderService {
     OrderCanDoResponse canCancleOrComfirm(UUID orderItemId);
     Page<OrderItemResponse.OrderDetailResponse> listPending(int page, int size);
     OrderItemResponse.OrderDetailResponse approvedOrderItems(UUID orderItemId);
+    OrderBlindBoxResultResponse createBlindBoxOrder(OrderBlinkBoxResultRequest request);
 }

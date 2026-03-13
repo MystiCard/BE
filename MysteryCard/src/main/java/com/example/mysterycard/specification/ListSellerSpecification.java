@@ -5,6 +5,8 @@ import com.example.mysterycard.enums.Rarity;
 import com.example.mysterycard.enums.Status;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.util.UUID;
+
 public class ListSellerSpecification {
     public static Specification<ListSeller> findByCardName(String keySearch)
     {
@@ -54,6 +56,19 @@ public class ListSellerSpecification {
 
             return
                     cb.between(root.get("card").get("basePrice"), min, max);
+        };
+    }
+    public static Specification<ListSeller> findByUser(UUID userId)
+    {
+
+        return (root, query, cb) -> {
+            if(userId == null)
+            {
+                return cb.conjunction();
+            }
+
+            return
+                    cb.notEqual(root.get("seller").get("userId"), userId);
         };
     }
 }

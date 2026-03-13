@@ -27,4 +27,6 @@ public interface ListSellerRepo extends JpaRepository<ListSeller, UUID>, JpaSpec
     Page<ListSeller> findByCard_CardIdAndStatusAndQuantityGreaterThan(UUID cardCardId, Status status, int quantityIsGreaterThan,Pageable pageable);
 
     Page<ListSeller> findByCard_CardIdAndStatusAndQuantityGreaterThanEqual(UUID cardCardId, Status status, int quantityIsGreaterThan,Pageable pageable);
+
+    ListSeller findByListSellerId(UUID listSellerId);
 }

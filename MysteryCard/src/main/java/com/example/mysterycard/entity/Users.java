@@ -61,4 +61,6 @@ public class Users {
     private List<ReturnRequest> returnRequestList = new ArrayList<>();
     @OneToMany(mappedBy = "users")
     private List<CardRequired> cardRequireds = new ArrayList<>();
+    @OneToMany(mappedBy = "user")
+    private List<Cart> cartList = new ArrayList<>();
 }

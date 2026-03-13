@@ -99,6 +99,8 @@ public enum ErrorCode {
     ALREADY_CREATE(21002,"Request already update",HttpStatus.BAD_REQUEST),
     // Image requird(22)
     IMAGE_CONVERT(22001, "Get Vector form image fail",HttpStatus.BAD_REQUEST),
+    // Image requird(23)
+    CART_NOT_FOUND(22002, "Cart not found ",HttpStatus.BAD_REQUEST),
     ;
     int code;
     String message;

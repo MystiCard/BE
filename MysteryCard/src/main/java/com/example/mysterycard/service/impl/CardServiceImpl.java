@@ -338,7 +338,7 @@ public class CardServiceImpl implements CardService {
     @Override
     public PageResponse<CardSellResponse> getALlCarSelling(int page, int size, CardSellRequest request) {
        page = page -1;
-
+       Users users = userService.getUser();
         Sort sort1 = Sort.by(Sort.Direction.ASC, "price");
         if(request.getSort() != null && request.getSort().equalsIgnoreCase("desc")){
             sort1 = Sort.by(Sort.Direction.DESC, "price");
@@ -346,6 +346,7 @@ public class CardServiceImpl implements CardService {
         Specification<ListSeller> specification = Specification.allOf(
 
                 ListSellerSpecification.findByStatus(Status.AVAILABLE),
+                ListSellerSpecification.findByUser(users.getUserId()),
                 ListSellerSpecification.findByQuanity(),
                 ListSellerSpecification.findByCardName(request.getKeyword()),
                 ListSellerSpecification.findByCardPrice(request.getMin(),request.getMax()),

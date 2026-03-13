@@ -51,6 +51,7 @@ public class UsersController {
     public ResponseEntity<ApiResponse<UserResponse>> activateUser(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.success(userService.activeUser(id)));
     }
+    @PreAuthorize("hasAnyRole('USER','ADMIN','SHIPPER','SUPPORT')")
     @GetMapping("/my-infor")
     public ResponseEntity<ApiResponse<UserResponse>> getMyInfor() {
         return ResponseEntity.ok(ApiResponse.success(userService.getMyInfor()));

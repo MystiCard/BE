@@ -22,8 +22,8 @@ public class ListSeller {
     private UUID listSellerId;
     private double price;
     private int quantity;
-    @Enumerated(EnumType.STRING)
-    private Status status= Status.AVAILABLE;
+    @Enumerated(EnumType.ORDINAL)
+    private Status status = Status.AVAILABLE;
     @CreationTimestamp
     private LocalDateTime createdAt;
     @ManyToOne

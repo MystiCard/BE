@@ -8,7 +8,8 @@ import com.example.mysterycard.dto.response.transaction.TransactionResponse;
 import com.example.mysterycard.entity.*;
 import com.example.mysterycard.enums.*;
 import com.example.mysterycard.exception.AppException;
-import com.example.mysterycard.exception.ErrorCode;import com.example.mysterycard.mapper.SumariesMapper;
+import com.example.mysterycard.exception.ErrorCode;
+import com.example.mysterycard.mapper.SumariesMapper;
 import com.example.mysterycard.mapper.TransactionMapper;
 import com.example.mysterycard.repository.*;
 import com.example.mysterycard.service.NotificationService;
@@ -49,6 +50,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final SumariesRepository sumariesRepository;
     private final SumariesMapper sumariesMapper;
     private final ShipmentService shipmentService;
+    private final ShipmentRepo shipmentRepo;
     private final ListSellerRepo listSellerRepo;
     private final WalletRepo walletRepo;
     private final ReturnRequestRepo returnRequestRepo;
@@ -456,6 +458,55 @@ public class TransactionServiceImpl implements TransactionService {
         Pageable pageable = PageRequest.of(page-1, size,Sort.by("createAt").ascending());
         Page<WalletTransaction> walletTransactions = transactionRepo.findByTransactionType(TransactionType.REQUEST_WITHDRAW,pageable);
         return walletTransactions.map(transactionMapper::entityToResponse);
+    }
+
+    /**
+     * Thanh toán phí ship cho shipment chứa BlindBoxResult bằng ví của user hiện tại.
+     * FE: POST /api/transactions/blind-box/ship/{shipmentId}/wallet
+     */
+    @Override
+    @Transactional
+    public TransactionResponse payBlindBoxShipWithWallet(UUID shipmentId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Users user = usersRepo.findByEmail(email);
+        if (user == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        Wallet sender = getWallet(user.getUserId());
+        Shipment shipment = shipmentRepo.findById(shipmentId).orElseThrow(
+                () -> new AppException(ErrorCode.SHIPMENT_NOT_FOUND)
+        );
+
+        if (sender.getBalance() < shipment.getShipmentFee()) {
+            throw new AppException(ErrorCode.CAN_NOT_TRANSACTION);
+        }
+
+        Users admin = usersRepo.findByEmail(adminEmail);
+        if (admin == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        Wallet receive = admin.getWallet();
+        Double price = shipment.getShipmentFee() * 1.0;
+
+        WalletTransaction newTransaction = WalletTransaction.builder()
+                .amount(price)
+                .walletSend(sender)
+                .walletReceive(receive)
+                .transactionType(TransactionType.TRANSFER)
+                .statusTransaction(StatusPayment.SUCCESS)
+                .message("Pay ship fee for blind box shipment: " + shipment.getShipmentId())
+                .build();
+
+        sender.setBalance(sender.getBalance() - price);
+        receive.setBalance(receive.getBalance() + price);
+        shipment.setShipmentStatus(ShippingStatus.PENDING);
+
+        walletRepo.saveAll(List.of(receive, sender));
+        shipmentRepo.save(shipment);
+
+        return transactionMapper.entityToResponse(transactionRepo.save(newTransaction));
     }
 
 }

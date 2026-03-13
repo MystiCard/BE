@@ -26,4 +26,10 @@ public interface TransactionService {
     TransactionResponse payforShipFeeReturnItem(UUID returnItemId);
     TransactionResponse refundCancleReturn(ReturnRequest request);
     Page<TransactionResponse> listWithDraw(int page, int size);
+
+    /**
+     * Thanh toán phí ship cho shipment chứa BlindBoxResult bằng ví của user hiện tại.
+     * FE: POST /api/transactions/blind-box/ship/{shipmentId}/wallet
+     */
+    TransactionResponse payBlindBoxShipWithWallet(UUID shipmentId);
 }

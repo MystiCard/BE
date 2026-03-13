@@ -83,6 +83,17 @@ public class TransactionController {
     ) {
         return ResponseEntity.ok(ApiResponse.success(transactionService.payforShipFeeReturnItem(returnItemId)));
     }
+
+    /**
+     * Thanh toán phí ship cho shipment chứa BlindBoxResult bằng ví của user hiện tại.
+     * FE: POST /api/transactions/blind-box/ship/{shipmentId}/wallet
+     */
+    @PostMapping("/blind-box/ship/{shipmentId}/wallet")
+    public ResponseEntity<ApiResponse<TransactionResponse>> payBlindBoxShipWithWallet(
+            @PathVariable UUID shipmentId
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(transactionService.payBlindBoxShipWithWallet(shipmentId)));
+    }
     @GetMapping("/request-withdraw")
     public ResponseEntity<ApiResponse<?>> getListRequestWithdraw(
             @RequestParam(required = false, defaultValue = "1") int page,

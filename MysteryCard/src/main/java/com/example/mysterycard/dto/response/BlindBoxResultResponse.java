@@ -14,5 +14,9 @@ public class BlindBoxResultResponse {
     private String cardName;
     private String cardImageUrl;
     private String rarity;
-
+    // Các trạng thái để FE quyết định có cho phép giao về nhà nữa hay không
+    private boolean shipped;                 // Đã có shipment (đã yêu cầu giao)
+    private boolean shippedToHomeDelivered;  // Shipment đã giao thành công (RECEIVED/DELIVERED)
+    private boolean listedForSale;           // Đang đăng bán trên sàn (future use)
+    private boolean soldAndDeliveredToBuyer; // Đã bán qua sàn và buyer đã nhận (future use)
 }

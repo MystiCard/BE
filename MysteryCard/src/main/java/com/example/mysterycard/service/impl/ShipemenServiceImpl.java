@@ -20,10 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,8 +48,6 @@ public class ShipemenServiceImpl implements ShipmentService {
     private   int weight;
     @Value("${ghn.width}")
     private int width;
-    @Value("${ghn.service_id}")
-    private   Long serviceId;
     private final ShipmentMapper shipmentMapper;
     private final ShipmentRepo shipmentRepo;
     private final RestTemplate restTemplate = new RestTemplate();
@@ -243,12 +238,43 @@ public class ShipemenServiceImpl implements ShipmentService {
                        .build()));
         return shipmentResponse;
     }
+
+    public Long getFirstServiceId( Long fromDistrict, Long toDistrict) {
+        String url = "https://online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/available-services";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Token", ghnToken);
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("shop_id", Long.valueOf(shopId));
+        body.put("from_district", fromDistrict);
+        body.put("to_district", toDistrict);
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
+
+        if (response.getStatusCode() == HttpStatus.OK) {
+            Map<String, Object> respBody = response.getBody();
+            List<Map<String, Object>> services = (List<Map<String, Object>>) respBody.get("data");
+            if (services != null && !services.isEmpty()) {
+                Number serviceIdNumber = (Number) services.get(0).get("service_id");
+                return serviceIdNumber.longValue(); // convert an toàn sang Long
+            }
+
+        }
+        return null; // fallback nếu không có dịch vụ nào
+    }
  @Override
     public Long calculatFeeShip(CalculateFeeRequest request) {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Token",ghnToken);
         headers.set("shop_id",shopId);
         headers.setContentType(MediaType.APPLICATION_JSON);
+        Long serviceId = getFirstServiceId(request.getFromDistrictId(),request.getToDistrictId());
+        log.info("service id :  {}",serviceId);
         CalculateShipmentFeeRequest calRequest = CalculateShipmentFeeRequest.builder()
                 .service_id(serviceId)
                 .insurance_value(Math.round(request.getTotalAmount()))

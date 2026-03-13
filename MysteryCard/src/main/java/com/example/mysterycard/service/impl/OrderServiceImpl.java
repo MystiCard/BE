@@ -186,11 +186,13 @@ public class OrderServiceImpl implements OrderService {
         Long shipfee = shipmentService.calculatFeeShip(
                 CalculateFeeRequest.builder()
                         .totalAmount(0)
-                        .fromDistrictId(Long.valueOf(request.getToDistrictId()))
+                        .fromDistrictId(1803L)
                         .toWardId(String.valueOf(request.getToWardId()))
                         .toDistrictId(request.getToDistrictId())
                         .build()
         );
+        log.info("Calculator ship  {}",shipfee);
+
         totalAmount+=shipfee;
         shipmentService.createsShipment(
                 ShipmentRequest.builder()
@@ -200,8 +202,8 @@ public class OrderServiceImpl implements OrderService {
                         .toWardId(request.getToWardId())
                         .toPhone(request.getBuyerPhone())
                         .fromPhone(request.getBuyerPhone())
-                        .fromAddress(request.getBuyerAddress())
-                        .fromDistrictId(Long.valueOf(request.getToDistrictId()))
+                        .fromAddress("Thôn Cốc Thôn, Xã Cam Thượng, Huyện Ba Vì, Hà Nội")
+                        .fromDistrictId(3695L)
                         .shipmentFee(shipfee)
                         .build()
         );
@@ -210,7 +212,7 @@ public class OrderServiceImpl implements OrderService {
 
         OrderBlindBoxResultResponse orderBlindBoxResultResponse = OrderBlindBoxResultResponse.builder()
                 .orderId(order.getOrderId())
-                .totalAmount(0L)
+                .totalAmount(shipfee)
                 .orderDate(order.getOrderDate())
                 .status(order.getStatus())
                 .blindBoxResults(blindBoxResultResponses)

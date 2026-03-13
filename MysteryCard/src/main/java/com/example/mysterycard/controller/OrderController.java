@@ -2,6 +2,7 @@ package com.example.mysterycard.controller;
 
 import com.example.mysterycard.base.ApiResponse;
 import com.example.mysterycard.dto.request.MyOrderDetailRequest;
+import com.example.mysterycard.dto.request.OrderBlinkBoxResultRequest;
 import com.example.mysterycard.dto.request.OrderCardRequest;
 import com.example.mysterycard.dto.response.*;
 import com.example.mysterycard.enums.OrderItemStatus;
@@ -28,6 +29,12 @@ public class OrderController {
             @RequestBody @Valid OrderCardRequest request
     ) {
         return ResponseEntity.ok(ApiResponse.success(orderService.createOrder(request)));
+    }
+    @PostMapping("/create-blind-box")
+    public ResponseEntity<ApiResponse<OrderBlindBoxResultResponse>> createOrderBlindBox(
+            @RequestBody @Valid OrderBlinkBoxResultRequest request
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(orderService.createBlindBoxOrder(request)));
     }
 
     @PostMapping("/orderItems/status")

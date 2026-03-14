@@ -257,15 +257,16 @@ public class TransactionServiceImpl implements TransactionService {
             // tra tien ship
             Shipment shipment = orderItem.getShipments().stream().toList().getLast();
             Wallet shipper = shipment.getShipper().getWallet();
+            double shipfee = shipment.getShipmentFee();
             WalletTransaction transactionForShipper = WalletTransaction.builder()
-                    .amount(orderItem.getPrice() * orderItem.getQuantity())
+                    .amount(shipfee)
                     .walletReceive(shipper)
                     .walletSend(send)
                     .transactionType(TransactionType.TRANSFER)
                     .statusTransaction(StatusPayment.SUCCESS)
-                    .message(message)
+                    .message("Tra tien ship cho shipper")
                     .build();
-            shipper.setBalance(recive.getBalance() + shipment.getShipmentFee());
+            shipper.setBalance(shipper.getBalance() + shipment.getShipmentFee());
             send.setBalance(send.getBalance() - shipment.getShipmentFee());
             transactionRepo.save(transactionForShipper);
         }
@@ -280,8 +281,9 @@ public class TransactionServiceImpl implements TransactionService {
                 .walletReceive(recive)
                 .walletSend(send)
                 .transactionType(TransactionType.TRANSFER)
-                .statusTransaction(StatusPayment.SUCCESS)
+                .statusTransaction(StatusPayment.RELEASED)
                 .message(message)
+                .order(orderItem.getOrder())
                 .build();
         recive.setBalance(recive.getBalance() + (price));
         send.setBalance(send.getBalance() - (price));
@@ -321,7 +323,10 @@ public class TransactionServiceImpl implements TransactionService {
         }
         Wallet wallet = getWallet(user.getUserId());
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createAt").descending());
-        Specification<WalletTransaction> spe = Specification.allOf(TransactionSpecification.byStatus(statusPayment), TransactionSpecification.byWallet(wallet));
+        Specification<WalletTransaction> spe = Specification.allOf(
+                TransactionSpecification.byStatus(statusPayment),
+                TransactionSpecification.byWallet(wallet)
+        );
         return transactionRepo.findAll(spe, pageable).map(transactionMapper::entityToResponse);
     }
 
@@ -453,7 +458,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public Page<TransactionResponse> listWithDraw(int page, int size) {
-        Pageable pageable = PageRequest.of(page-1, size,Sort.by("createAt").ascending());
+        Pageable pageable = PageRequest.of(page-1, size,Sort.by("createAt").descending());
         Page<WalletTransaction> walletTransactions = transactionRepo.findByTransactionType(TransactionType.REQUEST_WITHDRAW,pageable);
         return walletTransactions.map(transactionMapper::entityToResponse);
     }

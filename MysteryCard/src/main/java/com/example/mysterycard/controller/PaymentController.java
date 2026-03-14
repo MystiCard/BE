@@ -7,6 +7,7 @@ import com.example.mysterycard.dto.response.PageResponse;
 import com.example.mysterycard.dto.response.PaymentResponse;
 import com.example.mysterycard.dto.response.transaction.TransactionResponse;
 import com.example.mysterycard.enums.StatusPayment;
+import com.example.mysterycard.enums.TransactionType;
 import com.example.mysterycard.service.PaymentService;
 import com.example.mysterycard.service.TransactionService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -57,7 +58,11 @@ public class PaymentController {
             updateTransactionStatusRequest.setMessage("Veryfy signature wrong");
             updateTransactionStatusRequest.setStatusPayment(StatusPayment.FAILED);
          }
-        transactionService.callBackDepositeAndWithdraw(updateTransactionStatusRequest);
+       TransactionResponse response=  transactionService.callBackDepositeAndWithdraw(updateTransactionStatusRequest);
+         if(response.getTransactionType().equals(TransactionType.WITHDRAW))
+         {
+             return new RedirectView(FRONTEND_URL+"/admin/withdraws");
+         }
         log.info("Call back {},{}",orderId,resultCode);
 
         return new RedirectView(FRONTEND_URL+"/wallet");

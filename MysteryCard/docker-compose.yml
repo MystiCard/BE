@@ -12,5 +12,9 @@ services:
       - "5433:5432"
     volumes:
       - postgres_mystery:/var/lib/postgresql/data
+  ai-image:
+    image: duongvanquyet/ai-service
+    ports:
+      - "5000:5000"
 volumes:
   postgres_mystery:

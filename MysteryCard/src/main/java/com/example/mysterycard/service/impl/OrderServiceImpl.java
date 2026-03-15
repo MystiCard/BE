@@ -229,8 +229,7 @@ public class OrderServiceImpl implements OrderService {
               ShipmentSpecification.findByStatus(request.getShippingStatus())
       );
       Pageable pageable = PageRequest.of(page, size, Sort.by("createAt").descending());
-      Page<Shipment> shipments = shipmentRepo.findAll(specification,pageable);
-
+      List<Shipment> shipments = shipmentRepo.findAll(specification);
         List<OrderItemResponse> result = new ArrayList<>();
         shipments.forEach((s)->{
             if(s.getOrderItems() != null && s.getOrderItems().size() > 0){
@@ -282,22 +281,24 @@ public class OrderServiceImpl implements OrderService {
             if (orderItem.getOrderItemStatus().equals(OrderItemStatus.CONFIRMED)) {
                 orderItem.setOrderItemStatus(OrderItemStatus.RECIEVED);
                 transactionService.releasePrice(orderItem);
-            } else if(orderItem.getOrderItemStatus().equals(OrderItemStatus.RETURNING)) {
-                orderItem.setOrderItemStatus(OrderItemStatus.RETURNED);
-                transactionService.releasePrice(orderItem);
             }
+
         }
         Order order = shipment.getOrderItems().stream().toList().getFirst().getOrder();
         int countReceived = 0;
         int countCancelled = 0;
-        for (OrderItem item : order.getOrderItemList()) {
-            Shipment ship = item.getShipments().stream().toList().getLast();
-            if (ship.getShipmentStatus().equals(ShippingStatus.RECEIVED)) {
-                countReceived++;
+        for (Shipment s : order.getShipmentList()) {
+
+            if(s.getShipmentStatus() != null)
+            {
+                if (s.getShipmentStatus().equals(ShippingStatus.RECEIVED)) {
+                    countReceived++;
+                }
+                if (s.getShipmentStatus().equals(ShippingStatus.CANCELLED)) {
+                    countCancelled++;
+                }
             }
-            if (item.getOrderItemStatus().equals(OrderItemStatus.CANCELLED)) {
-                countCancelled++;
-            }
+
         }
         if (countReceived == (order.getOrderItemList().size() - countCancelled)) {
             order.setStatus(OrderStatus.COMPLETED);
@@ -327,16 +328,28 @@ public class OrderServiceImpl implements OrderService {
         orderItemsRepo.save(orderItem);
         Shipment shipment = orderItem.getShipments().stream().toList().getLast();
         int countOrderItem = 0;
+        int confirm = 0;
         for (OrderItem item : shipment.getOrderItems()) {
-            if (!item.getOrderItemStatus().equals(OrderItemStatus.CANCELLED)) {
+            if (item.getOrderItemStatus().equals(OrderItemStatus.CANCELLED)) {
                 countOrderItem++;
             }
+            if(item.getOrderItemStatus().equals(OrderItemStatus.CONFIRMED)) {
+                confirm++;
+            }
         }
-        if (countOrderItem == 0) {
+        if (countOrderItem == shipment.getOrderItems().size()) {
             shipmentService.update(UpdateShipmentRequest.builder()
                     .shippingStatus(ShippingStatus.CANCELLED)
                     .shipmentId(shipment.getShipmentId())
                     .build(), null);
+        }else if(confirm == (shipment.getOrderItems().size() - countOrderItem)) {
+            // truong hop huy 1 phan trong shipment
+            if(shipment.getShipmentStatus() != null && shipment.getShipmentStatus().equals(ShippingStatus.PENDING_APPROVED)) {
+                shipmentService.update(UpdateShipmentRequest.builder()
+                        .shippingStatus(ShippingStatus.PENDING)
+                        .shipmentId(shipment.getShipmentId())
+                        .build(), null);
+            }
         }
         // update quanity list seller
         ListSeller listSeller = orderItem.getListSeller();
@@ -439,21 +452,12 @@ public class OrderServiceImpl implements OrderService {
         List<Shipment> shipments = order.getShipmentList();
         int count = 0;
         for(Shipment shipment : shipments){
-            if(shipment.getShipmentStatus().equals(ShippingStatus.PENDING))
+            if(shipment != null && shipment.getShipmentStatus() != null  && shipment.getShipmentStatus().equals(ShippingStatus.PENDING))
             {
                 count++;
             }
         }
         return order.getBuyer().equals(users) && count == shipments.size();
-    }
-
-    @Override
-    public OrderCanDoResponse canCancleOrComfirm(UUID orderItemId) {
-        OrderCanDoResponse response = OrderCanDoResponse.builder()
-                .canCancle(canCancle(orderItemId))
-                .canConfirmRecieve(canConfirm(orderItemId))
-                .build();
-        return response;
     }
 
     @Override
@@ -489,35 +493,8 @@ public class OrderServiceImpl implements OrderService {
         }
         return orderItemMapper.entityToResponse(orderItemsRepo.save(orderItem));
     }
-
-
-    public boolean canConfirm(UUID orderItemId) {
-        Users users = getCurrentUser();
-        OrderItem orderItem = orderItemsRepo.findById(orderItemId).orElseThrow(
-                ()  -> new AppException(ErrorCode.ORDER_ITEMS_NOT_FOUND)
-        );
-        Users buyer = orderItem.getOrder().getBuyer();
-        Shipment shipment =  orderItem.getShipments().stream().toList().getLast();
-        // TH shipment co 2 orrder 1 cai cancle 1 cai da giao toi neu lam nhu nay thi confirm duoc ca 2 a
-        if(shipment.getShipmentStatus() == null ||
-                (shipment.getShipmentStatus() != null &&
-                        !shipment.getShipmentStatus().equals(ShippingStatus.DELIVERED))
-        )
-        {
-            return false;
-        }
-        if(orderItem.getOrderItemStatus().equals(OrderItemStatus.CANCELLED))
-        {
-            return false;
-        }
-         if(orderItem.getOrderItemStatus().equals(OrderItemStatus.RETURNING))
-         {
-             return users.equals(orderItem.getListSeller().getSeller()) ;
-         }
-        return  users.equals(buyer) ;
-    }
-
-    public boolean canCancle(UUID orderItemId) {
+    @Override
+    public boolean canCancleOrderDetail(UUID orderItemId) {
 
         Users users = getCurrentUser();
         OrderItem orderItem = orderItemsRepo.findById(orderItemId).orElseThrow(
@@ -528,6 +505,30 @@ public class OrderServiceImpl implements OrderService {
         Shipment shipment =  orderItem.getShipments().stream().toList().getLast();
         return users.equals(buyer) && !orderItem.getOrderItemStatus().equals(OrderItemStatus.CANCELLED)  && shipment.getShipmentStatus() != null && (shipment.getShipmentStatus().equals(ShippingStatus.PENDING) || shipment.getShipmentStatus().equals(ShippingStatus.PENDING_APPROVED));
     }
+
+    @Override
+    public boolean canConfirmShipment(UUID shipmentID) {
+        Users users = getCurrentUser();
+        Shipment shipment = shipmentRepo.findById(shipmentID).orElseThrow(
+                () -> new AppException(ErrorCode.SHIPMENT_NOT_FOUND)
+        );
+        Users buyer = shipment.getOrder().getBuyer();
+        // TH shipment co 2 orrder 1 cai cancle 1 cai da giao toi neu lam nhu nay thi confirm duoc ca 2 a
+        if(shipment.getShipmentStatus() == null ||
+                (shipment.getShipmentStatus() != null &&
+                        !shipment.getShipmentStatus().equals(ShippingStatus.DELIVERED))
+        )
+        {
+            return false;
+        }
+        OrderItem orderItem = shipment.getOrderItems().stream().toList().getFirst();
+        if(orderItem.getOrderItemStatus().equals(OrderItemStatus.RETURNING))
+        {
+            return users.equals(orderItem.getListSeller().getSeller()) ;
+        }
+        return  users.equals(buyer) ;
+    }
+
     public Users getCurrentUser()
     {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();

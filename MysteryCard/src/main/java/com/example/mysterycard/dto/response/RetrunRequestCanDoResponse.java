@@ -9,5 +9,6 @@ public class RetrunRequestCanDoResponse {
     private boolean canCancle;
     private boolean canjectOrApproved;
     private boolean canPayment;
+    private boolean canConfirmRecieved;
 
 }

@@ -20,4 +20,5 @@ public interface ReturnRequestService {
      boolean canSendReturn(UUID orderItemsId);
      ReturnResponse rejectReturnReqeust(UUID retrurnRequestId);
      RetrunRequestCanDoResponse canDo(UUID returnRequestId);
+     ReturnResponse confirmRecieved(UUID returnId);
 }

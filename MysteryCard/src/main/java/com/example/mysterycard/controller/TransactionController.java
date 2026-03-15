@@ -57,10 +57,11 @@ public class TransactionController {
     public ResponseEntity<ApiResponse<Page<TransactionResponse>>> getMyTransaction(
             @RequestParam(required = false) StatusPayment statusPayment,
             @RequestParam(required = false, defaultValue = "1") int page,
-            @RequestParam(required = false, defaultValue = "10") int size
+            @RequestParam(required = false, defaultValue = "10") int size,
+            @RequestParam(defaultValue = "true") boolean in
     )
     {
-        return ResponseEntity.ok(ApiResponse.success(transactionService.getMyTransaction(statusPayment,page,size)));
+        return ResponseEntity.ok(ApiResponse.success(transactionService.getMyTransaction(statusPayment,page,size,in)));
     }
     @PostMapping("/{paymentsId}/payments")
     public ResponseEntity<ApiResponse<Page<TransactionResponse>>> getAllTransactions(

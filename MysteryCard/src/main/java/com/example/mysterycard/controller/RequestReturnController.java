@@ -73,4 +73,8 @@ public class RequestReturnController {
     public ResponseEntity<ApiResponse<?>> canPayment(@PathVariable UUID returnId){
         return ResponseEntity.ok(ApiResponse.success(returnRequestService.canDo(returnId)));
     }
+    @PostMapping("/comfirm-recieve/{returnId}")
+    public ResponseEntity<ApiResponse<?>> confirmRecieve(@PathVariable UUID returnId){
+        return ResponseEntity.ok(ApiResponse.success(returnRequestService.confirmRecieved(returnId)));
+    }
 }

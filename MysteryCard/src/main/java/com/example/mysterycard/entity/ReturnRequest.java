@@ -35,5 +35,8 @@ public class ReturnRequest {
     private List<Image> images = new ArrayList<>();
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+    @OneToOne
+    @JoinColumn(name = "shipment_id")
+    private Shipment shipment;
 
 }

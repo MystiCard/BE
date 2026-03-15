@@ -5,5 +5,6 @@ public enum ReturnRequestStatus {
     APPROVED,
     PAID,
     REJECTED,
-    CANCELED
+    CANCELED,
+    COMPLETE
 }

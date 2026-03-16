@@ -14,5 +14,6 @@ public class BlindBoxResultResponse {
     private String cardName;
     private String cardImageUrl;
     private String rarity;
+    private String blindBoxName;
 
 }

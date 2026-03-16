@@ -22,6 +22,7 @@ import com.example.mysterycard.mapper.OrderItemMapper;
 import com.example.mysterycard.mapper.OrderMapper;
 import com.example.mysterycard.mapper.ShipmentMapper;
 import com.example.mysterycard.repository.*;
+import com.example.mysterycard.service.BlindBoxService;
 import com.example.mysterycard.service.OrderService;
 import com.example.mysterycard.service.ShipmentService;
 import com.example.mysterycard.service.TransactionService;
@@ -56,6 +57,7 @@ public class OrderServiceImpl implements OrderService {
     private final ShipmentMapper shipmentMapper;
     private final TransactionService transactionService;
     private final BlindBoxResultRepo blindBoxResultRepo;
+    private final BlindBoxService blindBoxService;
     @Override
     @Transactional
     public OrderCardResponse createOrder(OrderCardRequest request) {
@@ -174,6 +176,7 @@ public class OrderServiceImpl implements OrderService {
                         () -> new AppException(ErrorCode.BLIND_BOX_RESULT_NOT_FOUND)
                 );
                 blindBoxResult.setOrder(order);
+                blindBoxResult.setStatus(BlindBoxResult.ResultStatus.SHIPPING);
                 blindBoxResultRepo.save(blindBoxResult);
                 BlindBoxResultResponse blindBoxResultResponse = BlindBoxResultResponse.builder()
                         .blindBoxResultId(blindBoxResult.getBlindBoxResultId())
@@ -205,9 +208,9 @@ public class OrderServiceImpl implements OrderService {
                         .toDistrictId(request.getToDistrictId())
                         .toWardId(request.getToWardId())
                         .toPhone(request.getBuyerPhone())
-                        .fromPhone(request.getBuyerPhone())
+                        .fromPhone("0935730865")
                         .fromAddress("Thôn Cốc Thôn, Xã Cam Thượng, Huyện Ba Vì, Hà Nội")
-                        .fromDistrictId(3695L)
+                        .fromDistrictId(1803L)
                         .shipmentFee(shipfee)
                         .build()
         );
@@ -285,6 +288,38 @@ public class OrderServiceImpl implements OrderService {
                 .build();
         return pageResponse;
     }
+    @Override
+    @Transactional
+    public ConfirmBlindBoxResponse confirmReceiveBlindBoxResults (UUID shipmentId) {
+        Shipment shipment = shipmentRepo.findById(shipmentId).orElseThrow(
+                () -> new AppException(ErrorCode.SHIPMENT_NOT_FOUND)
+        );
+        if(!shipment.getShipmentStatus().equals(ShippingStatus.DELIVERED))
+        {
+            throw new AppException(ErrorCode.CAN_NOT_CONFIRM_RECEIVE);
+        }
+        shipmentService.update(UpdateShipmentRequest.builder()
+                .shippingStatus(ShippingStatus.RECEIVED)
+                .shipmentId(shipmentId)
+                .build(), null);
+        Set<BlindBoxResult> results = shipment.getBlindBoxResults();
+        for(BlindBoxResult result : results){
+            result.setStatus(BlindBoxResult.ResultStatus.RECEIVED);
+        }
+        blindBoxResultRepo.saveAll(results);
+        transactionService.releaseShipmentFee(shipment);
+        Order order = shipment.getOrder();
+        order.setStatus(OrderStatus.COMPLETED);
+        orderRepo.save(order);
+
+        return ConfirmBlindBoxResponse.builder()
+                .shipfee(shipment.getShipmentFee())
+                .orderStatus(order.getStatus().toString())
+                .shipmentResponse(shipmentMapper.entityToResponse(shipment))
+                .blindBoxResults(results.stream().map(blindBoxService::toBlindBoxResultResponse).toList())
+                .build();
+    }
+
 
     @Override
     @Transactional
@@ -564,6 +599,7 @@ public class OrderServiceImpl implements OrderService {
         }
         return users;
     }
+
 
 
 }

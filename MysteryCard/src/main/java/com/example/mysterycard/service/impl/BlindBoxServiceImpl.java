@@ -42,8 +42,6 @@ public class BlindBoxServiceImpl implements BlindBoxService {
     private final BlindBoxCardMapper blindBoxCardMapper;
     private final CardMapper cardMapper;
     private final UserService userService;
-    private final OrderRepo orderRepo;
-    private final OrderMapper orderMapper;
     private final CategoryService categoryService;
     private final TransactionService transactionService;
 
@@ -89,21 +87,6 @@ public class BlindBoxServiceImpl implements BlindBoxService {
         return blindBoxMapper.toBlindBoxResponse(blindBoxRepo.save(blindBox));
     }
 
-    private double getWeight(BlindBoxCard bc, BlindBox box){
-        Rarity rarity = bc.getCard().getRarity();
-        RateConfig config = box.getRateConfigList().stream()
-                .filter(rc -> rc.getCardRarity() == rarity)
-                .findFirst()
-                .orElseThrow(() -> new AppException(ErrorCode.RATE_CONFIG_NOT_FOUND));
-        return config.getDropRate();
-
-    }
-//    public double calculateTotalWeight(BlindBox box) {
-//        return box.getBlindBoxCards().stream()
-//                .filter(BlindBoxCard::isStatus)
-//                .mapToDouble(bc -> getWeight(bc, box))
-//                .sum();
-//    }
     @Transactional
     @Override
     public DrawResultResponse drawCard(UUID id) {
@@ -379,5 +362,18 @@ public class BlindBoxServiceImpl implements BlindBoxService {
                     .build();
             return response;
         });
+    }
+    public BlindBoxResultResponse toBlindBoxResultResponse(BlindBoxResult result) {
+        Card card = result.getCard();
+        String imageUrl = card.getImages().isEmpty() ? null : card.getImages().get(0).getImageUrl();
+
+        return BlindBoxResultResponse.builder()
+                .blindBoxResultId(result.getBlindBoxResultId())
+                .openedAt(result.getOpenedAt())
+                .cardName(card.getName())
+                .cardImageUrl(imageUrl)
+                .rarity(card.getRarity().name())
+                .blindBoxName(result.getBlindBox().getName()) // giả sử BlindBox có field name
+                .build();
     }
 }

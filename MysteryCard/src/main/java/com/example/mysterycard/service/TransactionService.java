@@ -6,6 +6,7 @@ import com.example.mysterycard.dto.response.TransactionReportResponse;
 import com.example.mysterycard.dto.response.transaction.TransactionResponse;
 import com.example.mysterycard.entity.OrderItem;
 import com.example.mysterycard.entity.ReturnRequest;
+import com.example.mysterycard.entity.Shipment;
 import com.example.mysterycard.enums.StatusPayment;
 import org.springframework.data.domain.Page;
 
@@ -26,4 +27,5 @@ public interface TransactionService {
     TransactionResponse payforShipFeeReturnItem(UUID returnItemId);
     TransactionResponse refundCancleReturn(ReturnRequest request);
     Page<TransactionResponse> listWithDraw(int page, int size);
+    TransactionResponse releaseShipmentFee (Shipment shipment);
 }

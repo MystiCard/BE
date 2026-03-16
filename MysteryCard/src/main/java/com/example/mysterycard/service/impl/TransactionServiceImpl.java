@@ -165,7 +165,7 @@ public class TransactionServiceImpl implements TransactionService {
         }
         WalletTransaction transaction = transactionMapper.requestToEnity(request);
         transaction.setStatusTransaction(StatusPayment.SUCCESS);
-        String message = "Transaction for Blind Box";
+        String message = "Transaction for buy Blind Box";
         double totalAmount;
         Order order = null;
         if(request.getOrderId()!=null){
@@ -173,10 +173,15 @@ public class TransactionServiceImpl implements TransactionService {
                 () -> new AppException(ErrorCode.ORDER_NOT_FOUND)
         );
         totalAmount = order.getTotalAmount();
+        transaction.setStatusTransaction(StatusPayment.ESCROWED);
+        if(order.getBlindBoxResults()==null) {
+            message = "Transaction for buy Card";
         }
         else {
-            message = "Transaction for buy Card";
-            transaction.setStatusTransaction(StatusPayment.ESCROWED);
+            message = "Tracsaction for shipment card results";
+        }
+        }
+        else {
             totalAmount = request.getDrawPrice();
         }
         // blind box
@@ -243,6 +248,31 @@ public class TransactionServiceImpl implements TransactionService {
                 () -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND)
         );
         return transactionMapper.entityToResponse(transaction);
+    }
+    @Transactional
+    @Override
+    public TransactionResponse releaseShipmentFee (Shipment shipment){
+        Users admin = usersRepo.findByEmail(adminEmail);
+        if (admin == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        Wallet send = admin.getWallet();
+        Wallet receive = shipment.getShipper().getWallet();
+
+        send.setBalance(send.getBalance()-shipment.getShipmentFee());
+        receive.setBalance(receive.getBalance()+shipment.getShipmentFee());
+        walletRepo.saveAll(List.of(receive, send));
+
+        WalletTransaction transactionForShipper = WalletTransaction.builder()
+                .amount(shipment.getShipmentFee().doubleValue())
+                .walletReceive(receive)
+                .walletSend(send)
+                .transactionType(TransactionType.TRANSFER)
+                .statusTransaction(StatusPayment.SUCCESS)
+                .message("Tra tien ship cho shipper")
+                .build();
+        return transactionMapper.entityToResponse(transactionRepo.save(transactionForShipper));
+
     }
 
     @Transactional

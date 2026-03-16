@@ -95,6 +95,8 @@ public class ShipemenServiceImpl implements ShipmentService {
                             () -> new AppException(ErrorCode.BLIND_BOX_RESULT_NOT_FOUND)
                     );
                     shipment.getBlindBoxResults().add(blindBoxResult);
+                    shipment.setShipmentStatus(ShippingStatus.PENDING);
+                    shipment.setOrder(blindBoxResult.getOrder());
                 }
             }
             else {

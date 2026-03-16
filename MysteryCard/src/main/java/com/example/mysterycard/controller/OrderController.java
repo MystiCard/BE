@@ -100,12 +100,20 @@ public class OrderController {
     {
         return ResponseEntity.ok(ApiResponse.success(orderService.approvedOrderItems(orderItemdid)));
     }
-    @GetMapping("/can-do/{orderItemId}")
-    public ResponseEntity<ApiResponse<OrderCanDoResponse>> canConfirmOrCancle(@PathVariable UUID orderItemId) {
-        return ResponseEntity.ok(ApiResponse.success(orderService.canCancleOrComfirm(orderItemId)));
+    @GetMapping("/can-cancle-orderdetail/{orderItemId}")
+    public ResponseEntity<ApiResponse<Boolean>> canCancle(@PathVariable UUID orderItemId) {
+        return ResponseEntity.ok(ApiResponse.success(orderService.canCancleOrderDetail(orderItemId)));
+    }
+    @GetMapping("/can-confirm/{shipmentId}")
+    public ResponseEntity<ApiResponse<Boolean>> canConfirm(@PathVariable UUID shipmentId) {
+        return ResponseEntity.ok(ApiResponse.success(orderService.canConfirmShipment(shipmentId)));
     }
     @GetMapping("/can-cancle-order/{orderId}")
     public ResponseEntity<ApiResponse<?>> canCancleOrder(@PathVariable UUID orderId) {
         return ResponseEntity.ok(ApiResponse.success(orderService.canCanleOrder(orderId)));
+    }
+    @GetMapping("/{orderId}")
+    public ResponseEntity<ApiResponse<OrderCardResponse>> getByOrderId(@PathVariable UUID orderId) {
+        return ResponseEntity.ok(ApiResponse.success(orderService.getByOrderId(orderId)));
     }
 }

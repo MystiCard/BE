@@ -1,12 +1,11 @@
 package com.example.mysterycard.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -15,21 +14,25 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
+@Builder
 public class Feedback {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID feedBackId;
     private String comment;
     private int rating;
-    private LocalDateTime createdAt;
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now();
     @ManyToOne
     @JoinColumn(name="buyer_id")
     private Users buyer;
+    @OneToOne
+    @JoinColumn(name = "orderDetai_id")
+    private OrderItem orderItem;
     @ManyToOne
-    @JoinColumn(name = "seller_id")
-    private Users seller;
-    @ManyToOne
-    @JoinColumn(name = "blind_box_id")
-    private BlindBox blindBox;
-
+    @JoinColumn(name = "seller")
+    public Users seller;
+    @OneToMany(mappedBy = "feedback",cascade = CascadeType.ALL,orphanRemoval = true)
+    @Builder.Default
+    public List<Image> images = new ArrayList<>();
 }

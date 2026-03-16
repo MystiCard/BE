@@ -11,6 +11,8 @@ public class ChangeAddressShipmentRequest {
     private Long toDistrictId;
     private Long toWardId;
     private String newAddress;
+    private String toName;
+    private String  toPhone;
 //    private Long oldShipmentFee;
 //    private Long totalPrice;
 }

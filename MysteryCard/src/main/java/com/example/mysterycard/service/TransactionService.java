@@ -22,7 +22,7 @@ public interface TransactionService {
     TransactionResponse getById(UUID transactionId);
     TransactionResponse releasePrice(OrderItem orderItem);
     String payAgaint(UUID paymentId);
-    Page<TransactionResponse> getMyTransaction(StatusPayment statusPayment, int page, int size);
+    Page<TransactionResponse> getMyTransaction(StatusPayment statusPayment, int page, int size,boolean in);
     TransactionReportResponse report(TransactionReportRequest request);
     TransactionResponse payforShipFeeReturnItem(UUID returnItemId);
     TransactionResponse refundCancleReturn(ReturnRequest request);

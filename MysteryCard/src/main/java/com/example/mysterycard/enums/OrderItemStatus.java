@@ -7,5 +7,6 @@ public enum OrderItemStatus {
     RETURNING,
     RETURNED,
     RECIEVED,
+    REJECT_RETURN
 }
 

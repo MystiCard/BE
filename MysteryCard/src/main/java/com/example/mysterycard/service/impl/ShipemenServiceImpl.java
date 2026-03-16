@@ -67,6 +67,7 @@ public class ShipemenServiceImpl implements ShipmentService {
     private final UserService userService;
     private final OrderItemMapper orderItemMapper;
     private final OrderMapper orderMapper;
+    private final  ReturnRequestRepo returnRequestRepo;
     @Override
     public ShipmentResponse createsShipment(ShipmentRequest request) {
             Shipment shipment = shipmentMapper.requestToEntity(request);
@@ -76,9 +77,15 @@ public class ShipemenServiceImpl implements ShipmentService {
                     OrderItem orderItem = orderItemsRepo.findById(orderItemId).orElseThrow(
                          () -> new AppException(ErrorCode.ORDER_ITEMS_NOT_FOUND)
                  );
-                    shipment.getOrderItems().add(orderItem);
-                    shipment.setOrder(orderItem.getOrder());
-
+                    if(orderItem.getReturnRequest() != null)
+                    {
+                     ReturnRequest returnRequest = orderItem.getReturnRequest();
+                     returnRequest.setShipment(shipment);
+                        returnRequestRepo.save(returnRequest);
+                    }else{
+                        shipment.getOrderItems().add(orderItem);
+                        shipment.setOrder(orderItem.getOrder());
+                    }
              }
             }
             else if(request.getBlindBoxResultId() != null && !request.getBlindBoxResultId().isEmpty()) {
@@ -363,6 +370,8 @@ public class ShipemenServiceImpl implements ShipmentService {
             shipment.setShipmentFee(shipfee);
             shipment.setToWardId(request.getToWardId());
             shipment.setToDistrictId(request.getToDistrictId());
+            shipment.setToName(request.getToName());
+            shipment.setToPhone(request.getToPhone());
             OrderItemResponse orderItemResponse = OrderItemResponse.builder()
                     .orderDetailResponseList(shipment.getOrderItems().stream().map(orderItemMapper::entityToResponse).toList())
                     .shipfee(shipfee)

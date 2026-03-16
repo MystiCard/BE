@@ -23,9 +23,12 @@ public interface OrderService {
     PageResponse<OrderItemResponse> getMyReturnOrderItem(ShippingStatus shippingStatus, int page, int size);
     Page<OrderResponse> getMyOrders(OrderStatus orderStatus, int page, int size);
     boolean canCanleOrder(UUID orderId);
-    OrderCanDoResponse canCancleOrComfirm(UUID orderItemId);
+    boolean canCancleOrderDetail(UUID orderDetailIDd);
+    boolean canConfirmShipment(UUID shipmentID);
+//    OrderCanDoResponse canCancleOrComfirm(UUID orderItemId);
     Page<OrderItemResponse.OrderDetailResponse> listPending(int page, int size);
     OrderItemResponse.OrderDetailResponse approvedOrderItems(UUID orderItemId);
     OrderBlindBoxResultResponse createBlindBoxOrder(OrderBlinkBoxResultRequest request);
     ConfirmBlindBoxResponse confirmReceiveBlindBoxResults (UUID shipmentId);
+    OrderCardResponse getByOrderId(UUID orderId);
 }

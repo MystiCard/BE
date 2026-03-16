@@ -17,6 +17,7 @@ import com.example.mysterycard.service.ShipmentService;
 import com.example.mysterycard.service.TransactionService;
 import com.example.mysterycard.specification.TransactionSpecification;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -37,6 +38,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionRepo transactionRepo;
@@ -280,27 +282,40 @@ public class TransactionServiceImpl implements TransactionService {
         if (admin == null) {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
+        Shipment shipment = orderItem.getShipments().stream().toList().getLast();
         Wallet send = admin.getWallet();
         // Truong hop nhan duoc hang
         Wallet recive = orderItem.getListSeller().getSeller().getWallet();
         Double price = orderItem.getPrice() * orderItem.getQuantity();
+        StatusPayment statusPayment = StatusPayment.RELEASED;
         String message = "Release price for orderItem: " + orderItem.getOrderItemId();
+
+// For return card
+        if(orderItem.getReturnRequest() != null && orderItem.getOrderItemStatus().equals(OrderItemStatus.RETURNED)) {
+            recive = orderItem.getReturnRequest().getBuyer().getWallet();
+            send = orderItem.getListSeller().getSeller().getWallet();
+            statusPayment = StatusPayment.REFUNDED;
+            message = "Refund for orderItem after recieved card return: " + orderItem.getOrderItemId();
+            shipment = orderItem.getReturnRequest().getShipment();
+        }
+
         if (orderItem.getOrderItemStatus().equals(OrderItemStatus.CANCELLED)) {
             recive = orderItem.getOrder().getBuyer().getWallet();
-            Shipment shipment = orderItem.getShipments().stream().toList().getLast();
+            Shipment shipment1 = orderItem.getShipments().stream().toList().getLast();
             message = "Refund for orderItem: " + orderItem.getOrderItemId();
-            if (shipment.getShipmentStatus().equals(ShippingStatus.CANCELLED)) {
+            statusPayment = StatusPayment.REFUNDED;
+            if (shipment1.getShipmentStatus().equals(ShippingStatus.CANCELLED)) {
                 price += shipment.getShipmentFee();
             }
         } else {
             // tra tien ship
-            Shipment shipment = orderItem.getShipments().stream().toList().getLast();
+
             Wallet shipper = shipment.getShipper().getWallet();
             double shipfee = shipment.getShipmentFee();
             WalletTransaction transactionForShipper = WalletTransaction.builder()
                     .amount(shipfee)
                     .walletReceive(shipper)
-                    .walletSend(send)
+                    .walletSend(admin.getWallet())
                     .transactionType(TransactionType.TRANSFER)
                     .statusTransaction(StatusPayment.SUCCESS)
                     .message("Tra tien ship cho shipper")
@@ -309,18 +324,13 @@ public class TransactionServiceImpl implements TransactionService {
             send.setBalance(send.getBalance() - shipment.getShipmentFee());
             transactionRepo.save(transactionForShipper);
         }
-        if(orderItem.getReturnRequest() != null && orderItem.getReturnRequest().getStatus().equals(ReturnRequestStatus.PAID)) {
-            recive = orderItem.getOrder().getBuyer().getWallet();
-            send = orderItem.getListSeller().getSeller().getWallet();
-            message = "Refund for orderItem after recieve card return: " + orderItem.getOrderItemId();
-        }
 
         WalletTransaction transaction = WalletTransaction.builder()
-                .amount(orderItem.getPrice() * orderItem.getQuantity())
+                .amount(price)
                 .walletReceive(recive)
                 .walletSend(send)
                 .transactionType(TransactionType.TRANSFER)
-                .statusTransaction(StatusPayment.RELEASED)
+                .statusTransaction(statusPayment)
                 .message(message)
                 .order(orderItem.getOrder())
                 .build();
@@ -354,7 +364,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public Page<TransactionResponse> getMyTransaction(StatusPayment statusPayment, int page, int size) {
+    public Page<TransactionResponse> getMyTransaction(StatusPayment statusPayment, int page, int size,boolean in) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Users user = usersRepo.findByEmail(email);
         if (user == null) {
@@ -362,9 +372,17 @@ public class TransactionServiceImpl implements TransactionService {
         }
         Wallet wallet = getWallet(user.getUserId());
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createAt").descending());
+        if(in)
+        {
+            Specification<WalletTransaction> spe = Specification.allOf(
+                    TransactionSpecification.byStatus(statusPayment),
+                    TransactionSpecification.byWalletIn(wallet)
+            );
+            return transactionRepo.findAll(spe, pageable).map(transactionMapper::entityToResponse);
+        }
         Specification<WalletTransaction> spe = Specification.allOf(
                 TransactionSpecification.byStatus(statusPayment),
-                TransactionSpecification.byWallet(wallet)
+                TransactionSpecification.byWalletOut(wallet)
         );
         return transactionRepo.findAll(spe, pageable).map(transactionMapper::entityToResponse);
     }
@@ -412,13 +430,24 @@ public class TransactionServiceImpl implements TransactionService {
         ReturnRequest returnRequest = returnRequestRepo.findById(returnItemId).orElseThrow(
                 () -> new AppException(ErrorCode.RETURN_REQUEST_NOT_FOUND)
         );
+
         if(!returnRequest.getStatus().equals(ReturnRequestStatus.APPROVED))
         {
             throw new AppException(ErrorCode.CAN_NOT_TRANSACTION_RETURN);
         }
-
-        Shipment shipment = returnRequest.getOrderItemList().getLast().getShipments().stream().toList().getLast();
+        Shipment shipment = returnRequest.getShipment();
+        if (sender.getBalance() < shipment.getShipmentFee()) {
+            throw new AppException(ErrorCode.CAN_NOT_TRANSACTION);
+        }
+        if (!returnRequest.getStatus().equals(ReturnRequestStatus.APPROVED)) {
+            throw new AppException(ErrorCode.CAN_NOT_TRANSACTION_RETURN);
+        }
+        Users admin = usersRepo.findByEmail(adminEmail);
+        if (admin == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
         shipment.setShipmentStatus(ShippingStatus.PENDING);
+
         if (shipment.getShipmentStatus() == null) {
             shipmentService.update(
                     UpdateShipmentRequest.builder()
@@ -426,17 +455,6 @@ public class TransactionServiceImpl implements TransactionService {
                             .shippingStatus(ShippingStatus.PENDING)
                             .build(), null
             );
-        }
-        if (sender.getBalance() < shipment.getShipmentFee()) {
-            throw new AppException(ErrorCode.CAN_NOT_TRANSACTION);
-        }
-        if (!returnRequest.getStatus().equals(ReturnRequestStatus.APPROVED)) {
-            throw new AppException(ErrorCode.CAN_NOT_TRANSACTION_RETURN);
-        }
-
-        Users admin = usersRepo.findByEmail(adminEmail);
-        if (admin == null) {
-            throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
         Wallet receive = admin.getWallet();
         Double price = shipment.getShipmentFee()*1.0;
@@ -476,17 +494,21 @@ public class TransactionServiceImpl implements TransactionService {
         if (admin == null) {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
+
         Wallet send = admin.getWallet();
-        Shipment shipment = request.getOrderItemList().getLast().getShipments().stream().toList().getLast();
+        Shipment shipment = request.getShipment();
+        if(admin.getWallet().getBalance() < shipment.getShipmentFee()) {
+            throw new AppException(ErrorCode.CAN_NOT_TRANSACTION_RETURN);
+        }
         Wallet recive = request.getBuyer().getWallet();
         Double price = shipment.getShipmentFee()*1.0;
-        String message = "Refund for cancel return request with shipment: " + shipment.getShipmentId();
+        String message = "Refund for cancel return request return request id: " + request.getReturnRequestId();
         WalletTransaction transaction = WalletTransaction.builder()
                 .amount(price)
                 .walletReceive(recive)
                 .walletSend(send)
                 .transactionType(TransactionType.TRANSFER)
-                .statusTransaction(StatusPayment.SUCCESS)
+                .statusTransaction(StatusPayment.REFUNDED)
                 .message(message)
                 .build();
         recive.setBalance(recive.getBalance() + (price));

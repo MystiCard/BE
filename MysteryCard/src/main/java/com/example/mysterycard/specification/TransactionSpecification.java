@@ -23,17 +23,30 @@ public class TransactionSpecification {
                 -> paymentId != null ? cb.equal(root.get("payment").get("paymentId"), paymentId) : null;
 
     }
-    public static Specification<WalletTransaction> byWallet(Wallet wallet) {
+    public static Specification<WalletTransaction> byWalletIn(Wallet wallet) {
         return (root,query,cb)->
         { if(wallet == null)
         {
             return cb.conjunction();
         }
-            return cb.or(
-                    cb.equal(root.get("walletSend"),wallet),
-                    cb.equal(root.get("walletReceive"),wallet)
-            );
+            return
+                    cb.equal(root.get("walletReceive"),wallet);
+
         };
+
+
+    }
+    public static Specification<WalletTransaction> byWalletOut(Wallet wallet) {
+        return (root,query,cb)->
+        { if(wallet == null)
+        {
+            return cb.conjunction();
+        }
+            return
+                    cb.equal(root.get("walletSend"),wallet);
+
+        };
+
 
     }
 }

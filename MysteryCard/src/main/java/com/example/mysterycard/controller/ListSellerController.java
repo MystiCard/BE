@@ -2,7 +2,7 @@ package com.example.mysterycard.controller;
 
 import com.example.mysterycard.base.ApiResponse;
 import com.example.mysterycard.dto.request.SellRequest;
-import com.example.mysterycard.dto.response.SellResponse;
+import com.example.mysterycard.dto.response.ListSellerResponse;
 import com.example.mysterycard.service.ListSellerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -28,11 +28,12 @@ public class ListSellerController {
         return ApiResponse.success(listSellerService.getListSellersByCardId(id, page, size));
     }
 
-    @GetMapping("/my-listings")
-    public ApiResponse<Page<SellResponse>> getMyList(
+    @GetMapping("/sell-listings/{userId}")
+    public ApiResponse<Page<ListSellerResponse>> getMyList(
+            @PathVariable UUID userId,
             @RequestParam(defaultValue = "1", required = false) int page,
             @RequestParam(defaultValue = "10", required = false) int size) {
-      return ApiResponse.success( listSellerService.myListing(page, size));
+      return ApiResponse.success( listSellerService.getListingByUserId(userId,page, size));
 
     }
 }

@@ -107,4 +107,8 @@ public class OrderController {
     public ResponseEntity<ApiResponse<?>> canCancleOrder(@PathVariable UUID orderId) {
         return ResponseEntity.ok(ApiResponse.success(orderService.canCanleOrder(orderId)));
     }
+    @GetMapping("/{orderId}")
+    public ResponseEntity<ApiResponse<OrderCardResponse>> getByOrderId(@PathVariable UUID orderId) {
+        return ResponseEntity.ok(ApiResponse.success(orderService.getByOrderId(orderId)));
+    }
 }

@@ -30,6 +30,8 @@ public class Shipment {
     private String toPhone;
     private String fromPhone;
     private String fromAddress;
+    private String fromName;
+    private String toName;
     @ManyToMany
     @JoinTable(
             name = "orderDetail_Shipment",

@@ -1,6 +1,7 @@
 package com.example.mysterycard.service.impl;
 
 import com.example.mysterycard.dto.request.SellRequest;
+import com.example.mysterycard.dto.response.ListSellerResponse;
 import com.example.mysterycard.dto.response.SellResponse;
 import com.example.mysterycard.entity.*;
 import com.example.mysterycard.enums.Status;
@@ -9,6 +10,7 @@ import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.ListSellerMapper;
 import com.example.mysterycard.repository.CardRepo;
 import com.example.mysterycard.repository.ListSellerRepo;
+import com.example.mysterycard.repository.UsersRepo;
 import com.example.mysterycard.repository.WishListRepo;
 import com.example.mysterycard.service.CardService;
 import com.example.mysterycard.service.ListSellerService;
@@ -39,6 +41,8 @@ public class ListSellerServiceImpl implements ListSellerService {
     private WishListRepo wishListRepo;
     @Autowired
     private NotificationService notificationService;
+    @Autowired
+    private UsersRepo usersRepo;
 
     public SellResponse createListSeller(SellRequest request, UUID cardId) {
         Card card = cardRepo.findById(cardId).orElseThrow(() -> new AppException(ErrorCode.CARD_NOT_FOUND));
@@ -64,11 +68,19 @@ public class ListSellerServiceImpl implements ListSellerService {
     }
 
     @Override
-    public Page<SellResponse> myListing(int page, int size) {
-        Users user = userService.getUser();
+    public Page<ListSellerResponse> getListingByUserId(UUID userId, int page, int size) {
+        Users users = null;
+        if(userId != null)
+        {
+            users = usersRepo.findByUserId(userId);
+        }
+        if(userId == null)
+        {
+            throw  new AppException(ErrorCode.USER_NOT_FOUND);
+        }
         Pageable pageable = PageRequest.of(page-1,size,Sort.by("createdAt").descending());
-        Page<ListSeller> listSellers = listSellerRepo.findAllBySeller(user, pageable);
-        return listSellers.map(listSellerMapper::toResponse)   ;
+        Page<ListSeller> listSellers = listSellerRepo.findAllBySeller(users, pageable);
+        return listSellers.map(listSellerMapper::entityToResponse)   ;
     }
 
 }

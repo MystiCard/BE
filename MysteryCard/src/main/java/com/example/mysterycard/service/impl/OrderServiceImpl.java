@@ -142,6 +142,8 @@ public class OrderServiceImpl implements OrderService {
                                         .fromPhone(listSeller.getSeller().getPhone())
                                         .fromAddress(listSeller.getSeller().getAddress())
                                         .fromDistrictId(Long.valueOf(listSeller.getSeller().getDistrictId()))
+                                        .fromName(listSeller.getSeller().getName())
+                                        .toName(request.getToName())
                                         .shipmentFee(shipfee)
                                         .build()
                         ))
@@ -220,6 +222,26 @@ public class OrderServiceImpl implements OrderService {
                 .build();
         return orderBlindBoxResultResponse;
     }
+
+    @Override
+    public OrderCardResponse getByOrderId(UUID orderId) {
+        Order order = orderRepo.findById(orderId).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+        List<Shipment> shipments =  order.getShipmentList();
+        List<OrderItemResponse> list = new ArrayList<>();
+        for (Shipment s : shipments)
+        {
+            OrderItemResponse orderItemResponse =  OrderItemResponse.builder()
+                    .shipmentResponse(shipmentMapper.entityToResponse(s))
+                    .shipfee(s.getShipmentFee())
+                    .orderDetailResponseList(s.getOrderItems().stream().map(orderItemMapper::entityToResponse).toList())
+                    .build();
+            list.add(orderItemResponse);
+        }
+        OrderCardResponse orderCardResponse = new OrderCardResponse();
+        orderCardResponse.setOrderItems(list);
+        return orderCardResponse;
+    }
+
     @Override
     public PageResponse<OrderItemResponse> getByStatusShipment(MyOrderDetailRequest request, int page, int size) {
         page = page - 1;
@@ -300,7 +322,7 @@ public class OrderServiceImpl implements OrderService {
             }
 
         }
-        if (countReceived == (order.getOrderItemList().size() - countCancelled)) {
+        if (countReceived == (order.getShipmentList().size()- countCancelled)) {
             order.setStatus(OrderStatus.COMPLETED);
         } else if (countReceived > 0) {
             order.setStatus(OrderStatus.PARTIAL_COMPLETED);
@@ -452,12 +474,12 @@ public class OrderServiceImpl implements OrderService {
         List<Shipment> shipments = order.getShipmentList();
         int count = 0;
         for(Shipment shipment : shipments){
-            if(shipment != null && shipment.getShipmentStatus() != null  && shipment.getShipmentStatus().equals(ShippingStatus.PENDING))
+            if(shipment != null && shipment.getShipmentStatus() != null  && (shipment.getShipmentStatus().equals(ShippingStatus.PENDING) || shipment.getShipmentStatus().equals(ShippingStatus.PENDING_APPROVED)))
             {
                 count++;
             }
         }
-        return order.getBuyer().equals(users) && count == shipments.size();
+        return order.getBuyer().equals(users) && count != 0 &&  count == shipments.size();
     }
 
     @Override
@@ -503,7 +525,10 @@ public class OrderServiceImpl implements OrderService {
         Users buyer = orderItem.getOrder().getBuyer();
 
         Shipment shipment =  orderItem.getShipments().stream().toList().getLast();
-        return users.equals(buyer) && !orderItem.getOrderItemStatus().equals(OrderItemStatus.CANCELLED)  && shipment.getShipmentStatus() != null && (shipment.getShipmentStatus().equals(ShippingStatus.PENDING) || shipment.getShipmentStatus().equals(ShippingStatus.PENDING_APPROVED));
+        return users.equals(buyer) &&
+                !orderItem.getOrderItemStatus().equals(OrderItemStatus.CANCELLED)
+                && shipment.getShipmentStatus() != null
+                && (shipment.getShipmentStatus().equals(ShippingStatus.PENDING) || shipment.getShipmentStatus().equals(ShippingStatus.PENDING_APPROVED));
     }
 
     @Override

@@ -19,6 +19,10 @@ public class ShipmentResponse {
     private String toPhone;
     private String fromPhone;
     private String fromAddress;
+    private String fromName;
+    private String toName;
+    private Long toDistrictId;
+    private Long toWardId;
     private LocalDateTime createAt;
     List<TrackingResponse> trackingResponses;
 

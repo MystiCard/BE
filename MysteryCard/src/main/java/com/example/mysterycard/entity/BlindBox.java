@@ -28,6 +28,4 @@ public class BlindBox {
     private List<RateConfig> rateConfigList = new ArrayList<>();
     @OneToMany(mappedBy = "blindBox")
     private List<Order> orderListd = new ArrayList<>();
-    @OneToMany(mappedBy = "blindBox")
-    private List<Feedback> blindBoxOpenList = new ArrayList<>();
 }

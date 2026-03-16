@@ -14,6 +14,7 @@ import com.example.mysterycard.repository.*;
 import com.example.mysterycard.service.ReturnRequestService;
 import com.example.mysterycard.service.ShipmentService;
 import com.example.mysterycard.service.TransactionService;
+import com.example.mysterycard.service.UserService;
 import com.example.mysterycard.utils.CloudiaryUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,10 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -47,6 +45,7 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
     private final ShipmentService shipmentService;
     private final TransactionService transactionService;
     private final ShipmentRepo shipmentRepo;
+    private final UserService userService;
 
     private final ShipmentMapper shipmentMapper;
     @Value("${DAY_CAN_RETURN}")
@@ -66,15 +65,14 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
                 .shippingStatus(ShippingStatus.CANCELLED)
                 .shipmentId(shipment.getShipmentId())
                 .build(), null);
-        updateStatusOrderItem(returnRequest);
+        updateStatusOrderItem(returnRequest,OrderItemStatus.RECIEVED);
         returnRequest.setStatus(ReturnRequestStatus.CANCELED);
-        updateStatusOrderItem(returnRequest);
         return returnRequestMapper.enityToReturnResponse(returnRequestRepo.save(returnRequest));
     }
 
-    public void updateStatusOrderItem(ReturnRequest request) {
+    public void updateStatusOrderItem(ReturnRequest request, OrderItemStatus status) {
         for (OrderItem orderItem : request.getOrderItemList()) {
-            orderItem.setOrderItemStatus(OrderItemStatus.RECIEVED);
+            orderItem.setOrderItemStatus(status);
 
         }
         orderItemsRepo.saveAll(request.getOrderItemList());
@@ -124,6 +122,8 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
                 .toDistrictId(Long.valueOf(seller.getDistrictId()))
                 .toWardId(Long.valueOf(seller.getWardId()))
                 .toPhone(seller.getPhone())
+                        .fromName(request.getSendName())
+                        .toName(seller.getName())
                 .build()
         );
         for (MultipartFile file : fileList) {
@@ -175,6 +175,7 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
                             && orderItem.getReturnRequest().getStatus().equals(status))
                     .map(OrderItem::getReturnRequest).collect(java.util.stream.Collectors.toSet());
         }
+        returnRequests.stream().sorted(Comparator.comparing(ReturnRequest::getCreatedAt).reversed()) ;
         int totalPages = returnRequests.size() / size;
         int from = page * size;
         int to = Math.min(((page + 1) * size), returnRequests.size());
@@ -212,11 +213,24 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
         Shipment shipment = shipmentRepo.findById(shipmentId).orElseThrow(
                 () -> new AppException(ErrorCode.SHIPMENT_NOT_FOUND)
         );
+        Users currentUser = userService.getUser();
         Set<OrderItem> orderItemList = shipment.getOrderItems();
-        Tracking tracking = shipment.getTrackingList().getLast();
-        return tracking.getShippingStatus() != null && tracking.getShippingStatus().equals(ShippingStatus.RECEIVED)
-                && tracking.getCreateAt().plusDays(dayCanReturn).isAfter(LocalDateTime.now());
+        int count =0 ;
+        for(OrderItem orderItem : orderItemList)
+        {
+            if(orderItem.getOrderItemStatus().equals(OrderItemStatus.RECIEVED)){
+                count++;
+            }
+        }
+        if(count == 0)
+        {
+            return false;
+        }
 
+        Tracking tracking = shipment.getTrackingList().getLast();
+        return shipment.getShipmentStatus() != null && shipment.getShipmentStatus().equals(ShippingStatus.RECEIVED)
+                && tracking.getCreateAt().plusDays(dayCanReturn).isAfter(LocalDateTime.now())
+                ;
     }
 
     @Override
@@ -229,7 +243,7 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
             throw new AppException(ErrorCode.CAN_NOT_APPROVE_RETURN_REQUEST);
         }
         returnRequest.setStatus(ReturnRequestStatus.REJECTED);
-        updateStatusOrderItem(returnRequest);
+        updateStatusOrderItem(returnRequest,OrderItemStatus.REJECT_RETURN);
         returnRequestRepo.save(returnRequest);
         return returnRequestMapper.enityToReturnResponse(returnRequest);
     }

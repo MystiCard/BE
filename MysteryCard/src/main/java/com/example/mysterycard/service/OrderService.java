@@ -29,4 +29,5 @@ public interface OrderService {
     Page<OrderItemResponse.OrderDetailResponse> listPending(int page, int size);
     OrderItemResponse.OrderDetailResponse approvedOrderItems(UUID orderItemId);
     OrderBlindBoxResultResponse createBlindBoxOrder(OrderBlinkBoxResultRequest request);
+    OrderCardResponse getByOrderId(UUID orderId);
 }

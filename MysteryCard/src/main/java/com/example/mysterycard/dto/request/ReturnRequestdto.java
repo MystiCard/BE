@@ -20,4 +20,6 @@ public class ReturnRequestdto {
     @NotNull(message = "SendPhone is required")
     @Pattern(regexp = "^(0|\\+84)(3|5|7|8|9)[0-9]{8}$",message = "Phone must be start 0 or +84 followed by 9 digit  ")
     private String sendPhone;
+    @NotNull(message = "Send Name is required")
+    private String sendName;
 }

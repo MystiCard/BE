@@ -33,6 +33,7 @@ public class OrderCardRequest {
         @NotNull(message = "List seller Id is require")
         private UUID listSellerId;
     }
-
+    @NotNull(message = "Name is required")
+    private String toName;
 
 }

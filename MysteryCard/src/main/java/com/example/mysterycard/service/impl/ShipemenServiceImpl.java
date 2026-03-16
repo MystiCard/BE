@@ -368,6 +368,8 @@ public class ShipemenServiceImpl implements ShipmentService {
             shipment.setShipmentFee(shipfee);
             shipment.setToWardId(request.getToWardId());
             shipment.setToDistrictId(request.getToDistrictId());
+            shipment.setToName(request.getToName());
+            shipment.setToPhone(request.getToPhone());
             OrderItemResponse orderItemResponse = OrderItemResponse.builder()
                     .orderDetailResponseList(shipment.getOrderItems().stream().map(orderItemMapper::entityToResponse).toList())
                     .shipfee(shipfee)

@@ -23,4 +23,6 @@ public class ShipmentRequest {
     private String fromPhone;
     private String fromAddress;
     private Long fromDistrictId;
+    private String fromName;
+    private String toName;
 }

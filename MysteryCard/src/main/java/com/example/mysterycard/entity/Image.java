@@ -32,4 +32,7 @@ public class Image {
     @JdbcTypeCode(SqlTypes.OTHER)
     @Transient
     private PGvector embedding;
+    @ManyToOne
+    @JoinColumn(name = "feedback_id")
+    private Feedback feedback;
 }

@@ -34,5 +34,13 @@ public class BlindBoxResult {
     private Order order;
     @ManyToMany(mappedBy = "blindBoxResults")
     private Set<Shipment>  shipments = new HashSet<>();
+    @Enumerated(EnumType.STRING)
+    private ResultStatus status = ResultStatus.NOT_RECEIVED;
+
+    public enum ResultStatus {
+        NOT_RECEIVED,
+        RECEIVED,
+        SHIPPING
+    }
 
 }

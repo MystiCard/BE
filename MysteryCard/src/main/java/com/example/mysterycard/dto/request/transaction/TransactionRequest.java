@@ -13,11 +13,10 @@ import lombok.Data;
 import java.util.UUID;
 
 @Data
+@Builder
 public class TransactionRequest {
     @NotNull(message = "Transaction Type is required")
     private TransactionType transactionType;
-    @NotNull(message = "Order Id  is required")
     private UUID orderId;
-
-
+    private double drawPrice;
 }

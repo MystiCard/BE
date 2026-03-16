@@ -34,9 +34,7 @@ public class Order {
     private List<WalletTransaction> transactionList = new ArrayList<>();
     @OneToMany(mappedBy = "order")
     private List<OrderItem> orderItemList = new ArrayList<>();
-    @ManyToOne
-    @JoinColumn(name = "blind_box_id")
-    private BlindBox blindBox;
+
     @Builder.Default
     @OneToMany(mappedBy = "order")
     private List<BlindBoxResult> blindBoxResults = new ArrayList<>();

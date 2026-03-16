@@ -1,10 +1,12 @@
 package com.example.mysterycard.service.impl;
 
 import com.example.mysterycard.dto.request.BlindBoxRequest;
+import com.example.mysterycard.dto.request.transaction.TransactionRequest;
 import com.example.mysterycard.dto.response.*;
 import com.example.mysterycard.entity.*;
 import com.example.mysterycard.enums.BlindBoxStatus;
 import com.example.mysterycard.enums.Rarity;
+import com.example.mysterycard.enums.TransactionType;
 import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.BlindBoxCardMapper;
@@ -14,6 +16,7 @@ import com.example.mysterycard.mapper.OrderMapper;
 import com.example.mysterycard.repository.*;
 import com.example.mysterycard.service.BlindBoxService;
 import com.example.mysterycard.service.CategoryService;
+import com.example.mysterycard.service.TransactionService;
 import com.example.mysterycard.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +45,7 @@ public class BlindBoxServiceImpl implements BlindBoxService {
     private final OrderRepo orderRepo;
     private final OrderMapper orderMapper;
     private final CategoryService categoryService;
+    private final TransactionService transactionService;
 
     @Override
     @Transactional
@@ -94,21 +98,20 @@ public class BlindBoxServiceImpl implements BlindBoxService {
         return config.getDropRate();
 
     }
-    public double calculateTotalWeight(BlindBox box) {
-        return box.getBlindBoxCards().stream()
-                .filter(BlindBoxCard::isStatus)
-                .mapToDouble(bc -> getWeight(bc, box))
-                .sum();
-    }
+//    public double calculateTotalWeight(BlindBox box) {
+//        return box.getBlindBoxCards().stream()
+//                .filter(BlindBoxCard::isStatus)
+//                .mapToDouble(bc -> getWeight(bc, box))
+//                .sum();
+//    }
     @Transactional
     @Override
     public DrawResultResponse drawCard(UUID id) {
         // 1. Tìm purchase và LOCK BOX
-        Order order = orderRepo.findById(id).orElseThrow(
-                () -> new AppException(ErrorCode.ORDER_NOT_FOUND));
-        BlindBox box = blindBoxRepo.findByIdWithLock(order.getBlindBox().getBlindBoxId())
-                .orElseThrow(() -> new AppException(ErrorCode.BLIND_BOX_NOT_FOUND));
 
+        BlindBox box = blindBoxRepo.findByIdWithLock(id)
+                .orElseThrow(() -> new AppException(ErrorCode.BLIND_BOX_NOT_FOUND));
+        double drawPrice = box.getDrawPrice();
         // 2. Lấy danh sách thẻ status = true (Dữ liệu tươi nhất từ DB)
         List<BlindBoxCard> activeCards = blindBoxCardRepo.findAllByBlindBoxAndStatusTrue(box);
         if (activeCards.isEmpty()) {
@@ -149,15 +152,16 @@ public class BlindBoxServiceImpl implements BlindBoxService {
         // 6. Lưu kết quả mở thưởng
         BlindBoxResult result = new BlindBoxResult();
         result.setCard(chosenCard.getCard());
-        result.setOrder(order);
-        result.setOwner(order.getBuyer());
+        Users owner = userService.getUser();
+        result.setOwner(owner);
+        result.setBlindBox(box);
         blindBoxCardResultRepo.save(result);
 
         // 7. Trả về Response
         DrawResultResponse drawResult = new DrawResultResponse();
         drawResult.setCard(cardMapper.toResponse(chosenCard.getCard()));
-        drawResult.setDrawPrice(order.getTotalAmount()); // Giá lúc khách mua
-        drawResult.setProfitOrLoss(chosenCard.getCard().getBasePrice() - order.getTotalAmount());
+        drawResult.setDrawPrice(drawPrice); // Giá lúc khách mua
+        drawResult.setProfitOrLoss(chosenCard.getCard().getBasePrice() - drawPrice);
 
         return drawResult;
     }
@@ -177,26 +181,27 @@ public class BlindBoxServiceImpl implements BlindBoxService {
     }
 
     @Override
-    public List<BlindBoxCardResponse> getCardsInBlindBox(UUID blindBoxId) {
+    public Page<BlindBoxCardResponse> getCardsInBlindBox(UUID blindBoxId, int size, int page) {
         BlindBox box = blindBoxRepo.findById(blindBoxId)
                 .orElseThrow(() -> new AppException(ErrorCode.BLIND_BOX_NOT_FOUND));
-        return box.getBlindBoxCards().stream()
-                .map(blindBoxCardMapper::toBlindBoxCardResponse)
-                .toList();
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
+        Page<BlindBoxCard> cards = blindBoxCardRepo.findByBlindBox_blindBoxId(box.getBlindBoxId(),pageable);
+        return cards.map(blindBoxCardMapper::toBlindBoxCardResponse);
+
+
     }
+    @Transactional
     @Override
-    public OrderResponse buyBlindBox(UUID blindBoxId) {
+    public DrawResultResponse buyBlindBox(UUID blindBoxId) {
         BlindBox box = blindBoxRepo.findById(blindBoxId)
                 .orElseThrow(() -> new AppException(ErrorCode.BLIND_BOX_NOT_FOUND));
-        Users users = userService.getUser();
-        Order order = new Order();
-        order.setBlindBox(box);
-        order.setBuyer(users);
-        order.setTotalAmount(box.getDrawPrice());
 
-
-        order = orderRepo.save(order);
-        return orderMapper.toOrderResponse(order);
+        transactionService.createTransaction(TransactionRequest.builder()
+                        .transactionType(TransactionType.PAYMENT)
+                        .drawPrice(box.getDrawPrice())
+                .build());
+        DrawResultResponse result = drawCard(box.getBlindBoxId());
+        return result;
     }
 
     @Override
@@ -287,7 +292,7 @@ public class BlindBoxServiceImpl implements BlindBoxService {
         double fillRate = (double) currentCount / initialCount;
 
         // 1. CHIẾN LƯỢC CHỐT HẠ (End-game)
-        if (currentCount <= (initialCount * 0.15) || currentCount < 10) {
+        if (currentCount <= (initialCount * 0.5) || currentCount < 10) {
             double totalValue = activeCards.stream()
                     .mapToDouble(c -> c.getCard().getBasePrice()).sum();
             return Math.round((totalValue / currentCount) * 1.05); // Cộng 5% phí sàn
@@ -327,10 +332,10 @@ public class BlindBoxServiceImpl implements BlindBoxService {
     private double calculateMultiplier(Rarity rarity, double fillRate) {
         return switch (rarity) {
             case COMMON, UNCOMMON -> 1.0;
-            case RARE -> fillRate > 0.8 ? 0.4 : 1.2;
-            case SUPER_RARE -> fillRate > 0.7 ? 0.0 : 1.5;
-            case ULTRA_RARE -> fillRate > 0.5 ? 0.0 : 2.5;
-            case SECRET_RARE -> fillRate > 0.3 ? 0.0 : 5.0;
+            case RARE -> fillRate > 0.7 ? 0.4 : 1.1;
+            case SUPER_RARE -> fillRate > 0.4? 0.0 : 1.25;
+            case ULTRA_RARE -> fillRate > 0.25 ? 0.0 : 2;
+            case SECRET_RARE -> fillRate > 0.2 ? 0.0 : 3;
             default -> 1.0;
         };
     }
@@ -343,10 +348,12 @@ public class BlindBoxServiceImpl implements BlindBoxService {
         return Math.round(totalValue * 1.03); // Giữ nguyên insurance 3% của bạn
     }
 
-    public Page<BlindBoxResultResponse> getAllResultsForUser(int page, int size) {
-        Users user = userService.getUser();
+    public Page<BlindBoxResultResponse> getAllResultsForUser(int page, int size , UUID blindBoxId) {
+        BlindBox box = blindBoxRepo.findById(blindBoxId)
+                .orElseThrow(() -> new AppException(ErrorCode.BLIND_BOX_NOT_FOUND));        Users user = userService.getUser();
         Pageable pageable = Pageable.ofSize(size).withPage(page);
-        Page<BlindBoxResult> resultsPage = blindBoxCardResultRepo.findByOwner_UserId(user.getUserId(), pageable);
+        Page<BlindBoxResult> resultsPage = blindBoxCardResultRepo.findByOwner_UserIdAndBlindBox_BlindBoxId(user.getUserId(), box.getBlindBoxId(),pageable);
+
         return resultsPage.map(result -> {
             BlindBoxResultResponse response = BlindBoxResultResponse.builder()
                     .blindBoxResultId(result.getBlindBoxResultId())
@@ -354,9 +361,23 @@ public class BlindBoxServiceImpl implements BlindBoxService {
                     .cardImageUrl(result.getCard().getImages().isEmpty() ? null : result.getCard().getImages().get(0).getImageUrl())
                     .rarity(result.getCard().getRarity().toString())
                     .openedAt(result.getOpenedAt())
+                    .blindBoxName(result.getBlindBox().getName())
                     .build();
             return response;
         });
     }
+    public Page<BlindBoxOpenResponse> getAllOpenedBlindBoxByUser(int page, int size) {
+        Users user = userService.getUser();
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
+        Page<BlindBox> resultsPage = blindBoxCardResultRepo.findDistinctBlindBoxByOwner_UserId(user.getUserId(),pageable);
 
+        return resultsPage.map(result -> {
+            BlindBoxOpenResponse response = BlindBoxOpenResponse.builder()
+                    .blindBoxId(result.getBlindBoxId())
+                    .name(result.getName())
+                    .imageUrl(result.getImageUrl())
+                    .build();
+            return response;
+        });
+    }
 }

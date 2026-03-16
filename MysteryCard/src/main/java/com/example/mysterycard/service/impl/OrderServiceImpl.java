@@ -179,6 +179,7 @@ public class OrderServiceImpl implements OrderService {
                         .cardName(blindBoxResult.getCard().getName())
                         .cardImageUrl(blindBoxResult.getCard().getImages().isEmpty() ? null : blindBoxResult.getCard().getImages().get(0).getImageUrl())
                         .rarity(blindBoxResult.getCard().getRarity().toString())
+                        .blindBoxName(blindBoxResult.getBlindBox().getName())
                         .build();
                 blindBoxResultResponses.add(blindBoxResultResponse);
                 order.getBlindBoxResults().add(blindBoxResult);

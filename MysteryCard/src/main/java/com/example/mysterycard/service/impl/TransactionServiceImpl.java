@@ -161,33 +161,42 @@ public class TransactionServiceImpl implements TransactionService {
         if (admin == null) {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
-        Order order = orderRepo.findById(request.getOrderId()).orElseThrow(
-                () -> new AppException(ErrorCode.ORDER_NOT_FOUND)
-        );
-        // blind box
         WalletTransaction transaction = transactionMapper.requestToEnity(request);
         transaction.setStatusTransaction(StatusPayment.SUCCESS);
-        Wallet seller = admin.getWallet();
         String message = "Transaction for Blind Box";
-        if (order.getBlindBox() == null) {
+        double totalAmount;
+        Order order = null;
+        if(request.getOrderId()!=null){
+        order = orderRepo.findById(request.getOrderId()).orElseThrow(
+                () -> new AppException(ErrorCode.ORDER_NOT_FOUND)
+        );
+        totalAmount = order.getTotalAmount();
+        }
+        else {
             message = "Transaction for buy Card";
             transaction.setStatusTransaction(StatusPayment.ESCROWED);
+            totalAmount = request.getDrawPrice();
         }
+        // blind box
+        Wallet seller = admin.getWallet();
+
         transaction.setMessage(message);
         transaction.setWalletReceive(seller);
         transaction.setWalletSend(buyer);
-        transaction.setAmount(order.getTotalAmount());
+        transaction.setAmount(totalAmount);
         transaction.setOrder(order);
-        if (buyer.getBalance() < order.getTotalAmount()) {
+        if (buyer.getBalance() < totalAmount) {
             transaction.setStatusTransaction(StatusPayment.FAILED);
             transaction.setMessage(ErrorCode.CAN_NOT_TRANSACTION.getMessage());
         } else {
-            admin.getWallet().setBalance(admin.getWallet().getBalance() + order.getTotalAmount());
+            admin.getWallet().setBalance(admin.getWallet().getBalance() + totalAmount);
             usersRepo.save(admin);
-            buyer.setBalance(buyer.getBalance() - order.getTotalAmount());
-            order.setStatus(OrderStatus.PAID);
-            UpdateStatusShipment(order);
-            updateQuanity(order);
+            buyer.setBalance(buyer.getBalance() - totalAmount);
+            if(order!=null) {
+                order.setStatus(OrderStatus.PAID);
+                UpdateStatusShipment(order);
+                updateQuanity(order);
+            }
         }
         return transactionMapper.entityToResponse(transactionRepo.save(transaction));
     }

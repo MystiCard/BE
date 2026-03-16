@@ -26,8 +26,8 @@ public class BlindBox {
     private List<BlindBoxCard> blindBoxCards = new ArrayList<>();
     @ManyToMany(mappedBy = "blindBoxesList",cascade = CascadeType.ALL)
     private List<RateConfig> rateConfigList = new ArrayList<>();
-    @OneToMany(mappedBy = "blindBox")
-    private List<Order> orderListd = new ArrayList<>();
+//    @OneToMany(mappedBy = "blindBox")
+//    private List<Order> orderListd = new ArrayList<>();
     @OneToMany(mappedBy = "blindBox")
     private List<Feedback> blindBoxOpenList = new ArrayList<>();
 }

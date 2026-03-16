@@ -37,8 +37,11 @@ public class BlindBoxController {
     }
 
     @GetMapping("/{id}/cards")
-    public ApiResponse getCardsInBlindBox(@PathVariable("id") UUID blindBoxId) {
-        return ApiResponse.success(blindBoxService.getCardsInBlindBox(blindBoxId));
+    public ApiResponse getCardsInBlindBox(
+            @RequestParam(required = false, defaultValue = "0 ") int page,
+            @RequestParam(required = false, defaultValue = "10") int size,
+            @PathVariable("id") UUID blindBoxId) {
+        return ApiResponse.success(blindBoxService.getCardsInBlindBox(blindBoxId,size,page));
     }
     @PostMapping("/{id}/buy")
     public ApiResponse buyBlindBox(@PathVariable("id") UUID blindBoxId) {
@@ -54,11 +57,20 @@ public class BlindBoxController {
         return blindBoxService.getProbabilities(id);
     }
 
-    @GetMapping("/results")
+    @GetMapping("/results/{blindBoxId}")
     public ApiResponse getAllResultsForUser(
-            @RequestParam(required = false, defaultValue = "1") int page,
-            @RequestParam(required = false, defaultValue = "10") int size) {
-        return ApiResponse.success(blindBoxService.getAllResultsForUser(page, size));
+            @RequestParam(required = false, defaultValue = "0 ") int page,
+            @RequestParam(required = false, defaultValue = "10") int size,
+            @PathVariable UUID blindBoxId
+    ) {
+        return ApiResponse.success(blindBoxService.getAllResultsForUser(page, size ,blindBoxId));
+    }
+    @GetMapping("/results")
+    public ApiResponse getAllOpenedBlindBoxForUser(
+            @RequestParam(required = false, defaultValue = "0 ") int page,
+            @RequestParam(required = false, defaultValue = "10") int size
+    ) {
+        return ApiResponse.success(blindBoxService.getAllOpenedBlindBoxByUser(page, size ));
     }
 
 }

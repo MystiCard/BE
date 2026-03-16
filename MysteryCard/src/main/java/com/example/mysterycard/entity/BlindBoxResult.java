@@ -24,6 +24,9 @@ public class BlindBoxResult {
     @JoinColumn(name = "card_id")
     private Card card;
     @ManyToOne
+    @JoinColumn(name = "blind_box_id")
+    private BlindBox blindBox;
+    @ManyToOne
     @JoinColumn(name = "user_id")
     private Users owner;
     @ManyToOne

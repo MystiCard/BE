@@ -12,9 +12,10 @@ public interface BlindBoxService {
     DrawResultResponse drawCard(UUID id);
     BlindBoxResponse getBlindBoxById(UUID id);
     List<BlindBoxResponse> getAllBlindBoxes();
-    List<BlindBoxCardResponse> getCardsInBlindBox(UUID blindBoxId);
-    OrderResponse buyBlindBox(UUID blindBoxId);
+    Page<BlindBoxCardResponse> getCardsInBlindBox(UUID blindBoxId, int size, int page);
+    DrawResultResponse buyBlindBox(UUID blindBoxId);
     void deleteBlindBox(UUID id);
     BlindBoxProbabilitiesResponse getProbabilities(UUID blindBoxId);
-    Page<BlindBoxResultResponse> getAllResultsForUser(int page, int size);
+    Page<BlindBoxResultResponse> getAllResultsForUser(int page, int size , UUID blindBoxId);
+    Page<BlindBoxOpenResponse> getAllOpenedBlindBoxByUser(int page, int size);
 }

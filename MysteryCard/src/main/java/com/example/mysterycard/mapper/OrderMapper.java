@@ -9,7 +9,6 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface OrderMapper {
     @Mapping(source = "buyer.userId", target = "buyerId")
-    @Mapping(source = "blindBox.blindBoxId", target = "blindBoxId")
     OrderResponse toOrderResponse(Order order);
     OrderCardResponse entityToResponse(Order order);
 }

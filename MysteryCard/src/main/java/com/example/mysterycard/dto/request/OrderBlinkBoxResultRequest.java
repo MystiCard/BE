@@ -26,4 +26,6 @@ public class OrderBlinkBoxResultRequest {
 
     @NotNull(message = "BlindBox results cannot be null")
     private List<UUID> blindBoxResultIds;
+    @NotNull(message = "Name is required")
+    private String toName;
 }

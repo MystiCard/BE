@@ -4,6 +4,7 @@ import com.example.mysterycard.enums.BlindBoxStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Entity
@@ -11,6 +12,8 @@ import java.util.*;
 @NoArgsConstructor
 @Getter
 @Setter
+@AllArgsConstructor
+@Builder
 public class BlindBox {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -20,6 +23,10 @@ public class BlindBox {
     private String imageUrl;
     private double drawPrice;
     private Long allBoxPrice;
+
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now();
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     private BlindBoxStatus blindBoxStatus = BlindBoxStatus.ACTIVE;
     @OneToMany(mappedBy = "blindBox", cascade = CascadeType.ALL , orphanRemoval = true)
@@ -28,6 +35,6 @@ public class BlindBox {
     private List<RateConfig> rateConfigList = new ArrayList<>();
 //    @OneToMany(mappedBy = "blindBox")
 //    private List<Order> orderListd = new ArrayList<>();
-    @OneToMany(mappedBy = "blindBox")
-    private List<Feedback> blindBoxOpenList = new ArrayList<>();
+//    @OneToMany(mappedBy = "blindBox")
+//    private List<Feedback> blindBoxOpenList = new ArrayList<>();
 }

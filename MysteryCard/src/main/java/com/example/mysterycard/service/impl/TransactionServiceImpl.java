@@ -257,10 +257,19 @@ public class TransactionServiceImpl implements TransactionService {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
         Wallet send = admin.getWallet();
-        Wallet receive = shipment.getShipper().getWallet();
-
+        Wallet receive = null;
+        String message = "";
+        if(shipment.getShipmentStatus().equals(ShippingStatus.CANCELLED)){
+            receive = shipment.getOrder().getBuyer().getWallet();
+            send.setBalance(send.getBalance()-shipment.getShipmentFee());
+            receive.setBalance(receive.getBalance()+shipment.getShipmentFee());
+            message="Hoan tra tien cho buyer";
+        }else{
+          receive =  shipment.getShipper().getWallet();
         send.setBalance(send.getBalance()-shipment.getShipmentFee());
         receive.setBalance(receive.getBalance()+shipment.getShipmentFee());
+        message="Tra tien ship cho shipper";
+        }
         walletRepo.saveAll(List.of(receive, send));
 
         WalletTransaction transactionForShipper = WalletTransaction.builder()
@@ -269,7 +278,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .walletSend(send)
                 .transactionType(TransactionType.TRANSFER)
                 .statusTransaction(StatusPayment.SUCCESS)
-                .message("Tra tien ship cho shipper")
+                .message(message)
                 .build();
         return transactionMapper.entityToResponse(transactionRepo.save(transactionForShipper));
 

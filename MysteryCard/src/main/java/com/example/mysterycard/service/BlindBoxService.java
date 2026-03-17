@@ -18,7 +18,7 @@ public interface BlindBoxService {
     BlindBoxResponse getBlindBoxById(UUID id);
     Page<BlindBoxResponse> getAllBlindBoxes(int page, int size, BlindBoxStatus blindBoxStatus);
     Page<BlindBoxCardResponse> getCardsInBlindBox(UUID blindBoxId, int size, int page);
-    DrawResultResponse buyBlindBox(UUID blindBoxId, int quantity);
+    List<DrawResultResponse> buyBlindBox(UUID blindBoxId, boolean buyAll);
     void deleteBlindBox(UUID id);
     BlindBoxProbabilitiesResponse getProbabilities(UUID blindBoxId);
     Page<BlindBoxResultResponse> getAllResultsForUser(int page, int size , UUID blindBoxId, BlindBoxResult.ResultStatus status);

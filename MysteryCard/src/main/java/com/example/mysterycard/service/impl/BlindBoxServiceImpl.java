@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -153,11 +154,11 @@ public class BlindBoxServiceImpl implements BlindBoxService {
         blindBoxCardResultRepo.save(result);
 
         // 7. Trả về Response
-        DrawResultResponse drawResult = new DrawResultResponse();
-        drawResult.setCard(cardMapper.toResponse(chosenCard.getCard()));
-        drawResult.setDrawPrice(drawPrice); // Giá lúc khách mua
-        drawResult.setProfitOrLoss(chosenCard.getCard().getBasePrice() - drawPrice);
-
+        DrawResultResponse drawResult = DrawResultResponse.builder()
+                .card(cardMapper.toResponse(chosenCard.getCard()))
+                .drawPrice(drawPrice)
+                .profitOrLoss(chosenCard.getCard().getBasePrice() - drawPrice)
+                .build();
         return drawResult;
     }
 
@@ -193,16 +194,49 @@ public class BlindBoxServiceImpl implements BlindBoxService {
 
     @Transactional
     @Override
-    public DrawResultResponse buyBlindBox(UUID blindBoxId, int quantity) {
+    public List<DrawResultResponse> buyBlindBox(UUID blindBoxId, boolean buyAll) {
+        List<DrawResultResponse> drawResultResponseList  = new ArrayList<>();
         BlindBox box = blindBoxRepo.findById(blindBoxId)
                 .orElseThrow(() -> new AppException(ErrorCode.BLIND_BOX_NOT_FOUND));
 
-        transactionService.createTransaction(TransactionRequest.builder()
-                .transactionType(TransactionType.PAYMENT)
-                .drawPrice(box.getDrawPrice())
-                .build());
-        DrawResultResponse result = drawCard(box.getBlindBoxId());
-        return result;
+
+        if(!buyAll){
+            transactionService.createTransaction(TransactionRequest.builder()
+                    .transactionType(TransactionType.PAYMENT)
+                    .drawPrice(box.getDrawPrice())
+                    .build());
+            DrawResultResponse result = drawCard(box.getBlindBoxId());
+            drawResultResponseList.add(result);
+
+        }
+        else {
+            transactionService.createTransaction(TransactionRequest.builder()
+                    .transactionType(TransactionType.PAYMENT)
+                    .drawPrice(box.getAllBoxPrice())
+                    .build());
+            List<BlindBoxCard> cards  = blindBoxCardRepo.findAllByBlindBoxAndStatusTrue(box);
+            for(BlindBoxCard card : cards){
+                DrawResultResponse results = DrawResultResponse.builder()
+                        .card(cardMapper.toResponse(card.getCard()))
+                        .build();
+                card.setStatus(false);
+                blindBoxCardRepo.save(card);
+                drawResultResponseList.add(results);
+                BlindBoxResult blindBoxResult = new BlindBoxResult();
+                blindBoxResult.setStatus(BlindBoxResult.ResultStatus.NOT_RECEIVED);
+                blindBoxResult.setOwner(userService.getUser());
+                blindBoxResult.setCard(card.getCard());
+                blindBoxResult.setOpenedAt(LocalDateTime.now());
+                blindBoxResult.setBlindBox(box);
+                blindBoxCardResultRepo.save(blindBoxResult);
+            }
+            box.setBlindBoxStatus(BlindBoxStatus.OUT_OF_STOCK);
+            box.setDrawPrice(0);
+            box.setAllBoxPrice(0l);
+            blindBoxRepo.save(box);
+
+        }
+        return drawResultResponseList;
     }
 
     @Override

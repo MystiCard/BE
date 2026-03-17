@@ -56,8 +56,8 @@ public class BlindBoxController {
     }
     @PostMapping("/{id}/buy")
     public ApiResponse buyBlindBox(@PathVariable("id") UUID blindBoxId,
-                                   @RequestParam(defaultValue = "1") int quantity) {
-        return ApiResponse.success(blindBoxService.buyBlindBox(blindBoxId, quantity));
+                                   @RequestParam(defaultValue = "false") boolean buyAll ) {
+        return ApiResponse.success(blindBoxService.buyBlindBox(blindBoxId, buyAll));
     }
     @DeleteMapping("/{id}")
     public ApiResponse deleteBlindBox(@PathVariable("id") UUID id) {

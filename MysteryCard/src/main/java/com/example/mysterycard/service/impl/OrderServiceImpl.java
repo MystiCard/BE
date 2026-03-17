@@ -453,7 +453,32 @@ public class OrderServiceImpl implements OrderService {
         }
         return orderMapper.entityToResponse(orderRepo.save(order));
     }
-
+    @Override
+    @Transactional
+    public ConfirmBlindBoxResponse cancleResultOrder(UUID orderId){
+        Order order = orderRepo.findById(orderId).orElseThrow(
+                () -> new AppException(ErrorCode.ORDER_NOT_FOUND)
+        );
+        List<BlindBoxResult> blindBoxResults = order.getBlindBoxResults();
+        for(BlindBoxResult result: blindBoxResults){
+            result.setStatus(BlindBoxResult.ResultStatus.NOT_RECEIVED);
+        }
+        blindBoxResultRepo.saveAll(blindBoxResults);
+        Shipment shipment = blindBoxResults.getFirst().getShipments().iterator().next();
+        shipmentService.update(UpdateShipmentRequest.builder()
+                .shippingStatus(ShippingStatus.CANCELLED)
+                .shipmentId(shipment.getShipmentId())
+                .build(), null);
+        order.setStatus(OrderStatus.CANCELLED);
+        orderRepo.save(order);
+        transactionService.releaseShipmentFee(shipment);
+        return ConfirmBlindBoxResponse.builder()
+                .shipfee(shipment.getShipmentFee())
+                .orderStatus(order.getStatus().toString())
+                .shipmentResponse(shipmentMapper.entityToResponse(shipment))
+                .blindBoxResults(blindBoxResults.stream().map(blindBoxService::toBlindBoxResultResponse).toList())
+                .build();
+    }
     @Override
     public PageResponse<OrderItemResponse> getMyReturnOrderItem(ShippingStatus shippingStatus, int page, int size) {
         page = page - 1;

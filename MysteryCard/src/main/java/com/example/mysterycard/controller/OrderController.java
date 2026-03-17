@@ -69,6 +69,13 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success(orderService.cancleOrder(orderId)));
 
     }
+
+    @PostMapping("/cancel-order-result/{orderId}")
+    public ResponseEntity<ApiResponse<ConfirmBlindBoxResponse>> cancelOrderResult(
+            @PathVariable UUID orderId) {
+        return ResponseEntity.ok(ApiResponse.success(orderService.cancleResultOrder(orderId)));
+
+    }
     @PostMapping("/my-card-return")
     public ResponseEntity<ApiResponse<PageResponse<OrderItemResponse>>> getMyReturnOrderItem(
             @RequestBody ShippingStatus shippingStatus,

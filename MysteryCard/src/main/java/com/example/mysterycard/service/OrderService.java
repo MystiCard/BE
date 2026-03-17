@@ -20,6 +20,7 @@ public interface OrderService {
     OrderItemResponse confirmReceiveCard(UUID orderItemId);
     OrderItemResponse.OrderDetailResponse cancleOrderItem(UUID orderItemId);
     OrderCardResponse cancleOrder(UUID orderId);
+    ConfirmBlindBoxResponse cancleResultOrder(UUID orderId);
     PageResponse<OrderItemResponse> getMyReturnOrderItem(ShippingStatus shippingStatus, int page, int size);
     Page<OrderResponse> getMyOrders(OrderStatus orderStatus, int page, int size);
     boolean canCanleOrder(UUID orderId);

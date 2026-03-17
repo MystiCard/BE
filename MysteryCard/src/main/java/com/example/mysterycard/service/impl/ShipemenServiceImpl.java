@@ -47,11 +47,11 @@ public class ShipemenServiceImpl implements ShipmentService {
     @Value("${ghn.url-fee}")
     private String url_fee;
     @Value("${ghn.length}")
-    private   int length;
+    private int length;
     @Value("${ghn.height}")
-    private   int height;
+    private int height;
     @Value("${ghn.weight}")
-    private   int weight;
+    private int weight;
     @Value("${ghn.width}")
     private int width;
     private final ShipmentMapper shipmentMapper;
@@ -67,46 +67,43 @@ public class ShipemenServiceImpl implements ShipmentService {
     private final UserService userService;
     private final OrderItemMapper orderItemMapper;
     private final OrderMapper orderMapper;
-    private final  ReturnRequestRepo returnRequestRepo;
+    private final ReturnRequestRepo returnRequestRepo;
+
     @Override
     public ShipmentResponse createsShipment(ShipmentRequest request) {
-            Shipment shipment = shipmentMapper.requestToEntity(request);
-            // create tracking
-            if(request.getOrderItemId() != null && !request.getOrderItemId().isEmpty()){
-                for (UUID orderItemId : request.getOrderItemId()) {
-                    OrderItem orderItem = orderItemsRepo.findById(orderItemId).orElseThrow(
-                         () -> new AppException(ErrorCode.ORDER_ITEMS_NOT_FOUND)
-                 );
-                    if(orderItem.getReturnRequest() != null)
-                    {
-                     ReturnRequest returnRequest = orderItem.getReturnRequest();
-                     returnRequest.setShipment(shipment);
-                        returnRequestRepo.save(returnRequest);
-                    }else{
-                        shipment.getOrderItems().add(orderItem);
-                        shipment.setOrder(orderItem.getOrder());
-                    }
-             }
-            }
-            else if(request.getBlindBoxResultId() != null && !request.getBlindBoxResultId().isEmpty()) {
-                for(UUID blindBoxResultId : request.getBlindBoxResultId())
-                {
-                    BlindBoxResult blindBoxResult = blindBoxResultRepo.findById(blindBoxResultId).orElseThrow(
-                            () -> new AppException(ErrorCode.BLIND_BOX_RESULT_NOT_FOUND)
-                    );
-                    shipment.getBlindBoxResults().add(blindBoxResult);
-                    shipment.setShipmentStatus(ShippingStatus.PENDING);
-                    shipment.setOrder(blindBoxResult.getOrder());
+        Shipment shipment = shipmentMapper.requestToEntity(request);
+        // create tracking
+        if (request.getOrderItemId() != null && !request.getOrderItemId().isEmpty()) {
+            for (UUID orderItemId : request.getOrderItemId()) {
+                OrderItem orderItem = orderItemsRepo.findById(orderItemId).orElseThrow(
+                        () -> new AppException(ErrorCode.ORDER_ITEMS_NOT_FOUND)
+                );
+                if (orderItem.getReturnRequest() != null) {
+                    ReturnRequest returnRequest = orderItem.getReturnRequest();
+                    returnRequest.setShipment(shipment);
+                    returnRequestRepo.save(returnRequest);
+                } else {
+                    shipment.getOrderItems().add(orderItem);
+                    shipment.setOrder(orderItem.getOrder());
                 }
             }
-            else {
-                throw new AppException(ErrorCode.INVALID_REQUEST);
+        } else if (request.getBlindBoxResultId() != null && !request.getBlindBoxResultId().isEmpty()) {
+            for (UUID blindBoxResultId : request.getBlindBoxResultId()) {
+                BlindBoxResult blindBoxResult = blindBoxResultRepo.findById(blindBoxResultId).orElseThrow(
+                        () -> new AppException(ErrorCode.BLIND_BOX_RESULT_NOT_FOUND)
+                );
+                shipment.getBlindBoxResults().add(blindBoxResult);
+                shipment.setShipmentStatus(null);
+                shipment.setOrder(blindBoxResult.getOrder());
             }
-            shipmentRepo.save(shipment);
-            trackingService.createTracking(
-                    TrackingRequest.builder()
-                            .shipmentId(shipment.getShipmentId())
-                            .build());
+        } else {
+            throw new AppException(ErrorCode.INVALID_REQUEST);
+        }
+        shipmentRepo.save(shipment);
+        trackingService.createTracking(
+                TrackingRequest.builder()
+                        .shipmentId(shipment.getShipmentId())
+                        .build());
         return shipmentMapper.entityToResponse(shipment);
     }
 
@@ -118,6 +115,7 @@ public class ShipemenServiceImpl implements ShipmentService {
         );
         return shipmentRepo.findByOrderItems(Set.of(orderItem)).stream().map(shipmentMapper::entityToResponse).collect(Collectors.toList());
     }
+
     @Override
     public List<ShipmentResponse> getShipmentByBlindBoxResult(UUID blindBoxResultId) {
         BlindBoxResult blindBoxResult = blindBoxResultRepo.findById(blindBoxResultId).orElseThrow(
@@ -125,6 +123,7 @@ public class ShipemenServiceImpl implements ShipmentService {
         );
         return shipmentRepo.findByBlindBoxResults(Set.of(blindBoxResult)).stream().map(shipmentMapper::entityToResponse).collect(Collectors.toList());
     }
+
     @Override
     public Page<ShipmentResponse> myShipment(boolean complete, int page, int size) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -132,28 +131,26 @@ public class ShipemenServiceImpl implements ShipmentService {
         if (users == null) {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
-        log.info("Current User {}",users.getName());
-        Pageable pageable = PageRequest.of(page-1, size, Sort.by("createAt").descending());
+        log.info("Current User {}", users.getName());
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createAt").descending());
         List<ShippingStatus> shippingStatuses = new ArrayList<>();
-        if(!complete)
-        {
-            shippingStatuses.addAll(List.of(ShippingStatus.ASIGNED,ShippingStatus.PICKED_UP,ShippingStatus.IN_TRANSIT,ShippingStatus.PENDING));
-         }
-        else {
-            shippingStatuses.addAll(List.of(ShippingStatus.RECEIVED,ShippingStatus.LOST,ShippingStatus.FAILED,ShippingStatus.CANCELLED,ShippingStatus.DELIVERED));
+        if (!complete) {
+            shippingStatuses.addAll(List.of(ShippingStatus.ASIGNED, ShippingStatus.PICKED_UP, ShippingStatus.IN_TRANSIT, ShippingStatus.PENDING));
+        } else {
+            shippingStatuses.addAll(List.of(ShippingStatus.RECEIVED, ShippingStatus.LOST, ShippingStatus.FAILED, ShippingStatus.CANCELLED, ShippingStatus.DELIVERED));
         }
 
         Specification<Shipment> spec = Specification.allOf(
                 ShipmentSpecification.findByUser(users),
                 ShipmentSpecification.findByStatus(shippingStatuses)
         );
-        return shipmentRepo.findAll(spec,pageable).map(shipmentMapper::entityToResponse);
+        return shipmentRepo.findAll(spec, pageable).map(shipmentMapper::entityToResponse);
     }
 
     @Override
     public Page<ShipmentResponse> shipmentNotAsigned(int page, int size) {
-        Pageable pageable = PageRequest.of(page-1, size, Sort.by("createAt").descending());
-        return shipmentRepo.findAllByNotHaveShipper(ShippingStatus.PENDING,pageable).map(shipmentMapper::entityToResponse);
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createAt").descending());
+        return shipmentRepo.findAllByNotHaveShipper(ShippingStatus.PENDING, pageable).map(shipmentMapper::entityToResponse);
     }
 
     @Override
@@ -161,16 +158,13 @@ public class ShipemenServiceImpl implements ShipmentService {
         Users users = userService.getUser();
         Users owner = null;
         Shipment shipment = shipmentRepo.findById(shipemnt).orElseThrow(
-                ()-> new AppException(ErrorCode.SHIPMENT_NOT_FOUND)
+                () -> new AppException(ErrorCode.SHIPMENT_NOT_FOUND)
         );
-        if(shipment.getOrderItems()!=null&&!shipment.getOrderItems().isEmpty())
-        {
+        if (shipment.getOrderItems() != null && !shipment.getOrderItems().isEmpty()) {
             Order order = shipment.getOrderItems().iterator().next().getOrder();
             owner = order.getBuyer();
 
-        }
-        else if(shipment.getBlindBoxResults()!=null&&!shipment.getBlindBoxResults().isEmpty())
-        {
+        } else if (shipment.getBlindBoxResults() != null && !shipment.getBlindBoxResults().isEmpty()) {
             Order order = shipment.getBlindBoxResults().iterator().next().getOrder();
             owner = order.getBuyer();
 
@@ -183,7 +177,7 @@ public class ShipemenServiceImpl implements ShipmentService {
                 Notification.NotiType.shipment
         );
 
-        notificationService.createNotification("Đơn hàng của bạn đã được giao cho shipper "+users.getUserId().toString()+", vui lòng theo dõi để biết thông tin chi tiết về đơn hàng",owner,
+        notificationService.createNotification("Đơn hàng của bạn đã được giao cho shipper " + users.getUserId().toString() + ", vui lòng theo dõi để biết thông tin chi tiết về đơn hàng", owner,
                 Notification.NotiType.shipment
         );
         return shipmentMapper.entityToResponse(shipmentRepo.save(shipment));
@@ -193,20 +187,16 @@ public class ShipemenServiceImpl implements ShipmentService {
     public boolean checkAllowedRecieveShipment() {
         Users users = userService.getUser();
         boolean shipper = false;
-       for(Role r : users.getRolelist())
-       {
-               if(r.getRoleCode().equals("SHIPPER"))
-               {
-                   shipper = true;
-               }
-       }
-       if(!shipper)
-       {
-           throw new AppException(ErrorCode.CANNOT_IS_SHIPPER);
-       }
-        List<ShippingStatus> list = List.of(ShippingStatus.ASIGNED,ShippingStatus.PICKED_UP,ShippingStatus.IN_TRANSIT);
-        if(shipmentRepo.existsByShipmentStatusIsInAndShipper(list,users))
-        {
+        for (Role r : users.getRolelist()) {
+            if (r.getRoleCode().equals("SHIPPER")) {
+                shipper = true;
+            }
+        }
+        if (!shipper) {
+            throw new AppException(ErrorCode.CANNOT_IS_SHIPPER);
+        }
+        List<ShippingStatus> list = List.of(ShippingStatus.ASIGNED, ShippingStatus.PICKED_UP, ShippingStatus.IN_TRANSIT);
+        if (shipmentRepo.existsByShipmentStatusIsInAndShipper(list, users)) {
             return false;
         }
         return true;
@@ -216,17 +206,14 @@ public class ShipemenServiceImpl implements ShipmentService {
     @Transactional
     public ShipmentResponse update(UpdateShipmentRequest request, List<MultipartFile> fileList) {
         Shipment shipment = shipmentRepo.findById(request.getShipmentId()).orElseThrow(
-                ()-> new AppException(ErrorCode.SHIPMENT_NOT_FOUND)
+                () -> new AppException(ErrorCode.SHIPMENT_NOT_FOUND)
         );
         Users owner = null;
-        if(shipment.getOrderItems()!=null&&!shipment.getOrderItems().isEmpty())
-        {
+        if (shipment.getOrderItems() != null && !shipment.getOrderItems().isEmpty()) {
             Order order = shipment.getOrderItems().iterator().next().getOrder();
             owner = order.getBuyer();
 
-        }
-        else if(shipment.getBlindBoxResults()!=null&&!shipment.getBlindBoxResults().isEmpty())
-        {
+        } else if (shipment.getBlindBoxResults() != null && !shipment.getBlindBoxResults().isEmpty()) {
             Order order = shipment.getBlindBoxResults().iterator().next().getOrder();
             owner = order.getBuyer();
 
@@ -243,25 +230,24 @@ public class ShipemenServiceImpl implements ShipmentService {
             case RECEIVED -> "đã được nhận.";
             case CANCELLED -> "đã bị hủy.";
         };
-        notificationService.createNotification("Đơn hàng của bạn "+message,owner,
+        notificationService.createNotification("Đơn hàng của bạn " + message, owner,
                 Notification.NotiType.shipment
         );
 
 
-
         shipment.setShipmentStatus(request.getShippingStatus());
         shipmentRepo.save(shipment);
-      ShipmentResponse shipmentResponse = shipmentMapper.entityToResponse(shipmentRepo.save(shipment));
-       shipmentResponse.getTrackingResponses().add( trackingService.createTracking(
-               TrackingRequest.builder()
-                       .shipmentId(shipment.getShipmentId())
-                       .note(request.getNote())
-                       .fileList(fileList)
-                       .build()));
+        ShipmentResponse shipmentResponse = shipmentMapper.entityToResponse(shipmentRepo.save(shipment));
+        shipmentResponse.getTrackingResponses().add(trackingService.createTracking(
+                TrackingRequest.builder()
+                        .shipmentId(shipment.getShipmentId())
+                        .note(request.getNote())
+                        .fileList(fileList)
+                        .build()));
         return shipmentResponse;
     }
 
-    public Long getFirstServiceId( Long fromDistrict, Long toDistrict) {
+    public Long getFirstServiceId(Long fromDistrict, Long toDistrict) {
         String url = "https://online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/available-services";
 
         HttpHeaders headers = new HttpHeaders();
@@ -289,74 +275,74 @@ public class ShipemenServiceImpl implements ShipmentService {
         }
         return null; // fallback nếu không có dịch vụ nào
     }
- @Override
+
+    @Override
     public Long calculatFeeShip(CalculateFeeRequest request) {
 
-     boolean ok = false;
-     long serviceId = 53320;
-     do{
+        boolean ok = false;
+        long serviceId = 53320;
+        do {
 
-         try{
-             HttpHeaders headers = new HttpHeaders();
-             headers.set("Token",ghnToken);
-             headers.set("shop_id",shopId);
-             headers.setContentType(MediaType.APPLICATION_JSON);
-             log.info("service id :  {}",serviceId);
-             CalculateShipmentFeeRequest calRequest = CalculateShipmentFeeRequest.builder()
-                     .service_id(serviceId)
-                     .insurance_value(Math.round(request.getTotalAmount()))
-                     .coupon(null)
-                     .from_district_id(request.getFromDistrictId())
-                     .to_district_id(request.getToDistrictId())
-                     .to_ward_code(request.getToWardId())
-                     .height(height)
-                     .length(length)
-                     .weight(weight)
-                     .width(width)
-                     .build();
-             HttpEntity<CalculateShipmentFeeRequest> entity = new HttpEntity<>(calRequest, headers);
-             ResponseEntity<Map> response = restTemplate.postForEntity(
-                     url_fee,
-                     entity,
-                     Map.class
-             );
-             log.info("Response {}", response.getBody());
-             Map<String, Object> body = response.getBody();
+            try {
+                HttpHeaders headers = new HttpHeaders();
+                headers.set("Token", ghnToken);
+                headers.set("shop_id", shopId);
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                log.info("service id :  {}", serviceId);
+                CalculateShipmentFeeRequest calRequest = CalculateShipmentFeeRequest.builder()
+                        .service_id(serviceId)
+                        .insurance_value(Math.round(request.getTotalAmount()))
+                        .coupon(null)
+                        .from_district_id(request.getFromDistrictId())
+                        .to_district_id(request.getToDistrictId())
+                        .to_ward_code(request.getToWardId())
+                        .height(height)
+                        .length(length)
+                        .weight(weight)
+                        .width(width)
+                        .build();
+                HttpEntity<CalculateShipmentFeeRequest> entity = new HttpEntity<>(calRequest, headers);
+                ResponseEntity<Map> response = restTemplate.postForEntity(
+                        url_fee,
+                        entity,
+                        Map.class
+                );
+                log.info("Response {}", response.getBody());
+                Map<String, Object> body = response.getBody();
 
-             Map<String, Object> data = (Map<String, Object>) body.get("data");
+                Map<String, Object> data = (Map<String, Object>) body.get("data");
 
-             return Long.parseLong(data.get("total").toString());
-         }catch(Exception e)
-         {
-            serviceId++;
-         }
+                return Long.parseLong(data.get("total").toString());
+            } catch (Exception e) {
+                serviceId++;
+            }
 
-     }while (!ok && serviceId < 53324);
-     return null;
+        } while (!ok && serviceId < 53324);
+        return null;
     }
+
     @Transactional
     @Override
     public OrderCardResponse changeAddressShip(ChangeAddressShipmentRequest request) {
 
         Order order = orderRepo.findById(request.getOrderId()).orElseThrow(
-                ()-> new AppException(ErrorCode.ORDER_NOT_FOUND)
+                () -> new AppException(ErrorCode.ORDER_NOT_FOUND)
         );
 
-      List<Shipment> shipments = order.getShipmentList();
-    Long shipfeeOld = 0L ;
-    Long shipfeenew = 0L ;
+        List<Shipment> shipments = order.getShipmentList();
+        Long shipfeeOld = 0L;
+        Long shipfeenew = 0L;
 
         List<OrderItemResponse> orderItemResponses = new ArrayList<>();
 
-        for(Shipment shipment : shipments) {
-          shipfeeOld += shipment.getShipmentFee();
-           ListSeller ls = shipment.getOrderItems().stream().toList().getFirst().getListSeller();
-           int totalPrice = 0 ;
-           for (OrderItem orderItem : shipment.getOrderItems())
-           {
-                       totalPrice += orderItem.getQuantity() * orderItem.getPrice();
+        for (Shipment shipment : shipments) {
+            shipfeeOld += shipment.getShipmentFee();
+            ListSeller ls = shipment.getOrderItems().stream().toList().getFirst().getListSeller();
+            int totalPrice = 0;
+            for (OrderItem orderItem : shipment.getOrderItems()) {
+                totalPrice += orderItem.getQuantity() * orderItem.getPrice();
 
-           }
+            }
             Long shipfee = calculatFeeShip(
                     CalculateFeeRequest.builder()
                             .totalAmount(totalPrice)
@@ -365,7 +351,7 @@ public class ShipemenServiceImpl implements ShipmentService {
                             .toDistrictId(request.getToDistrictId())
                             .build()
             );
-            shipfeenew+= shipfee;
+            shipfeenew += shipfee;
             shipment.setToAddress(request.getNewAddress());
             shipment.setShipmentFee(shipfee);
             shipment.setToWardId(request.getToWardId());
@@ -378,15 +364,15 @@ public class ShipemenServiceImpl implements ShipmentService {
                     .shipmentResponse(shipmentMapper.entityToResponse(shipment))
                     .build();
             orderItemResponses.add(orderItemResponse);
-      }
+        }
 
-        order.setTotalAmount(order.getTotalAmount()-(shipfeeOld-shipfeenew));
+        order.setTotalAmount(order.getTotalAmount() - (shipfeeOld - shipfeenew));
         orderRepo.save(order);
 
 
         OrderCardResponse orderCardResponse = orderMapper.entityToResponse(order);
         orderCardResponse.setOrderItems(orderItemResponses);
 
-        return   orderCardResponse;
+        return orderCardResponse;
     }
 }

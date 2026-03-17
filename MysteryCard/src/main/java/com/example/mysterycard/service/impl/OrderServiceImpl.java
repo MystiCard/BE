@@ -30,6 +30,7 @@ import com.example.mysterycard.specification.OrderSpecification;
 import com.example.mysterycard.specification.ShipmentSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -58,6 +59,8 @@ public class OrderServiceImpl implements OrderService {
     private final TransactionService transactionService;
     private final BlindBoxResultRepo blindBoxResultRepo;
     private final BlindBoxService blindBoxService;
+    @Value("${admin.email}")
+    private String adminEmail;
     @Override
     @Transactional
     public OrderCardResponse createOrder(OrderCardRequest request) {
@@ -164,6 +167,11 @@ public class OrderServiceImpl implements OrderService {
         if (users == null) {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
+
+        Users amdmin = usersRepo.findByEmail(adminEmail);
+        if (amdmin == null) {
+            throw  new AppException(ErrorCode.USER_NOT_FOUND);
+        }
         Order order = Order.builder()
                 .buyer(users)
                 .build();
@@ -176,7 +184,6 @@ public class OrderServiceImpl implements OrderService {
                         () -> new AppException(ErrorCode.BLIND_BOX_RESULT_NOT_FOUND)
                 );
                 blindBoxResult.setOrder(order);
-                blindBoxResult.setStatus(BlindBoxResult.ResultStatus.SHIPPING);
                 blindBoxResultRepo.save(blindBoxResult);
                 BlindBoxResultResponse blindBoxResultResponse = BlindBoxResultResponse.builder()
                         .blindBoxResultId(blindBoxResult.getBlindBoxResultId())
@@ -208,10 +215,12 @@ public class OrderServiceImpl implements OrderService {
                         .toDistrictId(request.getToDistrictId())
                         .toWardId(request.getToWardId())
                         .toPhone(request.getBuyerPhone())
-                        .fromPhone("0935730865")
-                        .fromAddress("Thôn Cốc Thôn, Xã Cam Thượng, Huyện Ba Vì, Hà Nội")
+                        .fromPhone(amdmin.getPhone())
+                        .fromAddress(amdmin.getAddress())
                         .fromDistrictId(1803L)
+                        .toName(request.getToName())
                         .shipmentFee(shipfee)
+                        .fromName(amdmin.getName())
                         .build()
         );
         order.setTotalAmount(totalAmount);
@@ -607,11 +616,18 @@ public class OrderServiceImpl implements OrderService {
         {
             return false;
         }
-        OrderItem orderItem = shipment.getOrderItems().stream().toList().getFirst();
-        if(orderItem.getOrderItemStatus().equals(OrderItemStatus.RETURNING))
-        {
-            return users.equals(orderItem.getListSeller().getSeller()) ;
-        }
+        // cho blind box result
+
+       if(shipment.getOrderItems() != null && shipment.getOrderItems().size() > 0)
+       {
+           OrderItem orderItem = shipment.getOrderItems().stream().toList().getFirst();
+           if(orderItem.getOrderItemStatus().equals(OrderItemStatus.RETURNING))
+           {
+               return users.equals(orderItem.getListSeller().getSeller()) ;
+           }
+
+       }
+
         return  users.equals(buyer) ;
     }
 

@@ -33,6 +33,7 @@ public class BlindBoxResult {
     @JoinColumn(name = "order_id")
     private Order order;
     @ManyToMany(mappedBy = "blindBoxResults")
+    @OrderBy("createAt")
     private Set<Shipment>  shipments = new HashSet<>();
     @Enumerated(EnumType.STRING)
     private ResultStatus status = ResultStatus.NOT_RECEIVED;

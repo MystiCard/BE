@@ -32,4 +32,6 @@ select s from Shipment s where s.shipper is null and s.shipmentStatus = :status
     boolean existsByShipmentStatusIsInAndShipper(Collection<ShippingStatus> shipmentStatuses, Users shipper);
 
     Page<Shipment> findAllByShipmentStatusInAndShipper(Collection<ShippingStatus> shipmentStatuses, Users shipper,Pageable pageable);
+
+    List<Shipment> findByOrderAndShipmentStatus(Order order, ShippingStatus shipmentStatus);
 }

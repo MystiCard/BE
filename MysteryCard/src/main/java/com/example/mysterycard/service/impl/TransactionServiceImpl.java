@@ -55,6 +55,8 @@ public class TransactionServiceImpl implements TransactionService {
     private final WalletRepo walletRepo;
     private final ReturnRequestRepo returnRequestRepo;
     private final NotificationService notificationService;
+    private final BlindBoxCardRepo blindBoxCardRepo;
+    private final BlindBoxCardResultRepo blindBoxCardResultRepo;
     @Value("${admin.email}")
     private String adminEmail;
 
@@ -179,6 +181,7 @@ public class TransactionServiceImpl implements TransactionService {
         }
         else {
             message = "Tracsaction for shipment card results";
+
         }
         }
         else {
@@ -199,28 +202,49 @@ public class TransactionServiceImpl implements TransactionService {
             admin.getWallet().setBalance(admin.getWallet().getBalance() + totalAmount);
             usersRepo.save(admin);
             buyer.setBalance(buyer.getBalance() - totalAmount);
-            if(order!=null) {
+            if(order!=null ) {
+                ShippingStatus status = ShippingStatus.PENDING;
+                if(order.getBlindBoxResults() == null && order.getOrderItemList() != null)
+                {
+                    updateQuanity(order);
+                    status = ShippingStatus.PENDING_APPROVED;
+                } else {
+                    updateStautsBlindBoxResult(order);
+                }
                 order.setStatus(OrderStatus.PAID);
-                UpdateStatusShipment(order);
-                updateQuanity(order);
+                UpdateStatusShipment(order,status);
+
             }
         }
         return transactionMapper.entityToResponse(transactionRepo.save(transaction));
     }
-
-    public void UpdateStatusShipment(Order order) {
-        for (OrderItem orderItem : order.getOrderItemList()) {
-            orderItem.getShipments().forEach(shipment -> {
-                if (shipment.getShipmentStatus() == null) {
-                    shipmentService.update(
-                            UpdateShipmentRequest.builder()
-                                    .shipmentId(shipment.getShipmentId())
-                                    .shippingStatus(ShippingStatus.PENDING_APPROVED)
-                                    .build(), null
-                    );
-                }
-            });
+    public void updateStautsBlindBoxResult (Order order)
+    {
+        List<BlindBoxResult> list = order.getBlindBoxResults();
+        for (BlindBoxResult blindBoxResult : list)
+        {
+            if(blindBoxResult.getStatus().equals(BlindBoxResult.ResultStatus.NOT_RECEIVED))
+            {
+                blindBoxResult.setStatus(BlindBoxResult.ResultStatus.SHIPPING);
+            }
         }
+        blindBoxCardResultRepo.saveAll(list);
+
+    }
+    public void UpdateStatusShipment(Order order, ShippingStatus status) {
+        List<Shipment> shipments = order.getShipmentList();
+        shipments.forEach(shipment -> {
+            if(shipment.getShipmentStatus() == null)
+            {
+                shipmentService.update(
+                        UpdateShipmentRequest.builder()
+                                .shipmentId(shipment.getShipmentId())
+                                .shippingStatus(status)
+                                .build(), null
+                );
+            }
+
+        });
     }
 
     public void updateQuanity(Order order) {

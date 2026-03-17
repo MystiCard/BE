@@ -9,7 +9,6 @@ import java.util.UUID;
 public class BlindBoxRequest {
     private String name;
     private String description;
-    private String imageUrl;
     private List<UUID> cardIds;
     private String categoryId;
 }

@@ -8,9 +8,7 @@ import java.util.UUID;
 public class BlindBoxCardResponse {
     private UUID blindBoxCardId;
     private UUID blindBoxId;
-    private UUID cardId;
-    private String cardName;
-    private String rarity;
+    private CardResponse cardResponse;
     private boolean status;
     private double rate;
 }

@@ -5,11 +5,9 @@ import com.example.mysterycard.entity.BlindBoxCard;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring",uses = {CardMapper.class})
 public interface BlindBoxCardMapper {
-    @Mapping(source = "card.name", target = "cardName")
     @Mapping(source = "blindBox.blindBoxId", target = "blindBoxId")
-    @Mapping(source = "card.cardId", target = "cardId")
-    @Mapping(source = "card.rarity", target = "rarity")
+    @Mapping(source = "card",target ="cardResponse" )
     BlindBoxCardResponse toBlindBoxCardResponse(BlindBoxCard blindBoxCard);
 }

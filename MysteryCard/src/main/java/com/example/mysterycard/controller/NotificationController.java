@@ -22,7 +22,7 @@ public class NotificationController {
 
     @GetMapping()
     public ResponseEntity<ApiResponse<?>> getNotificationsForUser(
-            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "10") int size) {
         return ResponseEntity.ok(ApiResponse.success(notificationService.getNotificationsForUser(page, size)));
     }

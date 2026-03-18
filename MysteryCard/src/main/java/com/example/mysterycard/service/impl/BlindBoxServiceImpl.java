@@ -171,7 +171,7 @@ public class BlindBoxServiceImpl implements BlindBoxService {
 
     @Override
     public Page<BlindBoxResponse> getAllBlindBoxes(int page, int size, BlindBoxStatus blindBoxStatus) {
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt"));
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
         Page<BlindBox> boxes = null;
         if (blindBoxStatus != null) {
             boxes = blindBoxRepo.findAllByBlindBoxStatus(blindBoxStatus, pageable);

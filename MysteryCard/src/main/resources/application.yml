@@ -3,7 +3,7 @@ momo:
   access-key: F8BBA842ECF85
   secret-key: K951B6PE1waDMi640xX08PD3vg6EkVlz
   end-point: https://test-payment.momo.vn/v2/gateway/api
-  return-url: http://localhost:8080/api/payments/call-back
+  return-url: ${RETURN_MOMO_URL:http://localhost:8080/api/payments/call-back}
   ipn-url: http://localhost:8080/api/payments/call-back
   request-type: payWithMethod
 spring:
@@ -28,7 +28,7 @@ ghn:
   weight: 300
   service_id: 53320
 
-FRONTEND_URL: http://localhost:5173
+FRONTEND_URL: ${FE_URL:http://localhost:5173}
 DAY_CAN_RETURN: 5
 AI:
   URL:${AI_URL}

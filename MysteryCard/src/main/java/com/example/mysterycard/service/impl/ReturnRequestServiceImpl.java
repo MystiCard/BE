@@ -166,15 +166,12 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
         List<OrderItem> orderItemList = orderItemsRepo.findByListSeller_Seller(seller);
-        Set<ReturnRequest> returnRequests = null;
-        if (status == null) {
-            returnRequests = orderItemList.stream().filter(orderItem -> orderItem.getReturnRequest() != null)
-                    .map(OrderItem::getReturnRequest).collect(java.util.stream.Collectors.toSet());
-        } else {
-            returnRequests = orderItemList.stream().filter(orderItem -> orderItem.getReturnRequest() != null
-                            && orderItem.getReturnRequest().getStatus().equals(status))
-                    .map(OrderItem::getReturnRequest).collect(java.util.stream.Collectors.toSet());
-        }
+        List<ReturnRequest> returnRequests = orderItemList.stream()
+                .map(OrderItem::getReturnRequest)
+                .filter(req -> req != null && (status == null || req.getStatus().equals(status)))
+                .distinct()
+                .sorted(Comparator.comparing(ReturnRequest::getCreatedAt).reversed())
+                .toList();
         returnRequests.stream().sorted(Comparator.comparing(ReturnRequest::getCreatedAt).reversed()) ;
         int totalPages = returnRequests.size() / size;
         int from = page * size;

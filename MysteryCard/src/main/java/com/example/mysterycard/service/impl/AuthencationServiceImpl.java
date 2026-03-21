@@ -8,6 +8,7 @@ import com.example.mysterycard.dto.request.RefreshAccessTokenRequest;
 import com.example.mysterycard.dto.response.EmailVerifyResponse;
 import com.example.mysterycard.dto.response.LoginResponse;
 import com.example.mysterycard.entity.EmailVerify;
+import com.example.mysterycard.entity.Role;
 import com.example.mysterycard.entity.Users;
 import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
@@ -83,19 +84,28 @@ public class AuthencationServiceImpl implements AuthencationSevice {
                     .name(auth.getPrincipal().getAttribute("name"))
                     .avatarUrl(auth.getPrincipal().getAttribute("picture"))
                     .rolelist(Set.of(roleRepo.findByRoleCode("USER")))
-                    .active(false)
+                    .active(true)
                     .build();
             usersRepo.save(user);
         }
         if(!user.isActive()){
-           sendVerifyCode(email);
-          return LoginResponse.builder()
-                  .email(email)
-                  .build();
+           throw  new AppException(ErrorCode.USER_INACTIVE);
+        }
+        Set<Role>  rolelist = user.getRolelist();
+        String role = "USER";
+        if(rolelist != null)
+        {
+            for (Role r : rolelist) {
+                if(r.getRoleCode().equals("ADMIN"))
+                {
+                    role = "ADMIN";
+                }
+            }
         }
         return LoginResponse.builder()
                 .accessToken(tokenService.generateToken(user))
                 .refreshToken(refreshTokenService.generateRefreshToken(user))
+                .roleCode(role)
                 .build();
     }
 

@@ -12,5 +12,11 @@ public class OrderSpecification {
     public static  Specification<Order> findByBuyer(Users users) {
         return (root, query, cb) -> users != null ? cb.equal(root.get("buyer"),users) : null;
     };
+    public static Specification<Order> findByNotBlindBox()
+    {
+        return  ((root, query, cb) ->
+                cb.isEmpty(root.get("blindBoxResults"))
+                );
+    }
 
 }

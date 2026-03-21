@@ -49,7 +49,7 @@ public class SecurityConfiguration {
                         .authenticationEntryPoint(authenticationEntryPoint)
         );
         http.oauth2Login(config -> {
-            config.defaultSuccessUrl(SUCCESS_URL, true);
+            config.defaultSuccessUrl(SUCCESS_URL+"/api/auth/login-google", true);
         });
 
         http.csrf(AbstractHttpConfigurer::disable)

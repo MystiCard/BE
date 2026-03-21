@@ -497,8 +497,12 @@ public class BlindBoxServiceImpl implements BlindBoxService {
                         List<BlindBoxShipmentResponse.BlinboxShipDetail> blinboxShipDetails = new ArrayList<>();
                         log.info("Shipment ID {}", s.getShipmentId());
                         log.info("1 ");
-                        if((status != null && s.getShipmentStatus().equals(status))  || status == null)
+
+
+
+                        if((status != null &&  ((status.equals(ShippingStatus.PENDING) && s.getShipmentStatus() == null) || (s.getShipmentStatus() != null &&  s.getShipmentStatus().equals(status))))  || status == null)
                         {
+
                             BlindBoxShipmentResponse blr = BlindBoxShipmentResponse.builder()
                                     .orderId(o.getOrderId())
                                     .build();

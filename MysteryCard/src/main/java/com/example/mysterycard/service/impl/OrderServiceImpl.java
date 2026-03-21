@@ -530,7 +530,7 @@ public class OrderServiceImpl implements OrderService {
         if (users == null) {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
-        Specification<Order> specification = Specification.allOf( OrderSpecification.findByStatus(orderStatus),OrderSpecification.findByBuyer(users));
+        Specification<Order> specification = Specification.allOf( OrderSpecification.findByStatus(orderStatus),OrderSpecification.findByBuyer(users),OrderSpecification.findByNotBlindBox());
         PageRequest pageRequest = PageRequest.of(page - 1, size, Sort.by("orderDate").descending());
         return orderRepo.findAll(specification,pageRequest).map(orderMapper::toOrderResponse);
     }

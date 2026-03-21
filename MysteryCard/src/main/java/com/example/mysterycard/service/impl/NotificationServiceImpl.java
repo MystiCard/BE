@@ -5,6 +5,7 @@ import com.example.mysterycard.entity.Card;
 import com.example.mysterycard.entity.Notification;
 import com.example.mysterycard.entity.Users;
 import com.example.mysterycard.entity.WishList;
+import org.springframework.data.domain.Sort;
 import com.example.mysterycard.exception.AppException;
 import com.example.mysterycard.exception.ErrorCode;
 import com.example.mysterycard.mapper.NotificationMapper;
@@ -14,6 +15,7 @@ import com.example.mysterycard.service.NotificationService;
 import com.example.mysterycard.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -81,7 +83,7 @@ public class NotificationServiceImpl implements NotificationService {
         {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
-        Pageable pageable = Pageable.ofSize(size).withPage(page);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         return notificationRepo.findByUsersUserId(users.getUserId(), pageable)
                 .map(notificationMapper::toResponse);
     }

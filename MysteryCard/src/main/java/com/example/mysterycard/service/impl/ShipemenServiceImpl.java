@@ -229,6 +229,8 @@ public class ShipemenServiceImpl implements ShipmentService {
             case LOST -> "bị thất lạc.";
             case RECEIVED -> "đã được nhận.";
             case CANCELLED -> "đã bị hủy.";
+            case COMPLETE -> "đã hoàn tất.";
+            default -> "";
         };
         notificationService.createNotification("Đơn hàng của bạn " + message, owner,
                 Notification.NotiType.shipment

@@ -14,6 +14,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.objenesis.instantiator.util.UnsafeUtils;
 
 import java.time.LocalDateTime;
@@ -27,8 +28,11 @@ public interface TransactionRepo extends JpaRepository<WalletTransaction, UUID>,
     long countByCreateAtBetweenAndStatusTransaction(LocalDateTime createAtAfter, LocalDateTime createAtBefore, StatusPayment statusTransaction);
 
     @Query("""
-      SELECT SUM(w.amount) from WalletTransaction  w  where w.createAt between :after and :before and w.statusTransaction = 'SUCCESS'
+    SELECT COALESCE(SUM(w.amount), 0) 
+    FROM WalletTransaction w 
+    WHERE w.createAt BETWEEN :start AND :end 
+    AND w.statusTransaction = 'SUCCESS'
 """)
-    long sumAmount(LocalDateTime after, LocalDateTime before);
+    Long sumAmount(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
     Page<WalletTransaction> findByTransactionType(TransactionType transactionType,Pageable pageable);
 }

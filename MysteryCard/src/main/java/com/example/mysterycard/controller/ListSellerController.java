@@ -3,6 +3,7 @@ package com.example.mysterycard.controller;
 import com.example.mysterycard.base.ApiResponse;
 import com.example.mysterycard.dto.request.SellRequest;
 import com.example.mysterycard.dto.response.ListSellerResponse;
+import com.example.mysterycard.enums.Status;
 import com.example.mysterycard.service.ListSellerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -26,6 +27,20 @@ public class ListSellerController {
                                               @RequestParam(defaultValue = "0") int page,
                                               @RequestParam(defaultValue = "10") int size) {
         return ApiResponse.success(listSellerService.getListSellersByCardId(id, page, size));
+    }
+    @PutMapping("/{id}")
+    public ApiResponse updateListSeller(@PathVariable UUID id, @RequestBody SellRequest request) {
+        return ApiResponse.success(listSellerService.updateListseller(id,request));
+    }
+    @DeleteMapping("/{id}")
+    public ApiResponse deleteListSeller(@PathVariable UUID id) {
+        listSellerService.updateStatus(id, Status.UNAVAILABLE);
+        return ApiResponse.success("Delete succesfully");
+    }
+    @PutMapping("/active/{id}")
+    public ApiResponse active(@PathVariable UUID id) {
+        listSellerService.updateStatus(id, Status.AVAILABLE);
+        return ApiResponse.success("Delete succesfully");
     }
 
     @GetMapping("/sell-listings/{userId}")

@@ -18,6 +18,7 @@ import com.example.mysterycard.repository.UsersRepo;
 import com.example.mysterycard.service.AuthencationSevice;
 import com.example.mysterycard.service.RefreshTokenService;
 import com.example.mysterycard.service.TokenService;
+import com.example.mysterycard.service.WalletService;
 import com.example.mysterycard.utils.EmailSender;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.SignedJWT;
@@ -49,6 +50,7 @@ public class AuthencationServiceImpl implements AuthencationSevice {
      private final RoleRepo roleRepo;
      private final EmailSender emailSender;
      private final EmailVerifyRepo emailVerifyRepo;
+     private final WalletService walletService;
      @Value("${code.expired}")
      private int expired;
     @Override
@@ -87,6 +89,7 @@ public class AuthencationServiceImpl implements AuthencationSevice {
                     .active(true)
                     .build();
             usersRepo.save(user);
+            walletService.createWallet(user);
         }
         if(!user.isActive()){
            throw  new AppException(ErrorCode.USER_INACTIVE);

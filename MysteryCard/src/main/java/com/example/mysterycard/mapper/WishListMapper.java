@@ -6,10 +6,9 @@ import com.example.mysterycard.entity.WishList;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring",uses = {CardMapper.class})
 public interface WishListMapper {
     WishList toEntity(WishListRequest request);
-    @Mapping(source = "card.cardId", target = "cardId")
-    @Mapping(source = "user.userId", target = "userId")
+    @Mapping(target = "cardResponse", source = "card")
     WishListResponse toResponse(WishList wishList);
 }

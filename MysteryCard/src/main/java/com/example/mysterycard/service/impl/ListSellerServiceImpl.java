@@ -54,33 +54,47 @@ public class ListSellerServiceImpl implements ListSellerService {
 
         List<WishList> wishLists = wishListRepo.getAllByCard_CardId(cardId);
         for (WishList wishList : wishLists) {
-            if(wishList.getExpectPrice()<=request.getPrice()) {
-                notificationService.createNotification(card, "The card " + card.getName() + " you wishlisted is now available for sale at a price of " + request.getPrice(),wishList.getUser(), Notification.NotiType.wishList);
+            if (wishList.getExpectPrice() >= request.getPrice()) {
+                notificationService.createNotification(card, "The card " + card.getName() + " you wishlisted is now available for sale at a price of " + request.getPrice(), wishList.getUser(), Notification.NotiType.wishList);
             }
         }
         return listSellerMapper.toResponse(savedListSeller);
     }
+
     public Page<SellResponse> getListSellersByCardId(UUID cardId, int page, int size) {
-        Users users  = userService.getUser();
+        Users users = userService.getUser();
         Pageable pageable = PageRequest.of(page, size, Sort.by("price").descending());
-        Page<ListSeller> listSellers = listSellerRepo.findByCard_CardIdAndStatusAndQuantityGreaterThanEqualAndSellerIsNot(cardId, Status.AVAILABLE,1,users, pageable);
+        Page<ListSeller> listSellers = listSellerRepo.findByCard_CardIdAndStatusAndQuantityGreaterThanEqualAndSellerIsNot(cardId, Status.AVAILABLE, 1, users, pageable);
         return listSellers.map(listSellerMapper::toResponse);
     }
 
     @Override
     public Page<ListSellerResponse> getListingByUserId(UUID userId, int page, int size) {
         Users users = null;
-        if(userId != null)
-        {
+        if (userId != null) {
             users = usersRepo.findByUserId(userId);
         }
-        if(userId == null)
-        {
-            throw  new AppException(ErrorCode.USER_NOT_FOUND);
+        if (userId == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
-        Pageable pageable = PageRequest.of(page-1,size,Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
         Page<ListSeller> listSellers = listSellerRepo.findAllBySeller(users, pageable);
-        return listSellers.map(listSellerMapper::entityToResponse)   ;
+        return listSellers.map(listSellerMapper::entityToResponse);
+    }
+
+    @Override
+    public SellResponse updateListseller(UUID id, SellRequest request) {
+        ListSeller listSeller = listSellerRepo.findById(id).orElseThrow(() -> new AppException(ErrorCode.LIST_SELLER_NOT_FOUND));
+        listSeller.setQuantity(request.getQuantity());
+        listSeller.setPrice(request.getPrice());
+        return listSellerMapper.toResponse(listSellerRepo.save(listSeller));
+    }
+
+    @Override
+    public void updateStatus(UUID id, Status status) {
+        ListSeller listSeller = listSellerRepo.findById(id).orElseThrow(() -> new AppException(ErrorCode.LIST_SELLER_NOT_FOUND));
+        listSeller.setStatus(status);
+        listSellerRepo.save(listSeller);
     }
 
 }
